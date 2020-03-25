@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Borang h_lebihDrpdSatuHakmilik_jadual_mukim"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="566"
+		 pageHeight="842"
+		 columnWidth="566"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="id_mukim" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_Fail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_hakmilik" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_hakmilikpb" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT INITCAP(REPLACE(M.NAMA_MUKIM,'-','- ')) AS NAMA_MUKIM, TO_CHAR(H.ID_HAKMILIK) AS ID_HAKMILIK,
+CASE  
+    WHEN H.NO_LOT IS NOT NULL AND H.NO_PT IS NULL THEN H.NO_LOT  
+    WHEN H.NO_LOT IS NULL AND H.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || H.NO_PT   
+    WHEN H.NO_LOT IS NOT NULL AND H.NO_PT IS NOT NULL THEN JL.KETERANGAN  || H.NO_PT || CHR(32) || CHR(40) || H.NO_LOT  || CHR(41) 
+    ELSE  ''  
+END AS NO_LOT,H.NO_PT,H.NO_HAKMILIK,
+HM.KOD_JENIS_HAKMILIK, 
+ROUND(H.LUAS_AMBIL,4) AS LUAS_AMBIL,
+    case
+    when h.ID_UNITLUASAMBIL_CONVERT = 1 then 'hektar'
+    when h.ID_UNITLUASAMBIL_CONVERT = 2 then 'meter persegi'
+    end as unit_AMBIL,
+ROUND(H.LUAS_LOT,4) AS LUAS_LOT,
+    case
+    when h.ID_UNITLUASLOT_CONVERT = 1 then 'hektar'
+    when h.ID_UNITLUASLOT_CONVERT = 2 then 'meter persegi'
+    end as unit_LOT,
+ TO_CHAR(M.ID_MUKIM) AS ID_MUKIM ,initcap(m.nama_mukim) as nama_mukim,initcap(D.NAMA_DAERAH) as nama_daerah,
+F.no_fail,P.tujuan,
+REPLACE(TO_CHAR(S.NILAI_SEUNIT,'999,999,990.99'),' ') AS JUM,
+CASE WHEN S.UNIT_TANAH = 2 THEN 'semeter Persegi'
+WHEN S.UNIT_TANAH = 1 THEN 'sehektar'
+WHEN S.UNIT_TANAH = 3 THEN 'sekar'
+WHEN S.UNIT_TANAH = 4 THEN 'sekaki Persegi'
+ELSE '' END AS UNIT
+FROM TBLPPTPERMOHONAN P,TBLPFDFAIL F,
+TBLPPTHAKMILIK H,TBLRUJMUKIM M , TBLRUJJENISHAKMILIK HM, TBLRUJLOT JL,TBLRUJDAERAH D,TBLPPTSIASATAN S
+WHERE P.ID_FAIL= F.ID_FAIL
+AND P.ID_DAERAH = D.ID_DAERAH
+AND H.ID_HAKMILIK = S.ID_HAKMILIK
+AND S.BIL_SIASATAN = (SELECT MAX(SS.BIL_SIASATAN) FROM TBLPPTSIASATAN SS,TBLPPTHAKMILIK HH WHERE SS.ID_HAKMILIK = HH.ID_HAKMILIK AND HH.ID_HAKMILIK = $P!{id_hakmilik}  )
+AND P.ID_PERMOHONAN = H.ID_PERMOHONAN
+AND H.ID_MUKIM = M.ID_MUKIM
+AND H.ID_JENISHAKMILIK = HM.ID_JENISHAKMILIK(+)
+AND H.ID_LOT = JL.ID_LOT(+)
+AND H.ID_HAKMILIK = $P!{id_hakmilik}
+AND H.ID_HAKMILIK IN (SELECT DISTINCT HHM.ID_HAKMILIK
+    FROM TBLPPTSUBAWARD A, TBLPPTAWARD B,TBLPPTSIASATAN SS,TBLPPTHAKMILIK HHM,TBLPPTHAKMILIKPB HPB
+    WHERE A.ID_AWARD = B.ID_AWARD 
+    AND HPB.ID_HAKMILIKPB = B.ID_HAKMILIKPB
+    AND SS.ID_SIASATAN = B.ID_SIASATAN
+    AND SS.ID_HAKMILIK = HHM.ID_HAKMILIK
+    AND HHM.ID_HAKMILIK = SS.ID_HAKMILIK
+    AND SS.ID_SIASATAN = (SELECT MAX(SSS.ID_SIASATAN) FROM TBLPPTSIASATAN SSS WHERE HHM.ID_HAKMILIK = SSS.ID_HAKMILIK(+))
+    AND A.FLAG_JENIS_AWARD <> 'BAYAR_LAIN'
+    AND HHM.ID_HAKMILIK = $P!{id_hakmilik})]]></queryString>
+
+	<field name="NAMA_MUKIM" class="java.lang.String"/>
+	<field name="ID_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="NO_PT" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
+	<field name="LUAS_AMBIL" class="java.math.BigDecimal"/>
+	<field name="UNIT_AMBIL" class="java.lang.String"/>
+	<field name="LUAS_LOT" class="java.math.BigDecimal"/>
+	<field name="UNIT_LOT" class="java.lang.String"/>
+	<field name="ID_MUKIM" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="JUM" class="java.lang.String"/>
+	<field name="UNIT" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="17"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="448"
+						y="0"
+						width="85"
+						height="17"
+						key="textField-65"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="48"
+						y="0"
+						width="62"
+						height="17"
+						key="textField-57"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="49"
+						y="0"
+						width="60"
+						height="17"
+						key="textField-27"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{LUAS_AMBIL} != null ? $F{LUAS_AMBIL}+($F{UNIT_AMBIL} != null ? " "+$F{UNIT_AMBIL}:""):"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="0"
+						width="67"
+						height="17"
+						key="textField-67"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="110"
+						y="0"
+						width="155"
+						height="17"
+						key="textField-66"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="48"
+						height="17"
+						key="textField-58"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="332"
+						y="0"
+						width="116"
+						height="17"
+						key="textField-68"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<subreport  isUsingCache="true">
+					<reportElement
+						mode="Transparent"
+						x="110"
+						y="0"
+						width="338"
+						height="17"
+						key="subreport-2"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_hakmilik">
+						<subreportParameterExpression><![CDATA[$F{ID_HAKMILIK}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_mukim">
+						<subreportParameterExpression><![CDATA[$P{id_mukim}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_Fail">
+						<subreportParameterExpression><![CDATA[$P{id_Fail}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_hakmilikpb">
+						<subreportParameterExpression><![CDATA[$P{id_hakmilikpb}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir}+"//ppt//Borang H_pb.jasper"]]></subreportExpression>
+				</subreport>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="1"
+						y="0"
+						width="46"
+						height="17"
+						key="textField-26"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_LOT} != null ? $F{NO_LOT}:($F{NO_PT} != null ? $F{NO_PT}:""))+"\n"+
+($F{NO_HAKMILIK} != null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":"")+$F{NO_HAKMILIK}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="449"
+						y="0"
+						width="83"
+						height="17"
+						key="textField-70"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Double"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Double"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Nilaian Tanah "+($F{UNIT} != null ? $F{UNIT}:"")
++"\nRM "+($F{JUM} != null ? $F{JUM}:"")]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

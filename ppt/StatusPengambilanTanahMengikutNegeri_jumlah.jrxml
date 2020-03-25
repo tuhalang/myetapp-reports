@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="StatusPengambilanTanahMengikutNegeri_jumlah"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="510"
+		 pageHeight="842"
+		 columnWidth="510"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="BULAN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TAHUN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="bulantahun" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="bulantahunSE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="jenisTempoh" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT 
+--N.NAMA_NEGERI,N.ID_NEGERI,
+TO_CHAR((
+SELECT COUNT(DISTINCT PP.ID_PERMOHONAN)
+FROM TBLPPTPERMOHONAN PP, TBLPFDFAIL F,TBLRUJDAERAH DD
+WHERE  PP.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND F.ID_NEGERI NOT IN (15,0,13,12,17,16)
+AND PP.ID_DAERAH = DD.ID_DAERAH AND DD.ID_NEGERI = F.ID_NEGERI
+AND CASE 
+        WHEN PP.TARIKH_PERMOHONAN < TO_DATE($P!{bulantahun},'MM/YYYY') THEN 1 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN) BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND TO_DATE($P!{bulantahunSE},'MM/YYYY') THEN 2 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY') THEN 3          
+        ELSE 0     
+    END = CASE 
+              WHEN $P!{jenisTempoh} = 'sehingga' THEN 1 
+              WHEN $P!{jenisTempoh} = 'julat' THEN 2 
+              WHEN $P!{jenisTempoh} = 'semasa' OR $P!{jenisTempoh} = 'SEMASA' THEN 3
+              ELSE 0
+          END
+AND (SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H,TBLPPTHAKMILIKBORANGK BK,TBLPPTBORANGK K
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.ID_HAKMILIK = BK.ID_HAKMILIK
+AND BK.ID_BORANGK = K.ID_BORANGK
+AND BK.ID_HAKMILIKBORANGK IS NOT NULL
+) = 
+(SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)
+AND 
+(SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)>0
+))
+AS BIL_KES_SELESAI,
+TO_CHAR((
+SELECT COUNT(DISTINCT PP.ID_PERMOHONAN)
+FROM TBLPPTPERMOHONAN PP, TBLPFDFAIL F,TBLRUJDAERAH DD
+WHERE  PP.ID_FAIL = F.ID_FAIL
+AND F.ID_NEGERI NOT IN (15,0,13,12,17,16)
+AND CASE 
+        WHEN PP.TARIKH_PERMOHONAN < TO_DATE($P!{bulantahun},'MM/YYYY') THEN 1 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN) BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND TO_DATE($P!{bulantahunSE},'MM/YYYY') THEN 2 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY') THEN 3          
+        ELSE 0     
+    END = CASE 
+              WHEN $P!{jenisTempoh} = 'sehingga' THEN 1 
+              WHEN $P!{jenisTempoh} = 'julat' THEN 2 
+              WHEN $P!{jenisTempoh} = 'semasa' OR $P!{jenisTempoh} = 'SEMASA' THEN 3
+              ELSE 0
+          END
+AND PP.ID_DAERAH = DD.ID_DAERAH AND DD.ID_NEGERI = F.ID_NEGERI
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND 
+(SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)>0
+))
+AS BIL_KES,
+TO_CHAR(
+(
+SELECT COUNT(DISTINCT PP.ID_PERMOHONAN)
+FROM TBLPPTPERMOHONAN PP, TBLPFDFAIL F,TBLRUJDAERAH DD
+WHERE  PP.ID_FAIL = F.ID_FAIL
+AND F.ID_NEGERI NOT IN (15,0,13,12,17,16)
+AND CASE 
+        WHEN PP.TARIKH_PERMOHONAN < TO_DATE($P!{bulantahun},'MM/YYYY') THEN 1 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN) BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND TO_DATE($P!{bulantahunSE},'MM/YYYY') THEN 2 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY') THEN 3          
+        ELSE 0     
+    END = CASE 
+              WHEN $P!{jenisTempoh} = 'sehingga' THEN 1 
+              WHEN $P!{jenisTempoh} = 'julat' THEN 2 
+              WHEN $P!{jenisTempoh} = 'semasa' OR $P!{jenisTempoh} = 'SEMASA' THEN 3
+              ELSE 0
+          END
+AND PP.ID_DAERAH = DD.ID_DAERAH AND DD.ID_NEGERI = F.ID_NEGERI
+AND 
+(SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)>0
+)
+-
+(
+SELECT COUNT(DISTINCT PP.ID_PERMOHONAN)
+FROM TBLPPTPERMOHONAN PP, TBLPFDFAIL F,TBLRUJDAERAH DD
+WHERE  PP.ID_FAIL = F.ID_FAIL
+AND F.ID_NEGERI NOT IN (15,0,13,12,17,16)
+AND CASE 
+        WHEN PP.TARIKH_PERMOHONAN < TO_DATE($P!{bulantahun},'MM/YYYY') THEN 1 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN) BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND TO_DATE($P!{bulantahunSE},'MM/YYYY') THEN 2 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY') THEN 3          
+        ELSE 0     
+    END = CASE 
+              WHEN $P!{jenisTempoh} = 'sehingga' THEN 1 
+              WHEN $P!{jenisTempoh} = 'julat' THEN 2 
+              WHEN $P!{jenisTempoh} = 'semasa' OR $P!{jenisTempoh} = 'SEMASA' THEN 3
+              ELSE 0
+          END
+AND PP.ID_DAERAH = DD.ID_DAERAH AND DD.ID_NEGERI = F.ID_NEGERI
+AND (SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H,TBLPPTHAKMILIKBORANGK BK,TBLPPTBORANGK K
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.ID_HAKMILIK = BK.ID_HAKMILIK
+AND BK.ID_BORANGK = K.ID_BORANGK
+AND BK.ID_HAKMILIKBORANGK IS NOT NULL
+) = 
+(SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)
+AND 
+(SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)>0
+)) AS BIL_KES_BELUM,
+TO_CHAR(
+(((
+SELECT COUNT(DISTINCT PP.ID_PERMOHONAN)
+FROM TBLPPTPERMOHONAN PP, TBLPFDFAIL F,TBLRUJDAERAH DD
+WHERE  PP.ID_FAIL = F.ID_FAIL
+AND F.ID_NEGERI NOT IN (15,0,13,12,17,16)
+AND CASE 
+        WHEN P.TARIKH_PERMOHONAN < TO_DATE($P!{bulantahun},'MM/YYYY') THEN 1 
+        WHEN TO_CHAR(P.TARIKH_PERMOHONAN) BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND TO_DATE($P!{bulantahunSE},'MM/YYYY') THEN 2 
+        WHEN TO_CHAR(P.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY') THEN 3          
+        ELSE 0     
+    END = CASE 
+              WHEN $P!{jenisTempoh} = 'sehingga' THEN 1 
+              WHEN $P!{jenisTempoh} = 'julat' THEN 2 
+              WHEN $P!{jenisTempoh} = 'semasa' OR $P!{jenisTempoh} = 'SEMASA' THEN 3
+              ELSE 0
+          END
+AND PP.ID_DAERAH = DD.ID_DAERAH AND DD.ID_NEGERI = F.ID_NEGERI
+AND (SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H,TBLPPTHAKMILIKBORANGK BK,TBLPPTBORANGK K
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.ID_HAKMILIK = BK.ID_HAKMILIK
+AND BK.ID_BORANGK = K.ID_BORANGK
+AND BK.ID_HAKMILIKBORANGK IS NOT NULL
+) = 
+(SELECT COUNT(*)
+
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)
+AND 
+(SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)>0
+)* 100/
+(
+SELECT
+CASE WHEN
+(SELECT COUNT(DISTINCT PP.ID_PERMOHONAN)
+FROM TBLPPTPERMOHONAN PP, TBLPFDFAIL F,TBLRUJDAERAH DD
+WHERE  PP.ID_FAIL = F.ID_FAIL
+AND F.ID_NEGERI NOT IN (15,0,13,12,17,16)
+AND CASE 
+        WHEN PP.TARIKH_PERMOHONAN < TO_DATE($P!{bulantahun},'MM/YYYY') THEN 1 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN) BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND TO_DATE($P!{bulantahunSE},'MM/YYYY') THEN 2 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY') THEN 3          
+        ELSE 0     
+    END = CASE 
+              WHEN $P!{jenisTempoh} = 'sehingga' THEN 1 
+              WHEN $P!{jenisTempoh} = 'julat' THEN 2 
+              WHEN $P!{jenisTempoh} = 'semasa' OR $P!{jenisTempoh} = 'SEMASA' THEN 3
+              ELSE 0
+          END
+AND PP.ID_DAERAH = DD.ID_DAERAH AND DD.ID_NEGERI = F.ID_NEGERI
+AND 
+(SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)>0) = 0 THEN 1
+ELSE
+(SELECT COUNT(DISTINCT PP.ID_PERMOHONAN)
+FROM TBLPPTPERMOHONAN PP, TBLPFDFAIL F,TBLRUJDAERAH DD
+WHERE  PP.ID_FAIL = F.ID_FAIL
+AND F.ID_NEGERI NOT IN (15,0,13,12,17,16)
+AND CASE 
+        WHEN PP.TARIKH_PERMOHONAN < TO_DATE($P!{bulantahun},'MM/YYYY') THEN 1 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN) BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND TO_DATE($P!{bulantahunSE},'MM/YYYY') THEN 2 
+        WHEN TO_CHAR(PP.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY') THEN 3          
+        ELSE 0     
+    END = CASE 
+              WHEN $P!{jenisTempoh} = 'sehingga' THEN 1 
+              WHEN $P!{jenisTempoh} = 'julat' THEN 2 
+              WHEN $P!{jenisTempoh} = 'semasa' OR $P!{jenisTempoh} = 'SEMASA' THEN 3
+              ELSE 0
+          END
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND PP.ID_DAERAH = DD.ID_DAERAH AND DD.ID_NEGERI = F.ID_NEGERI
+AND 
+(SELECT COUNT(*)
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK H
+WHERE H.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND PP.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--AND F.ID_NEGERI = N.ID_NEGERI
+AND H.FLAG_PEMBATALAN_KESELURUHAN IS NULL
+AND H.FLAG_PENARIKAN_KESELURUHAN IS NULL
+)>0)
+END
+FROM DUAL
+)))
+,'90.99') AS PERATUS_SELESAI
+FROM TBLPPTPERMOHONAN P, TBLPFDFAIL F, TBLPPTHAKMILIK HM,
+TBLPPTHAKMILIKBORANGK BK,TBLPPTBORANGK K,TBLRUJLOT JL,TBLRUJJENISHAKMILIK JH,TBLRUJDAERAH D,TBLRUJMUKIM M
+--,TBLRUJNEGERI N
+WHERE F.ID_FAIL = P.ID_FAIL
+AND HM.ID_MUKIM = M.ID_MUKIM
+AND HM.ID_DAERAH = D.ID_DAERAH
+----AND F.ID_NEGERI = N.ID_NEGERI
+AND HM.ID_LOT = JL.ID_LOT(+)
+AND HM.ID_DAERAH = D.ID_DAERAH
+AND HM.ID_JENISHAKMILIK = JH.ID_JENISHAKMILIK(+)
+AND F.ID_SUBURUSAN = '52'
+AND HM.ID_HAKMILIK = BK.ID_HAKMILIK
+AND BK.ID_BORANGK = K.ID_BORANGK
+AND BK.ID_HAKMILIKBORANGK IS NOT NULL
+AND HM.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND TO_CHAR(K.TARIKH_BORANGK,'yyyy') IS NOT NULL
+AND CASE 
+        WHEN P.TARIKH_PERMOHONAN < TO_DATE($P!{bulantahun},'MM/YYYY') THEN 1 
+        WHEN TO_CHAR(P.TARIKH_PERMOHONAN) BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND TO_DATE($P!{bulantahunSE},'MM/YYYY') THEN 2 
+        WHEN TO_CHAR(P.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY') THEN 3          
+        ELSE 0     
+    END = CASE 
+              WHEN $P!{jenisTempoh} = 'sehingga' THEN 1 
+              WHEN $P!{jenisTempoh} = 'julat' THEN 2 
+              WHEN $P!{jenisTempoh} = 'semasa' OR $P!{jenisTempoh} = 'SEMASA' THEN 3
+              ELSE 0
+          END
+AND F.ID_NEGERI NOT IN (15,0,13,12,17,16)]]></queryString>
+
+	<field name="BIL_KES_SELESAI" class="java.lang.String"/>
+	<field name="BIL_KES" class="java.lang.String"/>
+	<field name="BIL_KES_BELUM" class="java.lang.String"/>
+	<field name="PERATUS_SELESAI" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="19"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="151"
+						y="0"
+						width="81"
+						height="19"
+						key="rectangle-93"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="169"
+						y="0"
+						width="35"
+						height="19"
+						key="textField-92"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+($F{BIL_KES}!= null ? $F{BIL_KES}:"")]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="232"
+						y="0"
+						width="86"
+						height="19"
+						key="rectangle-95"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="249"
+						y="0"
+						width="38"
+						height="19"
+						key="textField-94"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+( $F{BIL_KES_SELESAI}!= null ? $F{BIL_KES_SELESAI}:"")]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="318"
+						y="0"
+						width="86"
+						height="19"
+						key="rectangle-97"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="339"
+						y="0"
+						width="36"
+						height="19"
+						key="textField-96"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+( $F{BIL_KES_BELUM}!= null ? $F{BIL_KES_BELUM}:"")]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="404"
+						y="0"
+						width="88"
+						height="19"
+						key="rectangle-99"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="427"
+						y="0"
+						width="37"
+						height="19"
+						key="textField-98"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+( $F{PERATUS_SELESAI}!= null ? $F{PERATUS_SELESAI}:"")]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="0"
+						y="0"
+						width="151"
+						height="19"
+						key="rectangle-106"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="0"
+						width="144"
+						height="19"
+						key="textField-113"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["JUMLAH"]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

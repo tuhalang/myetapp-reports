@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="laporan_bayaran_caj_lewat"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="842"
+		 pageHeight="595"
+		 columnWidth="782"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idFail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idHakmilik" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT TB.TARIKH_BAYARAN,add_months(BH.TARIKH_HANTAR,3)as TARIKH_HANTAR_3BLN, BH.TARIKH_HANTAR, E.ID_TERIMABAYARAN,C.ID_HAKMILIK,SS.ID_SIASATAN,G.ID_BORANGG, BH.ID_BORANGG,UPPER(B.TUJUAN)AS TUJUAN, UPPER(I.NAMA_MUKIM)AS NAMA_MUKIM, UPPER(J.NAMA_DAERAH)AS NAMA_DAERAH,
+CASE  
+    WHEN C.NO_LOT IS NOT NULL AND C.NO_PT IS NULL THEN C.NO_LOT  
+    WHEN C.NO_LOT IS NULL AND C.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || C.NO_PT   
+    WHEN C.NO_LOT IS NOT NULL AND C.NO_PT IS NOT NULL THEN JL.KETERANGAN  || C.NO_PT || CHR(32) || CHR(40) || C.NO_LOT  || CHR(41) 
+    ELSE  ''  
+END AS NO_LOT, c.no_hakmilik, E.ID_BAYARAN, A.ID_FAIL,D.ID_HAKMILIKPB, C.ID_HAKMILIK, F.NAMA_PB, JPB.KETERANGAN, F.NO_PB, D.NO_AKAUN, D.NAMA_BANK, TO_CHAR(G.TARIKH_BORANGH,'dd/MM/YYYY') AS TARIKH_BORANGH , TO_CHAR(BH.TARIKH_HANTAR,'dd/MM/YYYY') AS TARIKH_TERIMA, TO_CHAR(add_months(BH.TARIKH_HANTAR,3),'dd/MM/YYYY') AS BULAN_SLPS, TO_CHAR(TB.TARIKH_BAYARAN,'dd/MM/YYYY') AS TARIKH_BAYAR, 
+REPLACE(TO_CHAR(H.BAYAR_PAMPASAN, '999,999,990.99'), ' ') AS BAYAR_PAMPASAN,
+TO_CHAR(CASE
+    WHEN TB.TARIKH_BAYARAN >= add_months(BH.TARIKH_HANTAR,3) THEN TB.TARIKH_BAYARAN-add_months(BH.TARIKH_HANTAR,3)
+    ELSE 0
+END) AS JUM_HARI,
+REPLACE(TO_CHAR(CASE
+    WHEN TB.TARIKH_BAYARAN >= add_months(BH.TARIKH_HANTAR,3) THEN CAST((TB.TARIKH_BAYARAN-(add_months(BH.TARIKH_HANTAR,3)))*H.BAYAR_PAMPASAN*0.08/365 AS NUMBER(11,2))
+    ELSE 0
+END, '999,999,990.99'), ' ') AS JUM_AMAUN
+FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTHAKMILIK C, TBLPPTHAKMILIKPB D, TBLPPTBAYARAN E, TBLPPTPIHAKBERKEPENTINGAN F, 
+TBLPPTBORANGG G, TBLPPTAWARD H, TBLRUJMUKIM I, TBLRUJDAERAH J, TBLRUJJENISNOPB JPB, TBLRUJLOT JL, TBLRUJJENISHAKMILIK I,
+TBLPPTSIASATAN SS, TBLPPTBORANGH BH, TBLPPTTERIMABAYARAN TB
+WHERE A.ID_FAIL = B.ID_FAIL
+AND C.ID_PERMOHONAN = B.ID_PERMOHONAN
+AND D.ID_HAKMILIK = C.ID_HAKMILIK
+AND D.ID_PIHAKBERKEPENTINGAN = F.ID_PIHAKBERKEPENTINGAN
+AND E.ID_HAKMILIKPB = D.ID_HAKMILIKPB
+AND G.ID_SIASATAN = SS.ID_SIASATAN
+AND SS.ID_HAKMILIK = C.ID_HAKMILIK
+AND SS.BIL_SIASATAN = (SELECT MAX(SS1.BIL_SIASATAN) FROM TBLPPTSIASATAN SS1 WHERE SS1.ID_HAKMILIK = C.ID_HAKMILIK)
+AND H.ID_HAKMILIKPB = D.ID_HAKMILIKPB
+AND H.ID_SIASATAN = SS.ID_SIASATAN
+AND C.ID_MUKIM = I.ID_MUKIM(+)
+AND B.ID_DAERAH = J.ID_DAERAH(+)
+AND H.ID_HAKMILIKPB(+) = D.ID_HAKMILIKPB
+AND C.ID_LOT = JL.ID_LOT(+)
+AND C.ID_JENISHAKMILIK = I.ID_JENISHAKMILIK(+)
+AND BH.ID_BORANGG = G.ID_BORANGG
+AND F.ID_JENISNOPB = JPB.ID_JENISNOPB(+)
+AND E.ID_TERIMABAYARAN = TB.ID_TERIMABAYARAN
+AND A.ID_FAIL = $P!{idFail}
+AND C.ID_HAKMILIK = $P!{idHakmilik}]]></queryString>
+
+	<field name="TARIKH_BAYARAN" class="java.sql.Timestamp"/>
+	<field name="TARIKH_HANTAR_3BLN" class="java.sql.Timestamp"/>
+	<field name="TARIKH_HANTAR" class="java.sql.Timestamp"/>
+	<field name="ID_TERIMABAYARAN" class="java.math.BigDecimal"/>
+	<field name="ID_HAKMILIK" class="java.math.BigDecimal"/>
+	<field name="ID_SIASATAN" class="java.math.BigDecimal"/>
+	<field name="ID_BORANGG" class="java.math.BigDecimal"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="NAMA_MUKIM" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="ID_BAYARAN" class="java.math.BigDecimal"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="ID_HAKMILIKPB" class="java.math.BigDecimal"/>
+	<field name="NAMA_PB" class="java.lang.String"/>
+	<field name="KETERANGAN" class="java.lang.String"/>
+	<field name="NO_PB" class="java.lang.String"/>
+	<field name="NO_AKAUN" class="java.lang.String"/>
+	<field name="NAMA_BANK" class="java.lang.String"/>
+	<field name="TARIKH_BORANGH" class="java.lang.String"/>
+	<field name="TARIKH_TERIMA" class="java.lang.String"/>
+	<field name="BULAN_SLPS" class="java.lang.String"/>
+	<field name="TARIKH_BAYAR" class="java.lang.String"/>
+	<field name="BAYAR_PAMPASAN" class="java.lang.String"/>
+	<field name="JUM_HARI" class="java.lang.String"/>
+	<field name="JUM_AMAUN" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="68"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="56"
+						y="34"
+						width="670"
+						height="13"
+						key="textField-1"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Bold" size="12" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BAYARAN CAJ DENDA LEWAT 8% SETAHUN UNTUK "+$F{TUJUAN}+"\nMUKIM "+($F{NAMA_MUKIM}!=null?$F{NAMA_MUKIM}:"-")+" DAERAH "+($F{NAMA_DAERAH}!=null?$F{NAMA_DAERAH}:"-")+" LOT : "+($F{NO_LOT}!=null?$F{NO_LOT}:"-")+" HAKMILIK : "+($F{NO_HAKMILIK}!=null?$F{NO_HAKMILIK}:"-")]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="83"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="10"
+						y="13"
+						width="25"
+						height="70"
+						key="rectangle-1"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="35"
+						y="13"
+						width="161"
+						height="70"
+						key="rectangle-2"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="196"
+						y="13"
+						width="64"
+						height="70"
+						key="rectangle-3"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="260"
+						y="13"
+						width="75"
+						height="70"
+						key="rectangle-4"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="335"
+						y="13"
+						width="75"
+						height="70"
+						key="rectangle-5"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="410"
+						y="13"
+						width="64"
+						height="70"
+						key="rectangle-6"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="474"
+						y="13"
+						width="64"
+						height="70"
+						key="rectangle-7"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="538"
+						y="13"
+						width="236"
+						height="70"
+						key="rectangle-8"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="13"
+						y="25"
+						width="20"
+						height="42"
+						key="textField-2"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="41"
+						y="25"
+						width="148"
+						height="42"
+						key="textField-3"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Orang Berkepentingan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="203"
+						y="25"
+						width="51"
+						height="42"
+						key="textField-4"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh\nBorang H"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="25"
+						width="65"
+						height="42"
+						key="textField-5"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh\nPenerimaan\nBorang H"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="340"
+						y="17"
+						width="65"
+						height="60"
+						key="textField-6"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kiraan Faedah\n(3 Bulan slps\npenerimaan\nBorang H)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="417"
+						y="25"
+						width="51"
+						height="42"
+						key="textField-7"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh"
++"\n"
++"Bayaran"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="476"
+						y="25"
+						width="58"
+						height="42"
+						key="textField-8"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Amaun"
++"\n" 
++"Pampasan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="546"
+						y="16"
+						width="221"
+						height="61"
+						key="textField-9"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bayaran Faedah"]]></textFieldExpression>
+				</textField>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="61"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="10"
+						y="0"
+						width="25"
+						height="61"
+						key="rectangle-12"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="35"
+						y="0"
+						width="161"
+						height="61"
+						key="rectangle-13"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="196"
+						y="0"
+						width="64"
+						height="61"
+						key="rectangle-14"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="260"
+						y="0"
+						width="75"
+						height="61"
+						key="rectangle-15"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="335"
+						y="0"
+						width="75"
+						height="61"
+						key="rectangle-16"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="410"
+						y="0"
+						width="64"
+						height="61"
+						key="rectangle-17"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="474"
+						y="0"
+						width="64"
+						height="61"
+						key="rectangle-18"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="538"
+						y="0"
+						width="236"
+						height="61"
+						key="rectangle-19"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="41"
+						y="4"
+						width="148"
+						height="53"
+						key="textField-12"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Roman"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PB}!=null?$F{NAMA_PB}:"")
++($F{NO_PB}!=null ? "\n"+$F{KETERANGAN}+" : "+$F{NO_PB}+"\n":"")
++($F{NO_AKAUN} != null ? "A/k : "+$F{NO_AKAUN}+"\n":"")
++($F{NAMA_BANK} != null ? $F{NAMA_BANK}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="203"
+						y="4"
+						width="51"
+						height="53"
+						key="textField-13"
+						stretchType="RelativeToTallestObject"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Roman"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BORANGH}!=null?$F{TARIKH_BORANGH}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="4"
+						width="65"
+						height="53"
+						key="textField-14"
+						stretchType="RelativeToTallestObject"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Roman"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_TERIMA}!=null?$F{TARIKH_TERIMA}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="340"
+						y="4"
+						width="65"
+						height="53"
+						key="textField-15"
+						stretchType="RelativeToTallestObject"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Roman"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{BULAN_SLPS}!=null?$F{BULAN_SLPS}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="417"
+						y="4"
+						width="51"
+						height="53"
+						key="textField-16"
+						stretchType="RelativeToTallestObject"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Roman"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BAYAR}!=null?$F{TARIKH_BAYAR}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="476"
+						y="4"
+						width="61"
+						height="53"
+						key="textField-17"
+						stretchType="RelativeToTallestObject"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Roman"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{BAYAR_PAMPASAN}!=null?"RM "+$F{BAYAR_PAMPASAN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="546"
+						y="4"
+						width="221"
+						height="53"
+						key="textField-18"
+						stretchType="RelativeToTallestObject"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Roman"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{JUM_HARI}+" hari x RM"+$F{BAYAR_PAMPASAN}+" x 8% / 365\n\n= RM"+($F{JUM_AMAUN}!=null?$F{JUM_AMAUN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="13"
+						y="4"
+						width="20"
+						height="53"
+						key="textField"
+						stretchType="RelativeToTallestObject"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Times-Roman"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{COLUMN_COUNT}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

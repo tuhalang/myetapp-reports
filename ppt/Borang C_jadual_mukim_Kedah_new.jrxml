@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Borang C_jadual_mukim_Kedah_new"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="535"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="id_mukim" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_Fail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_hakmilik" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT ROWNUM AS TURUTAN,ID_MUKIM,
+--NAMA_MUKIM,
+(regexp_replace(INITCAP(REGEXP_REPLACE(UPPER(NAMA_MUKIM), 
+'(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', ' (\2)')),
+'\([[:alnum:]]+\)',upper(regexp_substr(INITCAP(REGEXP_REPLACE(UPPER(NAMA_MUKIM),
+'(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', ' (\2)')),'\((.*?)\)',1,1,null,1))))
+as NAMA_MUKIM,
+ID_HAKMILIK,NO_LOT,NO_PT,NO_HAKMILIK,KOD_JENIS_HAKMILIK,LUAS_AMBIL,UNIT_AMBIL,LUAS_AMBIL_H,LUAS_LOT_H,LUAS_LOT,UNIT_LOT,JUMLAH,KATEGORI_TANAH
+FROM (
+SELECT to_char(M.ID_MUKIM) as id_mukim, INITCAP(REPLACE(M.NAMA_MUKIM,'-','- ')) AS NAMA_MUKIM, TO_CHAR(H.ID_HAKMILIK) AS ID_HAKMILIK,
+CASE  
+    WHEN H.NO_LOT IS NOT NULL AND H.NO_PT IS NULL THEN H.NO_LOT  
+    WHEN H.NO_LOT IS NULL AND H.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || H.NO_PT   
+    WHEN H.NO_LOT IS NOT NULL AND H.NO_PT IS NOT NULL THEN JL.KETERANGAN  || H.NO_PT || CHR(32) || CHR(40) || H.NO_LOT  || CHR(41) 
+    ELSE  ''  
+END AS NO_LOT,H.NO_PT,H.NO_HAKMILIK,
+HM.KOD_JENIS_HAKMILIK, 
+TO_CHAR(ROUND(H.LUAS_AMBIL,4),'99990.9999') AS LUAS_AMBIL,
+    case
+    when h.ID_UNITLUASAMBIL_CONVERT = 1 then 'hektar'
+    when h.ID_UNITLUASAMBIL_CONVERT = 2 then 'meter persegi'
+    end as unit_AMBIL,
+REPLACE(TO_CHAR(case
+    when h.ID_UNITLUASAMBIL_CONVERT = 1 then TO_CHAR(ROUND(H.LUAS_AMBIL,4),'99990.9999')
+    when h.ID_UNITLUASAMBIL_CONVERT = 2 then TO_CHAR(ROUND((H.LUAS_AMBIL/10000),4),'99990.9999')
+    end),' ') as LUAS_AMBIL_H,
+REPLACE(TO_CHAR(case
+    when h.ID_UNITLUASLOT_CONVERT = 1 then TO_CHAR(ROUND(H.LUAS_LOT,4),'99990.9999')
+    when h.ID_UNITLUASLOT_CONVERT = 2 then TO_CHAR(ROUND((H.LUAS_LOT/10000),4),'99990.9999')
+    end),' ') as LUAS_LOT_H,
+TO_CHAR(ROUND(H.LUAS_LOT,4),'99990.9999') AS LUAS_LOT,
+    case
+    when h.ID_UNITLUASLOT_CONVERT = 1 then 'hektar'
+    when h.ID_UNITLUASLOT_CONVERT = 2 then 'meter persegi'
+    end as unit_LOT,'' AS JUMLAH, INITCAP(KT.KETERANGAN) AS KATEGORI_TANAH
+FROM TBLPPTPERMOHONAN P,TBLPFDFAIL F,
+TBLPPTHAKMILIK H,TBLRUJMUKIM M , TBLRUJJENISHAKMILIK HM, TBLRUJLOT JL, TBLRUJKATEGORI KT
+WHERE P.ID_FAIL= F.ID_FAIL
+AND P.ID_PERMOHONAN = H.ID_PERMOHONAN
+AND H.ID_MUKIM = M.ID_MUKIM
+AND KT.ID_KATEGORI(+) = H.ID_KATEGORITANAH
+AND H.ID_JENISHAKMILIK = HM.ID_JENISHAKMILIK(+)
+AND H.ID_LOT = JL.ID_LOT(+)
+AND F.ID_FAIL = $P!{id_Fail}
+AND M.ID_MUKIM = $P!{id_mukim}
+ORDER BY LPAD(H.no_lot,20) asc, LPAD(H.no_pt,20) asc, LPAD(NO_LOT,20) asc, LPAD(H.no_subjaket,20) asc
+)]]></queryString>
+
+	<field name="TURUTAN" class="java.math.BigDecimal"/>
+	<field name="ID_MUKIM" class="java.lang.String"/>
+	<field name="NAMA_MUKIM" class="java.lang.String"/>
+	<field name="ID_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="NO_PT" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
+	<field name="LUAS_AMBIL" class="java.lang.String"/>
+	<field name="UNIT_AMBIL" class="java.lang.String"/>
+	<field name="LUAS_AMBIL_H" class="java.lang.String"/>
+	<field name="LUAS_LOT_H" class="java.lang.String"/>
+	<field name="LUAS_LOT" class="java.lang.String"/>
+	<field name="UNIT_LOT" class="java.lang.String"/>
+	<field name="JUMLAH" class="java.lang.String"/>
+	<field name="KATEGORI_TANAH" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="25"  isSplitAllowed="true" >
+				<subreport  isUsingCache="true">
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="4"
+						width="513"
+						height="21"
+						key="subreport-5"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TURUTAN}.intValue()==1)]]></printWhenExpression>
+						</reportElement>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_mukim">
+						<subreportParameterExpression><![CDATA[$F{ID_MUKIM}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_Fail">
+						<subreportParameterExpression><![CDATA[$P{id_Fail}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_hakmilik">
+						<subreportParameterExpression><![CDATA[$F{ID_HAKMILIK}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir}+"//ppt//Borang C_jadual_mukim_Kedah_Mukim_new.jasper"]]></subreportExpression>
+				</subreport>
+				<subreport  isUsingCache="true">
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="4"
+						width="513"
+						height="21"
+						key="subreport-6"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TURUTAN}.intValue()!=1)]]></printWhenExpression>
+						</reportElement>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_mukim">
+						<subreportParameterExpression><![CDATA[$F{ID_MUKIM}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_Fail">
+						<subreportParameterExpression><![CDATA[$P{id_Fail}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_hakmilik">
+						<subreportParameterExpression><![CDATA[$F{ID_HAKMILIK}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir}+"//ppt//Borang C_jadual_mukim_Kedah_TiadaMukim_new.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Surat_iringan_ARB"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="451"
+		 columnSpacing="0"
+		 leftMargin="72"
+		 rightMargin="72"
+		 topMargin="95"
+		 bottomMargin="72"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="id_jawatan" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="no_fail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="namaPegawai" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_pejabat" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_siasatan" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT H.ID_SIASATAN, 
+REPLACE(INITCAP(NVL(E.NAMA_PB,'')),'&','&#38;') AS NAMA_PB,
+REPLACE(INITCAP(NVL(B.TUJUAN,'')),'&','&#38;') AS NAMA_PROJEK,
+ TO_CHAR(C.ID_HAKMILIK) AS ID_HAKMILIK,
+CASE  
+    WHEN C.NO_LOT IS NOT NULL AND C.NO_PT IS NULL THEN C.NO_LOT  
+    WHEN C.NO_LOT IS NULL AND C.NO_PT IS NOT NULL THEN  I.KETERANGAN  || CHR(32) || C.NO_PT   
+    WHEN C.NO_LOT IS NOT NULL AND C.NO_PT IS NOT NULL THEN I.KETERANGAN  || C.NO_PT || CHR(32) || CHR(40) || C.NO_LOT  || CHR(41) 
+    ELSE  ''  
+END AS NO_LOT,
+TO_CHAR(F.SYER_ATAS)AS SYER_ATAS, TO_CHAR(F.SYER_BAWAH)AS SYER_BAWAH,
+TO_CHAR (SYSDATE, 'DD') AS HARI_SYSDATE,
+CASE
+    WHEN TO_CHAR (SYSDATE,'MM') = '01' THEN 'Januari'
+    WHEN TO_CHAR (SYSDATE,'MM') = '02' THEN 'Februari'
+    WHEN TO_CHAR (SYSDATE,'MM') = '03' THEN 'Mac'
+    WHEN TO_CHAR (SYSDATE,'MM') = '04' THEN 'April'
+    WHEN TO_CHAR (SYSDATE,'MM') = '05' THEN 'Mei'
+    WHEN TO_CHAR (SYSDATE,'MM') = '06' THEN 'Jun'
+    WHEN TO_CHAR (SYSDATE,'MM') = '07' THEN 'Julai'
+    WHEN TO_CHAR (SYSDATE,'MM') = '08' THEN 'Ogos'
+    WHEN TO_CHAR (SYSDATE,'MM') = '09' THEN 'September'
+    WHEN TO_CHAR (SYSDATE,'MM') = '10' THEN 'Oktober'
+    WHEN TO_CHAR (SYSDATE,'MM') = '11' THEN 'November'
+    WHEN TO_CHAR (SYSDATE,'MM') = '12' THEN 'Disember'
+END AS BULAN_SYSDATE, TO_CHAR (SYSDATE, 'YYYY') AS TAHUN_SYSDATE,
+REPLACE(TO_CHAR(TO_CHAR(ROUND(C.LUAS_AMBIL,4)),'999,990.9999'),' ') AS LUAS_AMBIL,
+CASE
+    WHEN C.ID_UNITLUASAMBIL_CONVERT = 1 THEN 'hektar'
+    WHEN C.ID_UNITLUASAMBIL_CONVERT = 2 THEN 'meter persegi'
+END AS UNIT_LOT, INITCAP(REPLACE(NVL(J.NAMA_MUKIM,''),'&','&#38;')) AS NAMA_MUKIM_PROJEK, INITCAP(REPLACE(NVL(K.NAMA_DAERAH,''),'&','&#38;')) AS NAMA_DAERAH_PROJEK, 
+INITCAP(REPLACE(NVL(L.NAMA_NEGERI,''),'&','&#38;')) AS NAMA_NEGERI_PROJEK,
+CASE
+    WHEN '$P!{id_jawatan}' = 1 THEN 'Pengarah'
+    WHEN '$P!{id_jawatan}' = 4 THEN 'Pengarah'
+    ELSE 'b.p. Pengarah'
+END AS TITLE, REPLACE(NVL(M.NAMA_PEJABAT,''),'&','&#38;') AS NAMA_PEJABAT_ARB, REPLACE(NVL(M.ALAMAT1,''),'&','&#38;') AS ALAMAT1_ARB,
+REPLACE(NVL(M.ALAMAT2,''),'&','&#38;') AS ALAMAT2_ARB, REPLACE(NVL(M.ALAMAT3,''),'&','&#38;') AS ALAMAT3_ARB,
+M.POSKOD, INITCAP(N.NAMA_NEGERI) AS NAMA_NEGERI_ARB, INITCAP(REPLACE(NVL(O.NAMA_DAERAH,''),'&','&#38;')) AS DAERAH_ARB
+FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTHAKMILIK C, TBLPPTHAKMILIKPB D, TBLPPTPIHAKBERKEPENTINGAN E, TBLPPTBAHAGIANPB F,
+TBLPPTSIASATAN G, TBLPPTAWARD H, TBLRUJLOT I, TBLRUJMUKIM J, TBLRUJDAERAH K, TBLRUJNEGERI L, TBLRUJPEJABAT M, TBLRUJNEGERI N, TBLRUJDAERAH O
+WHERE A.ID_FAIL = B.ID_FAIL
+AND C.ID_PERMOHONAN = B.ID_PERMOHONAN
+AND D.ID_HAKMILIK = C.ID_HAKMILIK
+AND D.ID_PIHAKBERKEPENTINGAN = E.ID_PIHAKBERKEPENTINGAN
+AND D.ID_BAHAGIANPB = F.ID_BAHAGIANPB(+)
+AND G.ID_HAKMILIK = C.ID_HAKMILIK
+AND G.ID_SIASATAN = (SELECT MAX(G1.ID_SIASATAN) FROM TBLPPTSIASATAN G1 WHERE C.ID_HAKMILIK = G1.ID_HAKMILIK)
+AND D.ID_HAKMILIKPB = H.ID_HAKMILIKPB
+AND H.ID_SIASATAN = G.ID_SIASATAN
+AND C.ID_LOT = I.ID_LOT(+)
+AND C.ID_MUKIM = J.ID_MUKIM(+)
+AND B.ID_DAERAH = K.ID_DAERAH(+)
+AND A.ID_NEGERI = L.ID_NEGERI(+)
+AND M.ID_NEGERI = A.ID_NEGERI
+AND M.ID_NEGERI = N.ID_NEGERI(+)
+AND M.ID_JENISPEJABAT = '9'
+AND H.STATUS_PENERIMA = '3'
+AND M.ID_DAERAH = O.ID_DAERAH(+)
+AND M.ID_PEJABAT = '$P!{id_pejabat}'
+AND G.ID_SIASATAN = $P!{id_siasatan}]]></queryString>
+
+	<field name="ID_SIASATAN" class="java.math.BigDecimal"/>
+	<field name="NAMA_PB" class="java.lang.String"/>
+	<field name="NAMA_PROJEK" class="java.lang.String"/>
+	<field name="ID_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="SYER_ATAS" class="java.lang.String"/>
+	<field name="SYER_BAWAH" class="java.lang.String"/>
+	<field name="HARI_SYSDATE" class="java.lang.String"/>
+	<field name="BULAN_SYSDATE" class="java.lang.String"/>
+	<field name="TAHUN_SYSDATE" class="java.lang.String"/>
+	<field name="LUAS_AMBIL" class="java.lang.String"/>
+	<field name="UNIT_LOT" class="java.lang.String"/>
+	<field name="NAMA_MUKIM_PROJEK" class="java.lang.String"/>
+	<field name="NAMA_DAERAH_PROJEK" class="java.lang.String"/>
+	<field name="NAMA_NEGERI_PROJEK" class="java.lang.String"/>
+	<field name="TITLE" class="java.lang.String"/>
+	<field name="NAMA_PEJABAT_ARB" class="java.lang.String"/>
+	<field name="ALAMAT1_ARB" class="java.lang.String"/>
+	<field name="ALAMAT2_ARB" class="java.lang.String"/>
+	<field name="ALAMAT3_ARB" class="java.lang.String"/>
+	<field name="POSKOD" class="java.lang.String"/>
+	<field name="NAMA_NEGERI_ARB" class="java.lang.String"/>
+	<field name="DAERAH_ARB" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="91"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="283"
+						y="0"
+						width="168"
+						height="15"
+						key="textField-13"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Bottom">
+						<font fontName="Bookman Old Style" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{no_fail} != null && $P{no_fail} != "" ? $P{no_fail}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="46"
+						width="451"
+						height="15"
+						key="textField-1"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Pengurus Cawangan,"
++"\n"+($F{NAMA_PEJABAT_ARB}!=null ? $F{NAMA_PEJABAT_ARB}+",\n":"")
++($F{ALAMAT1_ARB}!=null ? $F{ALAMAT1_ARB}+",\n":"")
++($F{ALAMAT2_ARB}!=null ? $F{ALAMAT2_ARB}+",\n":"")
++($F{ALAMAT3_ARB}!=null ? $F{ALAMAT3_ARB}+",\n":"")
++"<style isUnderline='true' pdfFontName='Helvetica'>"+($F{POSKOD}!=null ? $F{POSKOD}+" ":"")+($F{DAERAH_ARB}!=null ? $F{DAERAH_ARB}+".":"")+"</style>"
++"\n\n"
++"Tuan,"
++"\n\n"
++"Harta Pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>( "+($F{NO_LOT}!=null ? $F{NO_LOT}:"")+" "+($F{NAMA_PB}!=null ? $F{NAMA_PB}:"")+" – "+($F{SYER_ATAS}!=null?$F{SYER_ATAS}+"/"+($F{SYER_BAWAH} != null ? $F{SYER_BAWAH}+" BHG":""):"")+" – MENINGGAL)</style> "
++"\nSimati – Wang Pampasan Pengambilan Tanah Untuk "+($F{NAMA_PROJEK}!=null ? $F{NAMA_PROJEK}:"")/*+" Seluas "+($F{LUAS_AMBIL}!=null ? $F{LUAS_AMBIL}+" "+($F{UNIT_LOT}!=null ? $F{UNIT_LOT}:""):"")+", "+($F{NAMA_MUKIM_PROJEK}!=null ? $F{NAMA_MUKIM_PROJEK}+",":"")+" "+($F{NAMA_DAERAH_PROJEK}!=null ?"Daerah "+$F{NAMA_DAERAH_PROJEK}+",":"")+" "+($F{NAMA_NEGERI_PROJEK}!=null ? $F{NAMA_NEGERI_PROJEK}:"")+". "*/
++"\n===================================================================="
++"\n\n"
++"Perkara di atas adalah dirujuk untuk tindakan tuan selanjutnya, bersama-sama ini disertakan sesalinan Borang H  untuk tindakan selanjutnya." 
++"\n\n"
++"2.\tJabatan ini berharap pihak tuan mentadbir harta pusaka simati di atas agar bayaran ini dapat disampaikan kepada waris-waris yang sah di sisi undang-undang.  Mengikut maklumat yang diperolehi simati ada meninggalkan waris seperti yang dicatatkan di bawah."
++"\n\n"
++"3.\tSila akui penerimaannya."
++"\n\n"
++"<style isBold='true' pdfFontName='Helvetica-Bold'>' BERKHIDMAT UNTUK NEGARA '</style>"
++"\n\n"
++"Saya yang menjalankan amanah,"
++"\n\n\n\n"
+
++"<style isBold='true' pdfFontName='Helvetica-Bold'>"+($P{namaPegawai} != "" && $P{namaPegawai} != null ? "("+$P{namaPegawai}+")":"")+"</style>"
++"\n"+($F{TITLE}!=null ? $F{TITLE}:"")+","
++"\nJab. Ketua Pengarah Tanah dan Galian"
++"\n"+($F{NAMA_NEGERI_PROJEK}!=null ? "Negeri "+$F{NAMA_NEGERI_PROJEK}:"")+"."                                                                                                          
++"\n\n"
++"<style isBold='true' pdfFontName='Helvetica-Bold'>s.k.:</style>"
++"\n\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="213"
+						y="0"
+						width="57"
+						height="15"
+						key="textField-8"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Bottom" lineSpacing="Single">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Ruj. Kami "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="213"
+						y="18"
+						width="57"
+						height="15"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Top" lineSpacing="Single">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="270"
+						y="0"
+						width="13"
+						height="15"
+						key="textField-10"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Bottom" lineSpacing="Single">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="270"
+						y="18"
+						width="13"
+						height="15"
+						key="textField-11"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" lineSpacing="Single">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="283"
+						y="18"
+						width="168"
+						height="15"
+						key="textField-14"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{HARI_SYSDATE} != null ? $F{HARI_SYSDATE}:"")+" "+($F{BULAN_SYSDATE} != null ? $F{BULAN_SYSDATE}:"")+" "+($F{TAHUN_SYSDATE} != null ? $F{TAHUN_SYSDATE}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="222"
+						y="15"
+						width="229"
+						height="3"
+						key="textField-15"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<break>
+					<reportElement
+						x="0"
+						y="89"
+						width="451"
+						height="0"
+						key="element-1"
+						positionType="Float"/>
+				</break>
+				<subreport  isUsingCache="true">
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="61"
+						width="451"
+						height="15"
+						key="subreport-1"
+						positionType="Float"/>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_hakmilik">
+						<subreportParameterExpression><![CDATA[$F{ID_HAKMILIK}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir} + "//ppt//Surat_iringan_ARB_subreport.jasper"]]></subreportExpression>
+				</subreport>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="76"
+						width="451"
+						height="15"
+						key="textField-16"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"
++"(Sila berhubung segera dengan Pengurus Cawangan, Amanah Raya Berhad seperti alamat tersebut  diatas jika harta pusaka simati belum ditadbirkan)."]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</summary>
+</jasperReport>

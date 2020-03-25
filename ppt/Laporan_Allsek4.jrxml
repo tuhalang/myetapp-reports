@@ -1,0 +1,3547 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Laporan_Allsek4"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="1417"
+		 pageHeight="595"
+		 columnWidth="1357"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="0"
+		 bottomMargin="28"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="bulantahun" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ID_DAERAH" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[" "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="bulantahunSE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="type" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="projek" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[" "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="ID_NEGERI" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[" "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="NAMA_PEJABAT" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="BULAN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="BULANSE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TAHUN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TAHUNSE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TYPEINT" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="HARI_SYSDATE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="BULAN_SYSDATE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TAHUN_SYSDATE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ID_PEJABAT" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="no_fail" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[" "]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[/* FORMATTEDh ON 2017/07/18 15:19 (FORMATTER PLUS V4.8.8) */
+SELECT 
+DISTINCT 
+TO_CHAR(1) AS TYPE, 
+TO_CHAR (F.ID_FAIL) AS ID_FAIL,
+                NULL AS ID_HAKMILIK, NULL AS NO_SUBJAKET,
+                UPPER (TO_CHAR (K.NAMA_KEMENTERIAN)) AS NAMA_KEMENTERIAN,
+                TO_CHAR (PP.ID_PERMOHONAN) AS ID_PERMOHONAN,
+                UPPER (PP.TUJUAN) AS TUJUAN, UPPER (F.NO_FAIL) AS NO_FAIL,
+                TO_CHAR (PP.TARIKH_PERMOHONAN,
+                         'DD/MM/YYYY'
+                        ) AS TARIKH_PERMOHONAN,
+                TO_CHAR (PP.TARIKH_PERMOHONAN,
+                         'DD.MM.YYYY'
+                        ) AS TARIKH_PERMOHONAN_DIS,
+                UPPER (D.NAMA_DAERAH) AS NAMA_DAERAH,
+                CASE
+                   WHEN PP.FLAG_JENIS_PROJEK = '1'
+                      THEN 'PENGAMBILAN JAJARAN'
+                   WHEN PP.FLAG_JENIS_PROJEK = '2'
+                      THEN 'PENGAMBILAN TAPAK'
+                   ELSE ''
+                END AS JENIS_PENGAMBILAN, HAKMILIK_LUAS.HAKMILIK_LUAS AS HAKMILIK_LUAS,
+               LUAS_SELURUH_RIZAB.LUAS_SELURUH_RIZAB,
+                NVL (COUNT (DISTINCT HM.ID_HAKMILIK), 0) AS JUM_LOT,
+                NVL
+                   (COUNT
+                       (DISTINCT CASE
+                           WHEN HBK.ID_HAKMILIKBORANGK IS NOT NULL
+                           AND NVL (HM.FLAG_PEMBATALAN, ' ') != 'Y'
+                           AND NVL (HM.FLAG_PEMBATALAN_KESELURUHAN, ' ') !=
+                                                                           'Y'
+                           AND NVL (HM.FLAG_PENARIKAN_BALIK, ' ') != 'Y'
+                           AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN, ' ') != 'Y'
+                              THEN HM.ID_HAKMILIK
+                        END
+                       ),
+                    0
+                   ) AS JUM_LOT_BORANGK,
+               JUM_PAMPASAN.JUM_PAMPASAN,
+                NVL
+                   (REPLACE
+                       (TO_CHAR
+                           (SUM
+                               (CASE
+                                   WHEN NVL (HM.FLAG_PEMBATALAN, ' ') != 'Y'
+                                   AND NVL (HM.FLAG_PEMBATALAN_KESELURUHAN,
+                                            ' '
+                                           ) != 'Y'
+                                   AND NVL (HM.FLAG_PENARIKAN_BALIK, ' ') !=
+                                                                           'Y'
+                                   AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN,
+                                            ' ') != 'Y'
+                                      THEN CASE
+                                             WHEN HMP.ID_HAKMILIKPB IS NOT NULL
+                                             AND HMP.ID_JENISPB NOT IN
+                                                             (27, 40, 41, 42)
+                                                THEN AW.DENDA_LEWAT
+                                             ELSE 0
+                                          END
+                                END
+                               ),
+                            '999,999,990.99'
+                           ),
+                        ' '
+                       ),
+                    0
+                   ) AS JUM_PAMPASAN_LEWAT,
+                NVL
+                   (COUNT
+                       (DISTINCT CASE
+                           WHEN HMP_PM.ID_HAKMILIKPB IS NOT NULL
+                           AND HMP_PM.ID_JENISPB IN (1)
+                              THEN HMP_PM.ID_HAKMILIKPB
+                        END
+                       ),
+                    0
+                   ) AS JUM_PEMILIK,
+                MAX (TO_CHAR (MMK.TARIKH_MMK, 'DD.MM.YYYY')) AS TARIKH_MMK,
+                MAX (TO_CHAR (MMK.TARIKH_HANTAR, 'DD.MM.YYYY')
+                    ) AS TARIKH_HANTAR,
+                MAX (TO_CHAR (WARTA.TARIKH_WARTA, 'DD.MM.YYYY')
+                    ) AS TARIKH_WARTA,
+                MAX (TO_CHAR (MMK_K.TARIKH_TERIMA, 'DD.MM.YYYY')
+                    ) AS TARIKH_MMK_KEPUTUSAN,
+                NULL AS TEMPOH_BH_BULAN,
+                TO_CHAR
+                   (ROUND (MONTHS_BETWEEN (MAX (BH.TARIKH_BORANGH),
+                                           PP.TARIKH_PERMOHONAN
+                                          )
+                          )
+                   ) AS TEMPOH_BH_BULAN_INDIVIDU,
+                (CASE
+                    WHEN NVL
+                           (COUNT
+                               (DISTINCT CASE
+                                   WHEN NVL (HM.FLAG_PEMBATALAN, ' ') != 'Y'
+                                   AND NVL (HM.FLAG_PEMBATALAN_KESELURUHAN,
+                                            ' '
+                                           ) != 'Y'
+                                   AND NVL (HM.FLAG_PENARIKAN_BALIK, ' ') !=
+                                                                           'Y'
+                                   AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN,
+                                            ' ') != 'Y'
+                                      THEN HM.ID_HAKMILIK
+                                END
+                               ),
+                            0
+                           ) =
+                           NVL
+                              (COUNT
+                                  (DISTINCT CASE
+                                      WHEN HBK.ID_HAKMILIKBORANGK IS NOT NULL
+                                      AND NVL (HM.FLAG_PEMBATALAN, ' ') != 'Y'
+                                      AND NVL (HM.FLAG_PEMBATALAN_KESELURUHAN,
+                                               ' '
+                                              ) != 'Y'
+                                      AND NVL (HM.FLAG_PENARIKAN_BALIK, ' ') !=
+                                                                           'Y'
+                                      AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN,
+                                               ' '
+                                              ) != 'Y'
+                                         THEN HM.ID_HAKMILIK
+                                   END
+                                  ),
+                               0
+                              )
+                    AND NVL
+                           (COUNT
+                               (DISTINCT CASE
+                                   WHEN NVL (HM.FLAG_PEMBATALAN, ' ') != 'Y'
+                                   AND NVL (HM.FLAG_PEMBATALAN_KESELURUHAN,
+                                            ' '
+                                           ) != 'Y'
+                                   AND NVL (HM.FLAG_PENARIKAN_BALIK, ' ') !=
+                                                                           'Y'
+                                   AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN,
+                                            ' ') != 'Y'
+                                      THEN HM.ID_HAKMILIK
+                                END
+                               ),
+                            0
+                           ) > 0
+                       THEN 'SELESAI'
+                    ELSE CASE
+                    WHEN NVL
+                           (COUNT
+                               (DISTINCT CASE
+                                   WHEN NVL (HM.FLAG_PEMBATALAN, ' ') = 'Y'
+                                    OR NVL (HM.FLAG_PEMBATALAN_KESELURUHAN,
+                                            ' '
+                                           ) = 'Y'
+                                    OR NVL (HM.FLAG_PENARIKAN_BALIK, ' ') =
+                                                                           'Y'
+                                    OR NVL (HM.FLAG_PENARIKAN_KESELURUHAN,
+                                            ' ') = 'Y'
+                                      THEN HM.ID_HAKMILIK
+                                END
+                               ),
+                            0
+                           ) = NVL (COUNT (DISTINCT HM.ID_HAKMILIK), 0)
+                    AND NVL (COUNT (DISTINCT HM.ID_HAKMILIK), 0) > 0
+                       THEN 'BATAL/TARIK BALIK KESELURUHAN'
+                    ELSE ''
+                 END
+                 END
+                ) AS STATUS_PERMOHONAN,
+                NULL AS STATUS_LOT,
+                MAX (TO_CHAR (BI.TARIKH_BORANGI, 'DD.MM.YYYY')
+                    ) AS TARIKH_BORANGI,
+                S.KETERANGAN AS STATUS,
+                NULL AS TARIKH_SIASATAN, NULL AS NO_LOTPT, NULL AS NAMA_MUKIM,
+                NULL AS TEMPOH_SIASATAN_BULAN, NULL AS NO_HAKMILIK,
+                NULL AS TARIKH_BORANGK, NULL AS TARIKH_BORANGE,
+                NULL AS TARIKH_BORANGG, NULL AS TARIKH_BORANGH,
+                NULL AS TARIKH_BORANGH_INDIVIDU, NULL AS TARIKH_BAYARAN,
+                NULL AS STATUS_AMBIL, NULL AS CATATAN_HM, NULL AS KOD_MUKIM
+            
+     
+           FROM TBLPPTPERMOHONAN PP,
+                TBLRUJSTATUS S,
+                TBLPFDFAIL F,
+                TBLRUJNEGERI NEG,
+                TBLRUJDAERAH D,
+                TBLRUJKEMENTERIAN K,
+                TBLPPTHAKMILIK HM,
+                TBLPPTHAKMILIKPB HMP,
+                TBLPPTAWARD AW,
+                TBLPPTHAKMILIKPB HMP_PM,
+                TBLPPTMMK MMK,
+                TBLPPTWARTA WARTA,
+                TBLPPTMMKKEPUTUSAN MMK_K,
+                TBLPPTBORANGH BH,
+                TBLPPTHAKMILIKBORANGK HBK,
+                TBLPPTBORANGI BI, 
+(SELECT * FROM (SELECT ID_PERMOHONAN,
+NVL
+(REPLACE
+(TO_CHAR
+   (SUM
+       (CASE
+           WHEN NVL (HM1.FLAG_PEMBATALAN, ' ') != 'Y'
+           AND NVL (HM1.FLAG_PEMBATALAN_KESELURUHAN,
+                    ' '
+                   ) != 'Y'
+           AND NVL (HM1.FLAG_PENARIKAN_BALIK, ' ') !=
+                                                   'Y'
+           AND NVL (HM1.FLAG_PENARIKAN_KESELURUHAN,
+                    ' ') != 'Y'
+              THEN CASE
+                     WHEN HM1.ID_UNITLUASAMBIL_CONVERT =
+                                                   '1'
+                        THEN HM1.LUAS_AMBIL * 1
+                     ELSE HM1.LUAS_AMBIL / 10000
+                  END
+        END
+       ),
+    '999,990.9999'
+   ),
+' '
+),
+0
+) AS HAKMILIK_LUAS
+FROM TBLPPTHAKMILIK HM1
+GROUP BY HM1.ID_PERMOHONAN
+) ) HAKMILIK_LUAS,
+
+(SELECT * FROM (SELECT ID_PERMOHONAN,
+NVL
+(REPLACE
+(TO_CHAR
+   (SUM
+       (CASE
+           WHEN NVL (HM1.FLAG_PEMBATALAN, ' ') != 'Y'
+           AND NVL (HM1.FLAG_PEMBATALAN_KESELURUHAN,
+                    ' '
+                   ) != 'Y'
+           AND NVL (HM1.FLAG_PENARIKAN_BALIK, ' ') !=
+                                                   'Y'
+           AND NVL (HM1.FLAG_PENARIKAN_KESELURUHAN,
+                    ' ') != 'Y'
+              THEN CASE
+                     WHEN HM1.ID_UNITLUASAMBIL_CONVERT =  '1'
+                      AND HM1.FLAG_JENIS_RIZAB = '1'
+                      THEN HM1.LUAS_AMBIL * 1
+                     ELSE HM1.LUAS_AMBIL / 10000
+                  END
+        END
+       ),
+    '999,990.9999'
+   ),
+' '
+),
+0
+) AS LUAS_SELURUH_RIZAB
+FROM TBLPPTHAKMILIK HM1
+GROUP BY HM1.ID_PERMOHONAN
+) ) LUAS_SELURUH_RIZAB,
+
+
+(SELECT * FROM (SELECT ID_PERMOHONAN,
+NVL
+(REPLACE
+(TO_CHAR
+   (SUM
+       (CASE
+           WHEN NVL (HM1.FLAG_PEMBATALAN, ' ') != 'Y'
+           AND NVL (HM1.FLAG_PEMBATALAN_KESELURUHAN,
+                    ' '
+                   ) != 'Y'
+           AND NVL (HM1.FLAG_PENARIKAN_BALIK, ' ') !=
+                                                   'Y'
+           AND NVL (HM1.FLAG_PENARIKAN_KESELURUHAN,
+                    ' ') != 'Y'
+              THEN CASE
+                     WHEN HMP.ID_HAKMILIKPB IS NOT NULL
+                                             AND HMP.ID_JENISPB NOT IN
+                                                             (27, 40, 41, 42)
+                                                THEN AW.BAYAR_PAMPASAN
+                                             ELSE 0
+                  END
+        END
+       ),
+    '999,999,990.99'
+   ),
+' '
+),
+0
+) AS JUM_PAMPASAN
+FROM TBLPPTHAKMILIK HM1, TBLPPTHAKMILIKPB HMP, TBLPPTAWARD AW
+WHERE HM1.ID_HAKMILIK = HMP.ID_HAKMILIK(+) 
+AND HMP.ID_HAKMILIKPB = AW.ID_HAKMILIKPB(+)
+GROUP BY HM1.ID_PERMOHONAN
+) ) JUM_PAMPASAN
+
+
+
+
+          WHERE F.ID_FAIL = PP.ID_FAIL
+            AND F.ID_KEMENTERIAN = K.ID_KEMENTERIAN
+            AND PP.ID_STATUS(+) = S.ID_STATUS
+            AND F.ID_SUBURUSAN IN ('51')
+            AND F.NO_FAIL IS NOT NULL
+            AND TO_CHAR (PP.TARIKH_PERMOHONAN, 'YYYY') IS NOT NULL
+            AND PP.ID_PERMOHONAN = HM.ID_PERMOHONAN(+)
+            AND PP.ID_PERMOHONAN = BI.ID_PERMOHONAN(+)
+            AND PP.ID_DAERAH = D.ID_DAERAH
+            AND F.ID_NEGERI = NEG.ID_NEGERI
+            AND HMP.ID_HAKMILIKPB = AW.ID_HAKMILIKPB(+)
+            AND HM.ID_HAKMILIK = HMP.ID_HAKMILIK(+)
+            AND HM.ID_HAKMILIK = HMP_PM.ID_HAKMILIK(+)
+            AND PP.ID_PERMOHONAN = MMK.ID_PERMOHONAN(+)
+            AND PP.ID_PERMOHONAN = WARTA.ID_PERMOHONAN(+)
+            AND MMK.ID_MMK = MMK_K.ID_MMK(+)
+            AND HMP.ID_HAKMILIKPB = BH.ID_HAKMILIKPB(+)
+            AND HM.ID_HAKMILIK = HBK.ID_HAKMILIK(+)
+            AND HAKMILIK_LUAS.ID_PERMOHONAN = HM.ID_PERMOHONAN
+            AND LUAS_SELURUH_RIZAB.ID_PERMOHONAN = HM.ID_PERMOHONAN
+            AND JUM_PAMPASAN.ID_PERMOHONAN = HM.ID_PERMOHONAN
+          AND (('$P!{projek}' != ' ' AND UPPER(PP.TUJUAN) LIKE UPPER('%$P!{projek}%')) OR ('$P!{projek}' = ' '))
+    AND ((' $P!{no_fail}' != ' ' AND UPPER(F.NO_FAIL) LIKE UPPER('%$P!{no_fail}%')) OR (' $P!{no_fail}' = ' '))
+          AND (('$P!{ID_PEJABAT}' != ' ' AND F.ID_NEGERI = '$P!{ID_PEJABAT}') OR ('$P!{ID_PEJABAT}' = ' '))
+       AND (('$P!{ID_DAERAH}' != ' ' AND PP.ID_DAERAH = '$P!{ID_DAERAH}') OR ('$P!{ID_DAERAH}' = ' '))
+            AND ((CAST('$P!{type}' AS INT) = '1' AND PP.TARIKH_PERMOHONAN < ADD_MONTHS(TO_DATE($P!{bulantahun},'MM/YYYY'),1)) 
+              OR (CAST('$P!{type}' AS INT) = '2' AND PP.TARIKH_PERMOHONAN BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND ADD_MONTHS(TO_DATE($P!{bulantahunSE},'MM/YYYY'),1))
+             OR (CAST('$P!{type}' AS INT) = '3' AND TO_CHAR(PP.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY'))
+            )
+     GROUP BY F.ID_FAIL,
+                K.NAMA_KEMENTERIAN,
+                PP.ID_PERMOHONAN,
+                PP.TUJUAN,
+                F.NO_FAIL,
+                PP.TARIKH_PERMOHONAN,
+                D.NAMA_DAERAH,
+                PP.FLAG_JENIS_PROJEK, HAKMILIK_LUAS,LUAS_SELURUH_RIZAB.LUAS_SELURUH_RIZAB,JUM_PAMPASAN.JUM_PAMPASAN,
+                S.KETERANGAN
+                
+        
+     
+     UNION ALL
+     
+     
+SELECT DISTINCT TO_CHAR(2) AS TYPE, TO_CHAR (F.ID_FAIL) AS ID_FAIL,
+                TO_CHAR(HM.ID_HAKMILIK) AS ID_HAKMILIK,
+                TO_CHAR(COALESCE(TO_NUMBER(REGEXP_SUBSTR (REPLACE (REPLACE (HM.NO_SUBJAKET,'SJ-',''),' ',''),'^(-|+)?\d+(\.|,)?(\d+)?$')),0)) AS NO_SUBJAKET,
+                NULL AS NAMA_KEMENTERIAN, NULL AS ID_PERMOHONAN, NULL AS TUJUAN, NULL AS NO_FAIL,
+                 TO_CHAR (PP.TARIKH_PERMOHONAN,
+                         'DD/MM/YYYY'
+                        ) AS TARIKH_PERMOHONAN,NULL AS TARIKH_PERMOHONAN_DIS,
+                NULL AS NAMA_DAERAH,NULL AS JENIS_PENGAMBILAN,
+               
+                            NVL(REPLACE(TO_CHAR(CASE  WHEN NVL (HM.FLAG_PEMBATALAN, ' ') != 'Y' AND NVL (HM.FLAG_PEMBATALAN_KESELURUHAN, ' ') != 'Y'
+                               AND NVL (HM.FLAG_PENARIKAN_BALIK, ' ') != 'Y' AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN, ' ') != 'Y'
+                               THEN CASE WHEN HM.ID_UNITLUASAMBIL_CONVERT = '1' THEN HM.LUAS_AMBIL * 1
+                                         ELSE HM.LUAS_AMBIL / 10000
+                                      END
+                            END,'999,990.9999'),' '),0) AS HAKMILIK_LUAS, 
+
+                NVL(REPLACE(TO_CHAR(CASE WHEN NVL (HM.FLAG_PEMBATALAN, ' ') != 'Y' AND NVL (HM.FLAG_PEMBATALAN_KESELURUHAN, ' ') != 'Y'
+                               AND NVL (HM.FLAG_PENARIKAN_BALIK, ' ') != 'Y' AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN, ' ') != 'Y'
+                                  THEN CASE WHEN HM.ID_UNITLUASAMBIL_CONVERT = '1' AND HM.FLAG_JENIS_RIZAB = '1' THEN HM.LUAS_AMBIL * 1
+                                         ELSE HM.LUAS_AMBIL / 10000
+                                      END
+                            END,'999,990.9999'),' '),0) AS LUAS_SELURUH_RIZAB,
+                NULL AS JUM_LOT, NULL AS JUM_LOT_BORANGK,
+                JUM_PAMPASAN.JUM_PAMPASAN,
+                NVL(REPLACE(TO_CHAR(SUM(CASE WHEN NVL (HM.FLAG_PEMBATALAN, ' ') != 'Y' AND NVL (HM.FLAG_PEMBATALAN_KESELURUHAN,' ') != 'Y'
+                                   AND NVL (HM.FLAG_PENARIKAN_BALIK, ' ') != 'Y'
+                                   AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN,' ') != 'Y'
+                                      THEN CASE
+                                             WHEN HMP.ID_HAKMILIKPB IS NOT NULL
+                                             AND HMP.ID_JENISPB NOT IN (27, 40, 41, 42)
+                                                THEN AW.DENDA_LEWAT
+                                             ELSE 0 END
+                                END),'999,999,990.99'),' '),0) AS JUM_PAMPASAN_LEWAT,
+                NVL (COUNT (DISTINCT CASE WHEN HMP_PM.ID_HAKMILIKPB IS NOT NULL
+                           AND HMP_PM.ID_JENISPB IN (1) THEN HMP_PM.ID_HAKMILIKPB
+                        END),0) AS JUM_PEMILIK,
+                NULL AS TARIKH_MMK, NULL AS TARIKH_HANTAR,
+                NULL AS TARIKH_WARTA, NULL AS TARIKH_MMK_KEPUTUSAN,
+                TO_CHAR(ROUND (MONTHS_BETWEEN (MAX (BG.TARIKH_BORANGH),PP.TARIKH_PERMOHONAN))) AS TEMPOH_BH_BULAN,
+                NULL AS TEMPOH_BH_BULAN_INDIVIDU, NULL AS STATUS_PERMOHONAN,
+                (CASE
+                    WHEN HBK.ID_HAKMILIKBORANGK IS NOT NULL
+                    AND NVL (HM.FLAG_PEMBATALAN, ' ') != 'Y'
+                    AND NVL (HM.FLAG_PEMBATALAN_KESELURUHAN, ' ') != 'Y'
+                    AND NVL (HM.FLAG_PENARIKAN_BALIK, ' ') != 'Y'
+                    AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN, ' ') != 'Y'
+                       THEN 'SELESAI'
+                    ELSE CASE
+                    WHEN NVL (HM.FLAG_PEMBATALAN, ' ') = 'Y'
+                     OR NVL (HM.FLAG_PEMBATALAN_KESELURUHAN, ' ') = 'Y'
+                       THEN 'BATAL'
+                    WHEN NVL (HM.FLAG_PENARIKAN_BALIK, ' ') = 'Y'
+                    AND NVL (HM.FLAG_PENARIKAN_KESELURUHAN, ' ') = 'Y'
+                       THEN 'TARIK BALIK'
+                    ELSE '' END END) AS STATUS_LOT,
+                NULL AS TARIKH_BORANGI, NULL AS STATUS, 
+                TO_CHAR(MAX(TO_DATE(CASE WHEN SS.ID_PERMOHONAN IS NOT NULL
+                                  THEN SS.TARIKH_SIASATAN
+                               ELSE NULL END)),'DD.MM.YYYY') AS TARIKH_SIASATAN,
+                CASE WHEN HM.NO_LOT IS NOT NULL AND HM.NO_PT IS NULL THEN HM.NO_LOT
+                   WHEN HM.NO_LOT IS NULL AND HM.NO_PT IS NULL THEN LT.KETERANGAN || HM.NO_PT
+                   WHEN HM.NO_LOT IS NULL AND HM.NO_PT IS NOT NULL THEN LT.KETERANGAN || HM.NO_PT
+                   WHEN HM.NO_LOT IS NOT NULL AND HM.NO_PT IS NOT NULL THEN LT.KETERANGAN
+                           || HM.NO_PT
+                           || CHR (32)
+                           || CHR (40)
+                           || HM.NO_LOT
+                           || CHR (41)
+                   ELSE '' END AS NO_LOTPT,
+                UPPER (M.NAMA_MUKIM) AS NAMA_MUKIM,
+                TO_CHAR(ROUND (MONTHS_BETWEEN (NVL (HM.TARIKH_STOP_SIASATAN,SYSDATE),PP.TARIKH_PERMOHONAN))) AS TEMPOH_SIASATAN_BULAN,
+                (CASE WHEN HM.ID_JENISHAKMILIK IS NOT NULL AND HM.ID_JENISHAKMILIK NOT IN (0, 333)
+                          THEN UPPER (JHM.KOD_JENIS_HAKMILIK) ELSE '' END || HM.NO_HAKMILIK) AS NO_HAKMILIK,
+                TO_CHAR (MAX (BK.TARIKH_BORANGK),
+                         'DD.MM.YYYY'
+                        ) AS TARIKH_BORANGK,
+                TO_CHAR (MAX (BE.TARIKH_BORANGE),
+                         'DD.MM.YYYY'
+                        ) AS TARIKH_BORANGE,
+                TO_CHAR (MAX (BG.TARIKH_BORANGG),
+                         'DD.MM.YYYY'
+                        ) AS TARIKH_BORANGG,
+                TO_CHAR (MAX (BG.TARIKH_BORANGH),
+                         'DD.MM.YYYY'
+                        ) AS TARIKH_BORANGH,
+                TO_CHAR (MAX (BH.TARIKH_BORANGH),
+                         'DD.MM.YYYY'
+                        ) AS TARIKH_BORANGH_INDIVIDU,
+                TO_CHAR
+                   (MAX (CASE
+                            WHEN BAY.CARA_BAYAR = '1'
+                               THEN BAY.TARIKH_SERAH_CEK
+                            WHEN BAY.CARA_BAYAR = '2'
+                               THEN BAY.TARIKH_SURAT_EFT
+                            ELSE NULL
+                         END
+                        ),
+                    'DD.MM.YYYY'
+                   ) AS TARIKH_BAYARAN,
+                (CASE
+                    WHEN (NVL
+                             (CASE
+                                 WHEN HM.ID_UNITLUASAMBIL_CONVERT = '1'
+                                    THEN HM.LUAS_AMBIL * 1
+                                 ELSE HM.LUAS_AMBIL / 10000
+                              END,
+                              0
+                             ) <
+                             NVL
+                                (CASE
+                                    WHEN HM.ID_UNITLUASLOT_CONVERT = '1'
+                                       THEN HM.LUAS_LOT * 1
+                                    ELSE HM.LUAS_LOT / 10000
+                                 END,
+                                 0
+                                )
+                         )
+                    AND NVL
+                           (CASE
+                               WHEN HM.ID_UNITLUASAMBIL_CONVERT = '1'
+                                  THEN HM.LUAS_AMBIL * 1
+                               ELSE HM.LUAS_AMBIL / 10000
+                            END,
+                            0
+                           ) > 0
+                    AND NVL
+                           (CASE
+                               WHEN HM.ID_UNITLUASLOT_CONVERT = '1'
+                                  THEN HM.LUAS_LOT * 1
+                               ELSE HM.LUAS_LOT / 10000
+                            END,
+                            0
+                           ) > 0
+                       THEN ' (AMBIL SBHG  - QT)'
+                    WHEN (NVL
+                             (CASE
+                                 WHEN HM.ID_UNITLUASAMBIL_CONVERT = '1'
+                                    THEN HM.LUAS_AMBIL * 1
+                                 ELSE HM.LUAS_AMBIL / 10000
+                              END,
+                              0
+                             ) =
+                             NVL
+                                (CASE
+                                    WHEN HM.ID_UNITLUASLOT_CONVERT = '1'
+                                       THEN HM.LUAS_LOT * 1
+                                    ELSE HM.LUAS_LOT / 10000
+                                 END,
+                                 0
+                                )
+                         )
+                    AND NVL
+                           (CASE
+                               WHEN HM.ID_UNITLUASAMBIL_CONVERT = '1'
+                                  THEN HM.LUAS_AMBIL * 1
+                               ELSE HM.LUAS_AMBIL / 10000
+                            END,
+                            0
+                           ) > 0
+                    AND NVL
+                           (CASE
+                               WHEN HM.ID_UNITLUASLOT_CONVERT = '1'
+                                  THEN HM.LUAS_LOT * 1
+                               ELSE HM.LUAS_LOT / 10000
+                            END,
+                            0
+                           ) > 0
+                       THEN ' (KESEMUA - FT)'
+                    ELSE ''
+                 END
+                ) AS STATUS_AMBIL,
+                UPPER (HM.CATATAN) AS CATATAN_HM, NULL AS KOD_MUKIM
+           FROM TBLPPTPERMOHONAN PP,TBLPFDFAIL F,
+                TBLPPTHAKMILIK HM,TBLPPTHAKMILIKPB HMP,TBLPPTAWARD AW,
+                TBLPPTHAKMILIKPB HMP_PM,TBLPPTBORANGH BH,TBLPPTHAKMILIKBORANGK HBK,
+                TBLPPTSIASATAN SS,TBLRUJLOT LT,TBLRUJMUKIM M,
+                TBLRUJJENISHAKMILIK JHM,TBLPPTBORANGK BK,
+                TBLPPTBORANGE BE,TBLPPTBORANGG BG,TBLPPTBAYARAN BAY,
+                
+               ( SELECT * FROM (SELECT HM1.ID_HAKMILIK,
+NVL
+(REPLACE
+(TO_CHAR
+   (SUM
+       (CASE
+           WHEN NVL (HM1.FLAG_PEMBATALAN, ' ') != 'Y'
+           AND NVL (HM1.FLAG_PEMBATALAN_KESELURUHAN,
+                    ' '
+                   ) != 'Y'
+           AND NVL (HM1.FLAG_PENARIKAN_BALIK, ' ') !=
+                                                   'Y'
+           AND NVL (HM1.FLAG_PENARIKAN_KESELURUHAN,
+                    ' ') != 'Y'
+              THEN CASE
+                     WHEN HMP.ID_HAKMILIKPB IS NOT NULL
+                                             AND HMP.ID_JENISPB NOT IN
+                                                             (27, 40, 41, 42)
+                                                THEN AW.BAYAR_PAMPASAN
+                                             ELSE 0
+                  END
+        END
+       ),
+    '999,999,990.99'
+   ),
+' '
+),
+0
+) AS JUM_PAMPASAN
+FROM TBLPPTHAKMILIK HM1, TBLPPTHAKMILIKPB HMP, TBLPPTAWARD AW
+WHERE HM1.ID_HAKMILIK = HMP.ID_HAKMILIK(+) 
+AND HMP.ID_HAKMILIKPB = AW.ID_HAKMILIKPB(+)
+GROUP BY HM1.ID_HAKMILIK
+)) JUM_PAMPASAN
+
+
+          WHERE F.ID_FAIL = PP.ID_FAIL AND F.ID_SUBURUSAN IN ('51')
+        AND F.NO_FAIL IS NOT NULL
+            AND TO_CHAR (PP.TARIKH_PERMOHONAN, 'YYYY') IS NOT NULL
+            AND PP.ID_PERMOHONAN = HM.ID_PERMOHONAN
+            AND HM.ID_MUKIM = M.ID_MUKIM                       
+            AND HMP.ID_HAKMILIKPB = BAY.ID_HAKMILIKPB(+) 
+            AND HM.ID_HAKMILIK = HMP.ID_HAKMILIK(+)
+            AND HMP.ID_HAKMILIKPB = AW.ID_HAKMILIKPB(+)
+            AND HM.ID_HAKMILIK = BE.ID_HAKMILIK(+) 
+            AND HM.ID_HAKMILIK = SS.ID_HAKMILIK(+)
+            AND HM.ID_HAKMILIK = HMP_PM.ID_HAKMILIK(+) 
+            AND HMP.ID_HAKMILIKPB = BH.ID_HAKMILIKPB(+)
+            AND HM.ID_HAKMILIK = HBK.ID_HAKMILIK(+) 
+            AND HBK.ID_BORANGK = BK.ID_BORANGK(+)
+            AND HM.ID_LOT = LT.ID_LOT(+) 
+            AND HM.ID_JENISHAKMILIK = JHM.ID_JENISHAKMILIK(+)
+            AND SS.ID_SIASATAN = BG.ID_SIASATAN(+)
+            AND JUM_PAMPASAN.ID_HAKMILIK = HM.ID_HAKMILIK
+       AND (('$P!{projek}' != ' ' AND UPPER(PP.TUJUAN) LIKE UPPER('%$P!{projek}%')) OR ('$P!{projek}' = ' '))
+ AND ((' $P!{no_fail}' != ' ' AND UPPER(F.NO_FAIL) LIKE UPPER('%$P!{no_fail}%')) OR (' $P!{no_fail}' = ' '))
+          AND (('$P!{ID_PEJABAT}' != ' ' AND F.ID_NEGERI = '$P!{ID_PEJABAT}') OR ('$P!{ID_PEJABAT}' = ' '))
+       AND (('$P!{ID_DAERAH}' != ' ' AND PP.ID_DAERAH = '$P!{ID_DAERAH}') OR ('$P!{ID_DAERAH}' = ' '))
+            AND ((CAST('$P!{type}' AS INT) = '1' AND PP.TARIKH_PERMOHONAN < ADD_MONTHS(TO_DATE($P!{bulantahun},'MM/YYYY'),1)) 
+              OR (CAST('$P!{type}' AS INT) = '2' AND PP.TARIKH_PERMOHONAN BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND ADD_MONTHS(TO_DATE($P!{bulantahunSE},'MM/YYYY'),1))
+             OR (CAST('$P!{type}' AS INT) = '3' AND TO_CHAR(PP.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY'))
+            )
+       GROUP BY F.ID_FAIL,HM.ID_HAKMILIK,PP.ID_PERMOHONAN,
+                HM.FLAG_PEMBATALAN,HM.FLAG_PEMBATALAN_KESELURUHAN,
+                HM.FLAG_PENARIKAN_BALIK,HM.FLAG_PENARIKAN_KESELURUHAN,
+                HBK.ID_HAKMILIKBORANGK,PP.TARIKH_PERMOHONAN,JUM_PAMPASAN.JUM_PAMPASAN,
+                HM.NO_PT,HM.NO_LOT,LT.KETERANGAN,HM.ID_UNITLUASAMBIL_CONVERT,
+                HM.LUAS_AMBIL,HM.FLAG_JENIS_RIZAB,HM.NO_SUBJAKET,HM.TARIKH_STOP_SIASATAN,
+                M.NAMA_MUKIM,HM.ID_JENISHAKMILIK,JHM.KOD_JENIS_HAKMILIK,
+                HM.NO_HAKMILIK,HM.ID_UNITLUASLOT_CONVERT,HM.LUAS_LOT,HM.CATATAN
+               ORDER BY TARIKH_PERMOHONAN DESC,
+                ID_FAIL ASC,
+                TYPE ASC,
+                NO_SUBJAKET ASC,
+                KOD_MUKIM ASC,
+                TARIKH_SIASATAN DESC]]></queryString>
+
+	<field name="TYPE" class="java.lang.String"/>
+	<field name="ID_FAIL" class="java.lang.String"/>
+	<field name="ID_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_SUBJAKET" class="java.lang.String"/>
+	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
+	<field name="ID_PERMOHONAN" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="TARIKH_PERMOHONAN" class="java.lang.String"/>
+	<field name="TARIKH_PERMOHONAN_DIS" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="JENIS_PENGAMBILAN" class="java.lang.String"/>
+	<field name="HAKMILIK_LUAS" class="java.lang.String"/>
+	<field name="LUAS_SELURUH_RIZAB" class="java.lang.String"/>
+	<field name="JUM_LOT" class="java.math.BigDecimal"/>
+	<field name="JUM_LOT_BORANGK" class="java.math.BigDecimal"/>
+	<field name="JUM_PAMPASAN" class="java.lang.String"/>
+	<field name="JUM_PAMPASAN_LEWAT" class="java.lang.String"/>
+	<field name="JUM_PEMILIK" class="java.math.BigDecimal"/>
+	<field name="TARIKH_MMK" class="java.lang.String"/>
+	<field name="TARIKH_HANTAR" class="java.lang.String"/>
+	<field name="TARIKH_WARTA" class="java.lang.String"/>
+	<field name="TARIKH_MMK_KEPUTUSAN" class="java.lang.String"/>
+	<field name="TEMPOH_BH_BULAN" class="java.lang.String"/>
+	<field name="TEMPOH_BH_BULAN_INDIVIDU" class="java.lang.String"/>
+	<field name="STATUS_PERMOHONAN" class="java.lang.String"/>
+	<field name="STATUS_LOT" class="java.lang.String"/>
+	<field name="TARIKH_BORANGI" class="java.lang.String"/>
+	<field name="STATUS" class="java.lang.String"/>
+	<field name="TARIKH_SIASATAN" class="java.lang.String"/>
+	<field name="NO_LOTPT" class="java.lang.String"/>
+	<field name="NAMA_MUKIM" class="java.lang.String"/>
+	<field name="TEMPOH_SIASATAN_BULAN" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="TARIKH_BORANGK" class="java.lang.String"/>
+	<field name="TARIKH_BORANGE" class="java.lang.String"/>
+	<field name="TARIKH_BORANGG" class="java.lang.String"/>
+	<field name="TARIKH_BORANGH" class="java.lang.String"/>
+	<field name="TARIKH_BORANGH_INDIVIDU" class="java.lang.String"/>
+	<field name="TARIKH_BAYARAN" class="java.lang.String"/>
+	<field name="STATUS_AMBIL" class="java.lang.String"/>
+	<field name="CATATAN_HM" class="java.lang.String"/>
+	<field name="KOD_MUKIM" class="java.lang.String"/>
+
+	<variable name="TOTAL_ALL_PEMILIK" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[($F{TYPE}.equals("1") ? $F{JUM_PEMILIK} : null)]]></variableExpression>
+	</variable>
+	<variable name="TOTAL_ALL_LOT" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[
+($F{TYPE}.equals("1") ? $F{JUM_LOT} : null)]]></variableExpression>
+	</variable>
+	<variable name="NUMBERING_MAIN" class="java.lang.Integer" resetType="Report" calculation="Count">
+		<variableExpression><![CDATA[($F{TYPE}.equals("1") ? new Integer($V{NUMBERING_MAIN}.intValue()+1) : null)
+]]></variableExpression>
+	</variable>
+
+		<group  name="KEPALA" >
+			<groupExpression><![CDATA[$F{TYPE}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="104"  isSplitAllowed="false" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="390"
+						y="39"
+						width="501"
+						height="12"
+						key="textField-72"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["LAPORAN BULANAN PENGAMBILAN TANAH MENGIKUT PROJEK DAN NEGERI"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="17"
+						y="84"
+						width="153"
+						height="16"
+						key="textField-203"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tempoh dari : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="17"
+						y="84"
+						width="153"
+						height="16"
+						key="textField-204"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("3"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tahun : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="17"
+						y="68"
+						width="153"
+						height="16"
+						key="textField-205"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Unit Pengambilan Tanah : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="171"
+						y="68"
+						width="605"
+						height="16"
+						key="textField-206"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{NAMA_PEJABAT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="17"
+						y="84"
+						width="153"
+						height="16"
+						key="textField-207"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bulan/Tahun (Sehingga): "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="171"
+						y="84"
+						width="344"
+						height="16"
+						key="textField-208"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+($P{BULAN}!=null && $P{BULAN}!= "" ? $P{BULAN}:"")+" / "+($P{TAHUN}!=null && $P{TAHUN}!= "" ? $P{TAHUN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="171"
+						y="84"
+						width="344"
+						height="16"
+						key="textField-209"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("3"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{TAHUN}!=null && $P{TAHUN}!= "" ? $P{TAHUN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="171"
+						y="84"
+						width="117"
+						height="16"
+						key="textField-210"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+($P{BULAN}!=null && $P{BULAN}!= "" ? $P{BULAN}:"")+" / "+($P{TAHUN}!=null && $P{TAHUN}!= "" ? $P{TAHUN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="288"
+						y="84"
+						width="87"
+						height="16"
+						key="textField-211"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Sehingga : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="381"
+						y="84"
+						width="122"
+						height="16"
+						key="textField-212"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{BULANSE}!=null && $P{BULANSE}!= "" ? $P{BULANSE}:"")+" / "+($P{TAHUNSE}!=null && $P{TAHUNSE}!= "" ? $P{TAHUNSE}:"")]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="45"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="17"
+						y="6"
+						width="635"
+						height="11"
+						backcolor="#CCCCCC"
+						key="textField-1"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Maklumat Projek"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="652"
+						y="6"
+						width="513"
+						height="11"
+						backcolor="#CCCCCC"
+						key="textField-2"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh-Tarikh Tindakan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="17"
+						y="17"
+						width="30"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-3"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="700"
+						y="17"
+						width="48"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-4"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Draf Kertas MMK Hantar Ke PTG"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="748"
+						y="17"
+						width="47"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-5"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kelulusan PBN"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="795"
+						y="17"
+						width="45"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-6"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Warta"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="840"
+						y="17"
+						width="45"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-7"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang E"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="885"
+						y="17"
+						width="47"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-8"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Siasatan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="932"
+						y="17"
+						width="47"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-9"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang G"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="979"
+						y="17"
+						width="47"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-10"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang H"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1026"
+						y="17"
+						width="44"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-11"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bayaran Pampasan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="141"
+						y="17"
+						width="104"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-12"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Nama Projek"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="245"
+						y="17"
+						width="68"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-13"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["No. Fail JKPTG"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="313"
+						y="17"
+						width="60"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-14"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Mukim/\nDaerah/\nBandar"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="373"
+						y="17"
+						width="48"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-15"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Keluasan\n(Hektar)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="421"
+						y="17"
+						width="51"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-16"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Luas Rizab Melayu\n(Hektar)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="472"
+						y="17"
+						width="30"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-17"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil. Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="502"
+						y="17"
+						width="30"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-18"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil. Pemilik"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="592"
+						y="17"
+						width="60"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-19"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Jumlah Pampasan\n(RM)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="652"
+						y="17"
+						width="48"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-20"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Terima Permohonan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1070"
+						y="17"
+						width="48"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-21"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang I"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1118"
+						y="17"
+						width="47"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-22"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang K"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1165"
+						y="6"
+						width="63"
+						height="39"
+						backcolor="#CCCCCC"
+						key="textField-23"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tempoh P.T.(Bulan)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1228"
+						y="6"
+						width="113"
+						height="39"
+						backcolor="#CCCCCC"
+						key="textField-24"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Catatan"
++"\n/"
++"\nCatatan Hakmilik"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="47"
+						y="17"
+						width="94"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-73"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Nama Kementerian"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="532"
+						y="17"
+						width="60"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-75"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Caj Bayaran\nLewat(RM)"]]></textFieldExpression>
+				</textField>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="313"
+						y="0"
+						width="60"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-50"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_DAERAH}!=null ? $F{NAMA_DAERAH}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="373"
+						y="0"
+						width="48"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-51"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{HAKMILIK_LUAS}!=null ? $F{HAKMILIK_LUAS}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="245"
+						y="0"
+						width="68"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-52"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_FAIL}!=null ? $F{NO_FAIL}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="502"
+						y="0"
+						width="30"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-54"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUM_PEMILIK}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="652"
+						y="0"
+						width="48"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-55"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_PERMOHONAN_DIS}!=null ? $F{TARIKH_PERMOHONAN_DIS}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="700"
+						y="0"
+						width="48"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-56"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_HANTAR}!=null ? $F{TARIKH_HANTAR}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="748"
+						y="0"
+						width="47"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-57"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_MMK}!=null ? $F{TARIKH_MMK}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="17"
+						y="0"
+						width="30"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-59"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TYPE}.equals("1") ? new Integer($V{NUMBERING_MAIN}.intValue()+1)+"" : new Integer($V{NUMBERING_MAIN}.intValue()+1)+"."+$V{KEPALA_COUNT}+"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="141"
+						y="0"
+						width="104"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-60"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TUJUAN}!=null ? $F{TUJUAN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="472"
+						y="0"
+						width="30"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-61"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUM_LOT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="592"
+						y="0"
+						width="60"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-62"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{JUM_PAMPASAN}!=null  && !$F{JUM_PAMPASAN}.equals("0") ? $F{JUM_PAMPASAN}:"0.00")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="840"
+						y="0"
+						width="45"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-63"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="885"
+						y="0"
+						width="47"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-64"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="932"
+						y="0"
+						width="47"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-65"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="979"
+						y="0"
+						width="47"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-66"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1026"
+						y="0"
+						width="44"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-67"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1070"
+						y="0"
+						width="48"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-68"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BORANGI}!=null ? $F{TARIKH_BORANGI}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1118"
+						y="0"
+						width="47"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-69"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1165"
+						y="0"
+						width="63"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-70"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TEMPOH_BH_BULAN_INDIVIDU}!=null ? $F{TEMPOH_BH_BULAN_INDIVIDU}+"\n":"")
++($F{JENIS_PENGAMBILAN}!=null ? "("+$F{JENIS_PENGAMBILAN}+")":"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1228"
+						y="0"
+						width="113"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-71"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Justified" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{STATUS_PERMOHONAN}!=null ? $F{STATUS_PERMOHONAN}:($F{STATUS}!=null ? $F{STATUS}:""))]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="47"
+						y="0"
+						width="94"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-74"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_KEMENTERIAN}!=null ? $F{NAMA_KEMENTERIAN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="532"
+						y="0"
+						width="60"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-76"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{JUM_PAMPASAN_LEWAT}!=null  && !$F{JUM_PAMPASAN_LEWAT}.equals("0") ? $F{JUM_PAMPASAN_LEWAT}:"0.00")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="421"
+						y="0"
+						width="51"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-77"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{LUAS_SELURUH_RIZAB}!=null ? $F{LUAS_SELURUH_RIZAB}:"0")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="795"
+						y="0"
+						width="45"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-176"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="795"
+						y="0"
+						width="45"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-177"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_WARTA}!=null ? $F{TARIKH_WARTA}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="313"
+						y="0"
+						width="60"
+						height="15"
+						key="textField-178"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_MUKIM}!=null ? $F{NAMA_MUKIM}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="373"
+						y="0"
+						width="48"
+						height="15"
+						key="textField-179"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{HAKMILIK_LUAS}!=null ? $F{HAKMILIK_LUAS}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="245"
+						y="0"
+						width="68"
+						height="15"
+						key="textField-180"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_SUBJAKET}!=null && !$F{NO_SUBJAKET}.equals("0") ?"SJ "+ $F{NO_SUBJAKET}+"\n":"")+
+($F{NO_LOTPT}!=null ? $F{NO_LOTPT}+"\n":"")+
+($F{NO_HAKMILIK}!=null && !$F{NO_HAKMILIK}.equals("TDK") ? $F{NO_HAKMILIK}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="502"
+						y="0"
+						width="30"
+						height="15"
+						key="textField-181"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUM_PEMILIK}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="652"
+						y="0"
+						width="48"
+						height="15"
+						key="textField-182"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="700"
+						y="0"
+						width="48"
+						height="15"
+						key="textField-183"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="748"
+						y="0"
+						width="47"
+						height="15"
+						key="textField-184"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="17"
+						y="0"
+						width="30"
+						height="15"
+						key="textField-185"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TYPE}.equals("1") ? new Integer($V{NUMBERING_MAIN}.intValue()+1)+"" : new Integer($V{NUMBERING_MAIN}.intValue()+1)+"."+$V{KEPALA_COUNT}+"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="141"
+						y="0"
+						width="104"
+						height="15"
+						key="textField-186"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="472"
+						y="0"
+						width="30"
+						height="15"
+						key="textField-187"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="592"
+						y="0"
+						width="60"
+						height="15"
+						key="textField-188"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{JUM_PAMPASAN}!=null  && !$F{JUM_PAMPASAN}.equals("0") ? $F{JUM_PAMPASAN}:"0.00")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="840"
+						y="0"
+						width="45"
+						height="15"
+						key="textField-189"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BORANGE}!=null ? $F{TARIKH_BORANGE}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="885"
+						y="0"
+						width="47"
+						height="15"
+						key="textField-190"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_SIASATAN}!=null ? $F{TARIKH_SIASATAN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="932"
+						y="0"
+						width="47"
+						height="15"
+						key="textField-191"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BORANGG}!=null ? $F{TARIKH_BORANGG}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="979"
+						y="0"
+						width="47"
+						height="15"
+						key="textField-192"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BORANGH}!=null ? $F{TARIKH_BORANGH}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1026"
+						y="0"
+						width="44"
+						height="15"
+						key="textField-193"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BAYARAN}!=null ? $F{TARIKH_BAYARAN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1070"
+						y="0"
+						width="48"
+						height="15"
+						key="textField-194"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1118"
+						y="0"
+						width="47"
+						height="15"
+						key="textField-195"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BORANGK}!=null ? $F{TARIKH_BORANGK}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1165"
+						y="0"
+						width="63"
+						height="15"
+						key="textField-196"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TEMPOH_BH_BULAN}!=null ? $F{TEMPOH_BH_BULAN}: ($F{TEMPOH_SIASATAN_BULAN}!=null ? $F{TEMPOH_SIASATAN_BULAN}:"") )]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1228"
+						y="0"
+						width="113"
+						height="15"
+						key="textField-197"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{STATUS_LOT}!=null ? $F{STATUS_LOT}+"\n":"")
++($F{CATATAN_HM}!=null ? $F{CATATAN_HM}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="47"
+						y="0"
+						width="94"
+						height="15"
+						key="textField-198"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="532"
+						y="0"
+						width="60"
+						height="15"
+						key="textField-199"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{JUM_PAMPASAN_LEWAT}!=null  && !$F{JUM_PAMPASAN_LEWAT}.equals("0") ? $F{JUM_PAMPASAN_LEWAT}:"0.00")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="421"
+						y="0"
+						width="51"
+						height="15"
+						key="textField-200"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{LUAS_SELURUH_RIZAB}!=null ? $F{LUAS_SELURUH_RIZAB}:"0")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="795"
+						y="0"
+						width="45"
+						height="15"
+						key="textField-201"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="795"
+						y="0"
+						width="45"
+						height="15"
+						key="textField-202"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($F{TYPE}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1">					<pen lineWidth="0.2" lineStyle="Solid"/>
+					<topPen lineWidth="0.2" lineStyle="Solid"/>
+					<leftPen lineWidth="0.2" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.2" lineStyle="Solid"/>
+					<rightPen lineWidth="0.2" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="14"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1241"
+						y="0"
+						width="92"
+						height="14"
+						key="textField-148"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica" size="9" isBold="false" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{HARI_SYSDATE} != null ? $P{HARI_SYSDATE}:"")+" "+($P{BULAN_SYSDATE} != null ? $P{BULAN_SYSDATE}:"")+" "+($P{TAHUN_SYSDATE} != null ? $P{TAHUN_SYSDATE}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="632"
+						y="0"
+						width="92"
+						height="14"
+						key="textField-149"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica" size="10" isBold="false" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+$V{PAGE_NUMBER}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="28"  isSplitAllowed="false" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="502"
+						y="0"
+						width="30"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-130"
+						positionType="Float"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{TOTAL_ALL_PEMILIK}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="472"
+						y="0"
+						width="30"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-137"
+						positionType="Float"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{TOTAL_ALL_LOT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="17"
+						y="0"
+						width="455"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-145"
+						positionType="Float"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["JUMLAH : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="532"
+						y="0"
+						width="809"
+						height="28"
+						backcolor="#CCCCCC"
+						key="textField-146"
+						positionType="Float"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+		<noData>
+			<band height="170"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="17"
+						y="151"
+						width="1324"
+						height="19"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="555"
+						y="154"
+						width="246"
+						height="14"
+						key="textField-126"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tiada data"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="17"
+						y="113"
+						width="635"
+						height="11"
+						backcolor="#CCCCCC"
+						key="textField-150"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Maklumat Projek"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="652"
+						y="113"
+						width="513"
+						height="11"
+						backcolor="#CCCCCC"
+						key="textField-151"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh-Tarikh Tindakan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="17"
+						y="124"
+						width="20"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-152"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="700"
+						y="124"
+						width="48"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-153"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Draf Kertas MMK Hantar Ke PTG"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="748"
+						y="124"
+						width="47"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-154"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kelulusan PBN"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="795"
+						y="124"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-155"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Warta"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="840"
+						y="124"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-156"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang E"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="885"
+						y="124"
+						width="47"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-157"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Siasatan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="932"
+						y="124"
+						width="47"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-158"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang G"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="979"
+						y="124"
+						width="47"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-159"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang H"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1026"
+						y="124"
+						width="44"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-160"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bayaran Pampasan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="141"
+						y="124"
+						width="104"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-161"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Nama Projek"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="245"
+						y="124"
+						width="68"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-162"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["No. Fail JKPTG"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="313"
+						y="124"
+						width="60"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-163"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Mukim/\nDaerah/\nBandar"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="373"
+						y="124"
+						width="48"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-164"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Keluasan\n(Hektar)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="421"
+						y="124"
+						width="51"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-165"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Luas Rizab Melayu\n(Hektar)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="472"
+						y="124"
+						width="30"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-166"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil. Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="502"
+						y="124"
+						width="30"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-167"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil. Pemilik"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="592"
+						y="124"
+						width="60"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-168"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Jumlah Pampasan\n(RM)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="652"
+						y="124"
+						width="48"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-169"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Terima Permohonan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1070"
+						y="124"
+						width="48"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-170"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang I"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="37"
+						y="124"
+						width="104"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-171"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Nama Kementerian"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="532"
+						y="124"
+						width="60"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-172"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Caj Bayaran\nLewat(RM)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1118"
+						y="124"
+						width="47"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-173"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Borang K"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1165"
+						y="113"
+						width="63"
+						height="41"
+						backcolor="#CCCCCC"
+						key="textField-174"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tempoh P.T.(Bulan)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1228"
+						y="113"
+						width="113"
+						height="41"
+						backcolor="#CCCCCC"
+						key="textField-175"
+						stretchType="RelativeToTallestObject"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Catatan"
++"\n/"
++"\nCatatan Hakmilik"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="390"
+						y="43"
+						width="501"
+						height="12"
+						key="textField-213"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["LAPORAN BULANAN PENGAMBILAN TANAH MENGIKUT PROJEK DAN NEGERI"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="17"
+						y="83"
+						width="153"
+						height="16"
+						key="textField-214"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tempoh dari : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="17"
+						y="83"
+						width="153"
+						height="16"
+						key="textField-215"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("3"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tahun : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="17"
+						y="67"
+						width="153"
+						height="16"
+						key="textField-216"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Unit Pengambilan Tanah : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="171"
+						y="67"
+						width="605"
+						height="16"
+						key="textField-217"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{NAMA_PEJABAT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="17"
+						y="83"
+						width="153"
+						height="16"
+						key="textField-218"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bulan/Tahun (Sehingga): "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="171"
+						y="83"
+						width="344"
+						height="16"
+						key="textField-219"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("1"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+($P{BULAN}!=null && $P{BULAN}!= "" ? $P{BULAN}:"")+" / "+($P{TAHUN}!=null && $P{TAHUN}!= "" ? $P{TAHUN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="171"
+						y="83"
+						width="344"
+						height="16"
+						key="textField-220"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("3"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{TAHUN}!=null && $P{TAHUN}!= "" ? $P{TAHUN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="171"
+						y="83"
+						width="117"
+						height="16"
+						key="textField-221"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+($P{BULAN}!=null && $P{BULAN}!= "" ? $P{BULAN}:"")+" / "+($P{TAHUN}!=null && $P{TAHUN}!= "" ? $P{TAHUN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="288"
+						y="83"
+						width="87"
+						height="16"
+						key="textField-222"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Sehingga : "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="381"
+						y="83"
+						width="122"
+						height="16"
+						key="textField-223"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($P{TYPEINT}.equals("2"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{BULANSE}!=null && $P{BULANSE}!= "" ? $P{BULANSE}:"")+" / "+($P{TAHUNSE}!=null && $P{TAHUNSE}!= "" ? $P{TAHUNSE}:"")]]></textFieldExpression>
+				</textField>
+			</band>
+		</noData>
+</jasperReport>

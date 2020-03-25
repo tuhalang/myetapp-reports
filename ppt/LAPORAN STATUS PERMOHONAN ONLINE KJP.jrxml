@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="LAPORAN STATUS PERMOHONAN ONLINE KJP"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="MULA_TAHUN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="AKHIR_TAHUN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="dd" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="ID_NEGERI" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ID_KEMENTERIAN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="NAMA_KEMENTERIAN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ID_STATUS" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="NAMA_STATUS" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT TO_CHAR(MAIN.TARIKH_PERMOHONAN,'DD/MM/YYYY') AS TARIKH_PERMOHONAN,TO_CHAR(MAIN.ID_KEMENTERIAN) AS ID_KEMENTERIAN,TO_CHAR(MAIN.ID_FAIL) AS ID_FAIL,MAIN.NO_FAIL,UPPER(MAIN.TUJUAN) AS PROJEK,MAIN.FLAG_STATUS_ONLINE,
+       CASE WHEN MAIN.FLAG_STATUS_ONLINE = '1' THEN 'DITOLAK' ELSE
+       (CASE
+                 WHEN MAIN.HM_DITERIMA = MAIN.HM_SELESAI
+                 AND MAIN.HM_DITERIMA > 0
+                    THEN 'SELESAI'
+                 ELSE 'DALAM PROSES'  
+              END
+             ) END AS STATUS,
+       SUM (DISTINCT MAIN.HM_DITERIMA) AS LOT_DITERIMA,
+       SUM (DISTINCT MAIN.HM_SELESAI) AS LOT_DISELESAI
+  FROM (SELECT  P.TARIKH_PERMOHONAN, F.ID_KEMENTERIAN,
+  F.ID_FAIL, (CASE WHEN F.NO_FAIL IS NULL OR F.NO_FAIL = '' THEN P.NO_PERMOHONAN_ONLINE ELSE F.NO_FAIL END) AS NO_FAIL,
+  P.TUJUAN, F.ID_NEGERI,P.FLAG_STATUS_ONLINE,
+                 COUNT
+                    (DISTINCT (CASE
+                          WHEN HM.ID_HAKMILIK IS NOT NULL
+                             THEN HM.ID_HAKMILIK
+                       END
+                      )
+                    ) AS HM_DITERIMA,
+                 COUNT
+                    (CASE
+                        WHEN SSTK.ID_STATUS IN (1610242, 1610233)
+                           THEN HM.ID_HAKMILIK
+                     END
+                    ) AS HM_SELESAI
+            FROM TBLPFDFAIL F,
+                 TBLPPTPERMOHONAN P,
+                 TBLPPTHAKMILIK HM,
+                 TBLRUJSUBURUSANSTATUSHAKMILIK SHMK,
+                 TBLRUJSUBURUSANSTATUS SSTK
+           WHERE F.ID_FAIL = P.ID_FAIL
+             AND P.TARIKH_PERMOHONAN IS NOT NULL
+             AND F.ID_SUBURUSAN = '52'     
+             AND P.ID_PERMOHONAN = HM.ID_PERMOHONAN
+             AND HM.ID_HAKMILIK = SHMK.ID_HAKMILIK(+)
+             AND NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' AND NVL(HM.FLAG_PENARIKAN_BALIK,' ') <> 'Y'
+             AND SHMK.ID_SUBURUSANSTATUS = SSTK.ID_SUBURUSANSTATUS(+)
+        GROUP BY F.ID_FAIL, F.ID_NEGERI,F.ID_KEMENTERIAN,F.NO_FAIL,P.TUJUAN,P.FLAG_STATUS_ONLINE,P.NO_PERMOHONAN_ONLINE,P.TARIKH_PERMOHONAN
+        ) MAIN
+       WHERE  MAIN.ID_KEMENTERIAN = '$P!{ID_KEMENTERIAN}'  
+        AND ('$P!{ID_STATUS}' = ' ' OR ('$P!{ID_STATUS}' = '1' AND MAIN.FLAG_STATUS_ONLINE = '1') 
+        OR ('$P!{ID_STATUS}' = '2' AND MAIN.HM_DITERIMA != MAIN.HM_SELESAI AND MAIN.HM_DITERIMA > 0 AND NVL(MAIN.FLAG_STATUS_ONLINE,' ') != '1')  
+        OR ('$P!{ID_STATUS}' = '3' AND MAIN.HM_DITERIMA = MAIN.HM_SELESAI AND MAIN.HM_DITERIMA > 0))               
+        AND (($P{MULA_TAHUN} != ' ' AND TO_CHAR(MAIN.TARIKH_PERMOHONAN,'YYYY') >= $P{MULA_TAHUN})  OR $P{MULA_TAHUN} = ' ')
+        AND (($P{AKHIR_TAHUN} != ' ' AND TO_CHAR(MAIN.TARIKH_PERMOHONAN,'YYYY') <= $P{AKHIR_TAHUN})  OR $P{AKHIR_TAHUN} = ' ')  
+        GROUP BY MAIN.ID_KEMENTERIAN,MAIN.ID_FAIL,MAIN.HM_DITERIMA,
+        MAIN.HM_SELESAI,MAIN.NO_FAIL,MAIN.TUJUAN,MAIN.FLAG_STATUS_ONLINE,MAIN.TARIKH_PERMOHONAN]]></queryString>
+
+	<field name="TARIKH_PERMOHONAN" class="java.lang.String"/>
+	<field name="ID_KEMENTERIAN" class="java.lang.String"/>
+	<field name="ID_FAIL" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="PROJEK" class="java.lang.String"/>
+	<field name="FLAG_STATUS_ONLINE" class="java.lang.String"/>
+	<field name="STATUS" class="java.lang.String"/>
+	<field name="LOT_DITERIMA" class="java.math.BigDecimal"/>
+	<field name="LOT_DISELESAI" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="39"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="27"
+						width="534"
+						height="12"
+						key="textField-18"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["LAPORAN STATUS "+($P{NAMA_STATUS}!=null && !$P{NAMA_STATUS}.equals(" ") ? "("+$P{NAMA_STATUS}+")":"")+" PERMOHONAN PENGAMBILAN TANAH SECARA ONLINE OLEH "+($P{NAMA_KEMENTERIAN}!=null ? $P{NAMA_KEMENTERIAN}:"")+" "
++
+(($P{MULA_TAHUN}!=null && $P{AKHIR_TAHUN}!=null && $P{AKHIR_TAHUN}!="" && $P{AKHIR_TAHUN}!=null) 
+?
+ 
+($P{MULA_TAHUN}.equals($P{AKHIR_TAHUN}) ? "BAGI TAHUN "+$P{MULA_TAHUN}:
+ "DARI TAHUN "+$P{MULA_TAHUN}+ " HINGGA TAHUN "+$P{AKHIR_TAHUN}
+):"")]]></textFieldExpression>
+				</textField>
+				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="194"
+						y="32"
+						width="0"
+						height="0"
+						key="image-1"/>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[]]></imageExpression>
+				</image>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="38"  isSplitAllowed="false" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="407"
+						y="17"
+						width="90"
+						height="21"
+						backcolor="#CCCCCC"
+						key="staticText-10"
+						stretchType="RelativeToBandHeight"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="300"
+						y="17"
+						width="107"
+						height="21"
+						backcolor="#CCCCCC"
+						key="staticText-9"
+						stretchType="RelativeToBandHeight"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="43"
+						y="17"
+						width="22"
+						height="21"
+						backcolor="#CCCCCC"
+						key="staticText-8"
+						stretchType="RelativeToBandHeight"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="65"
+						y="17"
+						width="235"
+						height="21"
+						backcolor="#CCCCCC"
+						key="staticText-3"
+						stretchType="RelativeToBandHeight"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="46"
+						y="23"
+						width="16"
+						height="15"
+						key="textField-1"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled" lineSpacing="Single">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BIL"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="70"
+						y="23"
+						width="223"
+						height="15"
+						key="textField-2"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled" lineSpacing="Single">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["PROJEK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="303"
+						y="22"
+						width="103"
+						height="16"
+						key="textField-5"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled" lineSpacing="Single">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO. FAIL JKPTG"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="409"
+						y="22"
+						width="84"
+						height="16"
+						key="textField-6"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled" lineSpacing="Single">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["STATUS"]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="22"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Transparent"
+						x="43"
+						y="0"
+						width="22"
+						height="22"
+						backcolor="#FFFFFF"
+						key="staticText-18"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica" size="6" isBold="false"/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Transparent"
+						x="65"
+						y="0"
+						width="235"
+						height="22"
+						backcolor="#FFFFFF"
+						key="staticText-19"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica" size="6" isBold="false"/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="43"
+						y="0"
+						width="20"
+						height="22"
+						key="textField-11"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1"></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Arial" size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="67"
+						y="0"
+						width="232"
+						height="22"
+						key="textField-12"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1"></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Arial" size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{PROJEK}!= null ? $F{PROJEK}:"")]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						mode="Transparent"
+						x="300"
+						y="0"
+						width="107"
+						height="22"
+						backcolor="#FFFFFF"
+						key="staticText-24"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica" size="6" isBold="false"/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="303"
+						y="0"
+						width="100"
+						height="22"
+						key="textField-20"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1"></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Arial" size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_FAIL}!= null ?$F{NO_FAIL}:"")]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						mode="Transparent"
+						x="407"
+						y="0"
+						width="90"
+						height="22"
+						backcolor="#FFFFFF"
+						key="staticText-26"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica" size="6" isBold="false"/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="414"
+						y="0"
+						width="76"
+						height="22"
+						key="textField-21"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="1"></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Arial" size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{STATUS}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

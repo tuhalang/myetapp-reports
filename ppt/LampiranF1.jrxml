@@ -1,0 +1,2857 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="LampiranF1"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="1417"
+		 pageHeight="595"
+		 columnWidth="1357"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="ID_PEJABAT" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TAHUN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="BULAN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ID_DAERAH" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="bulantahun" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="bulantahunSE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="jenisTempoh" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TAHUNSE" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT  
+TEMP_TAHUN.YEAR, COUNT(MAIN.ID_PERMOHONAN) AS KES_TERIMA, SUM(MAIN.BIL_TERIMA_LOT) AS LOT_TERIMA,
+SUM(MAIN.PERMOHONAN_SELESAI) AS KES_SELESAI, SUM(MAIN.BIL_SELESAI_LOT)  AS LOT_SELESAI, 
+SUM(MAIN.PERMOHONAN_TARIK) AS KES_TARIK, SUM(MAIN.BIL_TARIK_LOT) AS LOT_TARIK 
+, SUM(MAIN.BIL_MMK_KES) AS KES_MMK, 
+SUM(MAIN.BIL_MMK_LOT) AS LOT_MMK,SUM(MAIN.BIL_KES_PBN) AS KES_PBN,SUM(MAIN.BIL_LOT_PBN) AS LOT_PBN,
+SUM(MAIN.BIL_KES_WARTA) AS KES_WARTA, SUM(MAIN.BIL_LOT_WARTA) AS LOT_WARTA
+,  SUM(MAIN.BIL_KES_BICARA) AS KES_BICARA,  SUM(MAIN.BIL_LOT_BICARA) AS LOT_BICARA
+,SUM(MAIN.BIL_KES_BORANGG) AS KES_BORANGG,SUM(MAIN.BIL_LOT_BORANGG) AS LOT_BORANGG
+,SUM(MAIN.BIL_KES_BAYARAN) AS KES_BAYARAN,SUM(MAIN.BIL_LOT_BAYARAN) AS LOT_BAYARAN
+FROM
+(
+
+
+SELECT 
+TO_CHAR(P.TARIKH_PERMOHONAN,'YYYY') AS YEAR, 
+P.ID_PERMOHONAN,
+COUNT(DISTINCT 
+HM.ID_HAKMILIK
+) AS BIL_TERIMA_LOT, 
+
+(CASE WHEN 
+COUNT(DISTINCT 
+CASE WHEN NVL(HM.FLAG_PENARIKAN_BALIK,' ') <> 'Y' AND NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+AND NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' AND NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) > 0 AND
+COUNT(DISTINCT 
+CASE WHEN NVL(HM.FLAG_PENARIKAN_BALIK,' ') <> 'Y' AND NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+AND NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' AND NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) 
+=
+COUNT(DISTINCT 
+CASE WHEN NVL(HM.FLAG_PENARIKAN_BALIK,' ') <> 'Y' AND NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+AND NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' AND NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+AND BK.TARIKH_BORANGK IS NOT NULL
+THEN 
+HM.ID_HAKMILIK
+END) THEN 1 ELSE 0 END) AS PERMOHONAN_SELESAI, 
+
+COUNT(DISTINCT 
+CASE WHEN NVL(HM.FLAG_PENARIKAN_BALIK,' ') <> 'Y' AND NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+AND NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' AND NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+AND BK.TARIKH_BORANGK IS NOT NULL
+THEN 
+HM.ID_HAKMILIK
+END) AS BIL_SELESAI_LOT,
+
+(CASE WHEN 
+COUNT(HM.ID_HAKMILIK) 
+=
+COUNT(DISTINCT 
+CASE WHEN NVL(HM.FLAG_PENARIKAN_BALIK,' ') = 'Y' OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') = 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') = 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') = 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) THEN 1 ELSE 0 END) AS PERMOHONAN_TARIK, 
+
+COUNT(DISTINCT 
+CASE WHEN NVL(HM.FLAG_PENARIKAN_BALIK,' ') = 'Y' OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') = 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') = 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') = 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) AS BIL_TARIK_LOT
+,
+
+
+(CASE WHEN 
+COUNT(DISTINCT 
+CASE WHEN NVL(M.FLAG_MMK,' ') = '1' OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) > 0 AND
+COUNT(DISTINCT 
+CASE WHEN NVL(M.FLAG_MMK,' ') = '1' OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) 
+=
+COUNT(DISTINCT 
+CASE WHEN NVL(M.FLAG_MMK,' ') = '1' OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) THEN 1 ELSE 0 END) AS BIL_MMK_KES, 
+
+
+
+COUNT(DISTINCT 
+CASE WHEN NVL(M.FLAG_MMK,' ')  = '1' OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') = 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') = 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') = 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) AS BIL_MMK_LOT,
+
+
+(CASE WHEN 
+COUNT(DISTINCT 
+CASE WHEN (MK.STATUS_KEPUTUSAN)  IS NOT NULL  OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) > 0 AND
+COUNT(DISTINCT 
+CASE WHEN (MK.STATUS_KEPUTUSAN)  IS NOT NULL OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) 
+=
+COUNT(DISTINCT 
+CASE WHEN (MK.STATUS_KEPUTUSAN)  IS NOT NULL  OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) THEN 1 ELSE 0 END) AS BIL_KES_PBN, 
+
+
+COUNT(DISTINCT 
+CASE WHEN (MK.STATUS_KEPUTUSAN)  IS NOT NULL  OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') = 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') = 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') = 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) AS BIL_LOT_PBN,
+
+
+(CASE WHEN 
+COUNT(DISTINCT 
+CASE WHEN TO_CHAR(W.TARIKH_WARTA)   IS NOT NULL  OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) > 0 AND
+COUNT(DISTINCT 
+CASE WHEN TO_CHAR(W.TARIKH_WARTA)  != '' OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) 
+=
+COUNT(DISTINCT 
+CASE WHEN TO_CHAR(W.TARIKH_WARTA)  IS NOT NULL  OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') <> 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') <> 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') <> 'Y' 
+AND BK.TARIKH_BORANGK IS NOT NULL
+THEN 
+HM.ID_HAKMILIK
+END) THEN 1 ELSE 0 END) AS BIL_KES_WARTA,
+
+COUNT(DISTINCT 
+CASE WHEN TO_CHAR(W.TARIKH_WARTA)  IS NOT NULL  OR NVL(HM.FLAG_PENARIKAN_KESELURUHAN,' ') = 'Y' 
+OR NVL(HM.FLAG_PEMBATALAN,' ') = 'Y' OR NVL(HM.FLAG_PEMBATALAN_KESELURUHAN,' ') = 'Y' 
+THEN 
+HM.ID_HAKMILIK
+END) AS BIL_LOT_WARTA
+
+,
+
+
+COUNT(DISTINCT CASE WHEN S.ID_SIASATAN IS NOT NULL THEN S.ID_PERMOHONAN END ) 
+
+AS 
+
+BIL_KES_BICARA,
+
+--COUNT(DISTINCT S.ID_HAKMILIK)
+COUNT(DISTINCT CASE WHEN H.ID_BORANGH IS NOT NULL THEN S.ID_HAKMILIK END )  
+
+AS 
+
+BIL_LOT_BICARA,
+--,
+
+
+COUNT(DISTINCT CASE WHEN H.ID_BORANGH IS NOT NULL  THEN S.ID_PERMOHONAN END) 
+
+AS BIL_KES_BORANGG,
+
+COUNT(DISTINCT CASE WHEN H.ID_BORANGH IS NOT NULL THEN S.ID_HAKMILIK END )  
+
+AS 
+
+BIL_LOT_BORANGG,
+
+
+COUNT(DISTINCT CASE WHEN B.ID_BAYARAN IS NOT NULL  THEN S.ID_PERMOHONAN END) 
+
+AS BIL_KES_BAYARAN,
+
+COUNT(DISTINCT CASE WHEN B.ID_BAYARAN IS NOT NULL THEN S.ID_HAKMILIK END )  
+
+AS 
+
+BIL_LOT_BAYARAN
+
+
+FROM TBLPPTPERMOHONAN P, TBLPPTHAKMILIK HM, TBLPPTHAKMILIKBORANGK HMK, TBLPPTBORANGK BK
+, TBLPPTMMK M, TBLPPTMMKKEPUTUSAN MK, TBLPPTWARTA W, TBLPPTSIASATAN S, TBLPPTBORANGG G, TBLPPTBORANGH H, TBLPPTBAYARAN B, TBLPPTHAKMILIKPB PB, TBLRUJPEJABATJKPTG JK
+WHERE P.ID_PERMOHONAN = HM.ID_PERMOHONAN AND HM.ID_HAKMILIK = HMK.ID_HAKMILIK(+) AND HMK.ID_BORANGK = BK.ID_BORANGK(+)
+AND P.ID_PERMOHONAN = M.ID_PERMOHONAN(+) 
+AND M.ID_MMK = MK.ID_MMK(+)
+AND P.ID_PERMOHONAN = W.ID_PERMOHONAN
+AND HM.ID_HAKMILIK = PB.ID_HAKMILIK
+AND HM.ID_HAKMILIK = S.ID_HAKMILIK(+)
+AND S.ID_SIASATAN = G.ID_SIASATAN(+)
+AND G.ID_BORANGG = H.ID_BORANGG(+)
+AND PB.ID_HAKMILIKPB = B.ID_HAKMILIKPB(+)
+AND P.TARIKH_PERMOHONAN IS NOT NULL
+AND JK.ID_PEJABATJKPTG = $P!{ID_PEJABAT}
+AND (('000' = $P!{ID_DAERAH} ) 
+OR ('000' <> $P!{ID_DAERAH} 
+AND P.ID_DAERAH = $P!{ID_DAERAH} ))
+GROUP BY TO_CHAR(P.TARIKH_PERMOHONAN,'YYYY'),P.ID_PERMOHONAN
+
+
+
+) MAIN,
+(SELECT DISTINCT TO_CHAR (ADD_MONTHS (START_DT, LEVEL - 1),
+                    'YYYY') AS YEAR
+      FROM (SELECT TRUNC (TO_DATE ($P!{TAHUN}, 'YYYY'),
+                          'YEAR'
+                         ) AS START_DT,
+                   TRUNC (TO_DATE ($P!{TAHUNSE}, 'YYYY'),
+                          'YEAR'
+                         ) AS END_DT
+              FROM DUAL)
+CONNECT BY LEVEL <= 1 + MONTHS_BETWEEN (END_DT, START_DT))
+TEMP_TAHUN
+WHERE TEMP_TAHUN.YEAR = MAIN.YEAR(+)
+GROUP BY TEMP_TAHUN.YEAR
+ORDER BY TEMP_TAHUN.YEAR]]></queryString>
+
+	<field name="YEAR" class="java.lang.String"/>
+	<field name="KES_TERIMA" class="java.math.BigDecimal"/>
+	<field name="LOT_TERIMA" class="java.math.BigDecimal"/>
+	<field name="KES_SELESAI" class="java.math.BigDecimal"/>
+	<field name="LOT_SELESAI" class="java.math.BigDecimal"/>
+	<field name="KES_TARIK" class="java.math.BigDecimal"/>
+	<field name="LOT_TARIK" class="java.math.BigDecimal"/>
+	<field name="KES_MMK" class="java.math.BigDecimal"/>
+	<field name="LOT_MMK" class="java.math.BigDecimal"/>
+	<field name="KES_PBN" class="java.math.BigDecimal"/>
+	<field name="LOT_PBN" class="java.math.BigDecimal"/>
+	<field name="KES_WARTA" class="java.math.BigDecimal"/>
+	<field name="LOT_WARTA" class="java.math.BigDecimal"/>
+	<field name="KES_BICARA" class="java.math.BigDecimal"/>
+	<field name="LOT_BICARA" class="java.math.BigDecimal"/>
+	<field name="KES_BORANGG" class="java.math.BigDecimal"/>
+	<field name="LOT_BORANGG" class="java.math.BigDecimal"/>
+	<field name="KES_BAYARAN" class="java.math.BigDecimal"/>
+	<field name="LOT_BAYARAN" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="113"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="1257"
+						y="8"
+						width="74"
+						height="13"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[LAMPIRAN F1]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="516"
+						y="30"
+						width="324"
+						height="14"
+						key="textField-33"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["LAPORAN PRESTASI PERMOHONAN PENGAMBILAN TANAH DALAM TAHUN 2008"]]></textFieldExpression>
+				</textField>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="263"
+						y="60"
+						width="788"
+						height="36"
+						key="subreport-1"
+						positionType="Float"/>
+					<subreportParameter  name="BULAN">
+						<subreportParameterExpression><![CDATA[$P{BULAN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="TAHUN">
+						<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ID_PEJABAT">
+						<subreportParameterExpression><![CDATA[$P{ID_PEJABAT}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ID_DAERAH">
+						<subreportParameterExpression><![CDATA[$P{ID_DAERAH}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="bulantahun">
+						<subreportParameterExpression><![CDATA[$P{bulantahun}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="bulantahunSE">
+						<subreportParameterExpression><![CDATA[$P{bulantahunSE}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="jenisTempoh">
+						<subreportParameterExpression><![CDATA[$P{jenisTempoh}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir}+"//ppt//LampiranB_sub.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="44"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="533"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-114"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="21"
+						y="1"
+						width="26"
+						height="43"
+						backcolor="#CCCCCC"
+						key="rectangle-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="26"
+						y="27"
+						width="16"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-3"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil."]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="47"
+						y="1"
+						width="108"
+						height="43"
+						backcolor="#CCCCCC"
+						key="rectangle-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="155"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="52"
+						y="23"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-4"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tahun Pemohonan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="160"
+						y="8"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-5"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BIL TERIMA"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="263"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-10"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="268"
+						y="6"
+						width="98"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-12"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BIL SELESAI"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="263"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-12"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="317"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-13"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="269"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-14"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="324"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-15"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="371"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-15"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="376"
+						y="3"
+						width="96"
+						height="20"
+						backcolor="#CCCCCC"
+						key="textField-17"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BATAL / "+"\n"+"PENARIKAN BALIK"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="371"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-17"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="425"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-18"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="379"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-19"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="433"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-20"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="155"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-37"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="209"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-38"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="160"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-45"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="479"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-41"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="482"
+						y="6"
+						width="103"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-47"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["TANGGUH"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="479"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-113"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="541"
+						y="30"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-126"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="483"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-127"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="963"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-129"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="585"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-130"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="590"
+						y="6"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-145"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["SEMAKAN"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="693"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-132"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="698"
+						y="6"
+						width="98"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-147"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["KERTAS MMK"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="693"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-134"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="747"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-135"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="699"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-149"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="754"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-150"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="801"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-137"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="806"
+						y="6"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-152"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["KELULUSAN PBN"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="801"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-139"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="855"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-140"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="809"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-154"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="863"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-155"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="585"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-142"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="639"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-143"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="591"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-158"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="909"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-144"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="912"
+						y="6"
+						width="103"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-159"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["WARTA"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="909"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-148"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="971"
+						y="30"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-163"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="913"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-164"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1287"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-149"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="1017"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-150"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1022"
+						y="6"
+						width="98"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-165"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["PERBICARAAN"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1017"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-152"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="1071"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-153"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1023"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-167"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1078"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-168"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1125"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-155"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1130"
+						y="6"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-170"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BORANG 'G' & 'H'"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1125"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-157"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="1179"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-158"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1133"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-172"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1187"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-173"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1233"
+						y="1"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-160"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1236"
+						y="6"
+						width="103"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-175"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BAYARAN"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1233"
+						y="28"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-163"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1295"
+						y="30"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-178"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1237"
+						y="30"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-179"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="217"
+						y="30"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-44"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="651"
+						y="30"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-157"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="19"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="21"
+						y="0"
+						width="26"
+						height="19"
+						key="rectangle-1"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="47"
+						y="0"
+						width="108"
+						height="19"
+						key="rectangle-5"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="155"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-6"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="68"
+						y="4"
+						width="62"
+						height="14"
+						key="textField-7"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+$F{YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="22"
+						y="1"
+						width="24"
+						height="16"
+						key="textField-8"
+						stretchType="RelativeToTallestObject"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{COLUMN_COUNT}]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="263"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-11"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="317"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-14"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="371"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-16"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="377"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-18"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{KES_TARIK} != null ? $F{KES_TARIK}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="425"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-19"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="432"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-21"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{LOT_TARIK} != null ? $F{LOT_TARIK}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="209"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-100"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="479"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-103"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="485"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-116"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["-"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="533"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-110"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="538"
+						y="4"
+						width="41"
+						height="15"
+						key="textField-123"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["-"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="585"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-131"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="592"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-146"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["-"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="693"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-133"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="699"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-148"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{KES_MMK} != null ? $F{KES_MMK}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="747"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-136"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="756"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-151"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{LOT_MMK} != null ? $F{LOT_MMK}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="801"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-138"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="807"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-153"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{KES_PBN} != null ? $F{KES_PBN}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="855"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-141"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="862"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-156"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{LOT_PBN} != null ? $F{LOT_PBN}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="639"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-145"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="647"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-160"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["-"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="909"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-146"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="916"
+						y="4"
+						width="41"
+						height="15"
+						key="textField-161"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{KES_WARTA} != null ? $F{KES_WARTA}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="963"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-147"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="969"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-162"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{LOT_WARTA} != null ? $F{LOT_WARTA}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1017"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-151"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1023"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-166"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{KES_BICARA} != null ? $F{KES_BICARA}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1071"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-154"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1078"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-169"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{LOT_BICARA} != null ? $F{LOT_BICARA}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1125"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-156"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1131"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-171"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{KES_BORANGG} != null ? $F{KES_BORANGG}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1179"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-159"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1186"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-174"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{LOT_BORANGG} != null ? $F{LOT_BORANGG}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1233"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-161"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1237"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-176"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{KES_BAYARAN} != null ? $F{KES_BAYARAN}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1287"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-162"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1293"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-177"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{LOT_BAYARAN} != null ? $F{LOT_BAYARAN}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="269"
+						y="4"
+						width="41"
+						height="15"
+						key="textField-215"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{KES_SELESAI} != null ? $F{KES_SELESAI}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="325"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-216"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{LOT_SELESAI} != null ? $F{LOT_SELESAI}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="159"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-217"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{KES_TERIMA} != null ? $F{KES_TERIMA}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="214"
+						y="4"
+						width="41"
+						height="14"
+						key="textField-218"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[($F{LOT_TERIMA} != null ? $F{LOT_TERIMA}:BigDecimal.ZERO)]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</summary>
+		<noData>
+			<band height="201"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="21"
+						y="180"
+						width="1320"
+						height="21"
+						key="rectangle-99"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="516"
+						y="41"
+						width="324"
+						height="14"
+						key="textField-86"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["LAPORAN PRESTASI PERMOHONAN PENGAMBILAN TANAH DALAM TAHUN 2008"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="620"
+						y="183"
+						width="210"
+						height="13"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Tiada Rekod]]></text>
+				</staticText>
+				<rectangle>
+					<reportElement
+						x="533"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-164"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="21"
+						y="137"
+						width="26"
+						height="43"
+						backcolor="#CCCCCC"
+						key="rectangle-165"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="26"
+						y="163"
+						width="16"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-180"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil."]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="47"
+						y="137"
+						width="108"
+						height="43"
+						backcolor="#CCCCCC"
+						key="rectangle-166"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="155"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-167"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="52"
+						y="159"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-181"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tahun Pemohonan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="160"
+						y="144"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-182"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BIL TERIMA"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="263"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-168"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="268"
+						y="142"
+						width="98"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-183"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BIL SELESAI"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="263"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-169"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="317"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-170"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="269"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-184"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="324"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-185"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="371"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-171"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="371"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-172"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="425"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-173"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="379"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-187"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="433"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-188"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="155"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-174"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="209"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-175"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="160"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-190"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="479"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-176"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="482"
+						y="142"
+						width="103"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-191"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["TANGGUH"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="479"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-177"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="541"
+						y="166"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-192"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="483"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-193"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="963"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-178"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="585"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-179"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="590"
+						y="142"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-194"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["SEMAKAN"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="693"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-180"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="698"
+						y="142"
+						width="98"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-195"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["KERTAS MMK"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="693"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-181"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="747"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-182"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="699"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-196"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="754"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-197"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="801"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-183"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="806"
+						y="142"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-198"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["KELULUSAN PBN"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="801"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-184"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="855"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-185"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="809"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-199"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="863"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-200"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="585"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-186"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="597"
+						y="166"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-201"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="639"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-187"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="647"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-202"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="909"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-188"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="912"
+						y="142"
+						width="103"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-203"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["WARTA"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="909"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-189"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="971"
+						y="166"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-204"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="913"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-205"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1017"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-190"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1022"
+						y="142"
+						width="98"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-206"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["PERBICARAAN"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1017"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-191"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1022"
+						y="165"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-207"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1287"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-192"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="1071"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-193"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1078"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-208"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1125"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-194"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1130"
+						y="142"
+						width="96"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-209"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BORANG 'G' & 'H'"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1125"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-195"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="1179"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-196"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1133"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-210"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1187"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-211"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1233"
+						y="137"
+						width="108"
+						height="27"
+						backcolor="#CCCCCC"
+						key="rectangle-197"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1236"
+						y="142"
+						width="103"
+						height="15"
+						backcolor="#CCCCCC"
+						key="textField-212"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BAYARAN"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1233"
+						y="164"
+						width="54"
+						height="16"
+						backcolor="#CCCCCC"
+						key="rectangle-198"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1295"
+						y="166"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-213"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="1237"
+						y="166"
+						width="41"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-214"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kes"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="1257"
+						y="36"
+						width="74"
+						height="13"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[LAMPIRAN F1]]></text>
+				</staticText>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="263"
+						y="70"
+						width="788"
+						height="36"
+						key="subreport-2"
+						positionType="Float"/>
+					<subreportParameter  name="BULAN">
+						<subreportParameterExpression><![CDATA[$P{BULAN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="TAHUN">
+						<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ID_PEJABAT">
+						<subreportParameterExpression><![CDATA[$P{ID_PEJABAT}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir}+"//ppt//LampiranB_sub.jasper"]]></subreportExpression>
+				</subreport>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="217"
+						y="166"
+						width="30"
+						height="12"
+						backcolor="#CCCCCC"
+						key="textField-189"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lot"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="375"
+						y="141"
+						width="96"
+						height="20"
+						backcolor="#CCCCCC"
+						key="textField-220"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BATAL / "+"\n"+"PENARIKAN BALIK"]]></textFieldExpression>
+				</textField>
+			</band>
+		</noData>
+</jasperReport>

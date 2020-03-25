@@ -1,0 +1,1101 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Laporan Hak Milik Sambungan"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="992"
+		 pageHeight="842"
+		 columnWidth="936"
+		 columnSpacing="0"
+		 leftMargin="28"
+		 rightMargin="28"
+		 topMargin="28"
+		 bottomMargin="28"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="ID_PEJABAT" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="BULAN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TAHUN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ID_DAERAH" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="bulantahun" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="bulantahunSE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="jenisTempoh" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="type" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="BULANSE" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TAHUNSE" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT M.NAMA_MUKIM,
+CASE
+WHEN P.NO_RUJUKAN_PTG IS NOT NULL THEN TO_CHAR(P.NO_RUJUKAN_PTG)
+WHEN P.NO_RUJUKAN_PTD IS NOT NULL THEN TO_CHAR(P.NO_RUJUKAN_PTD)
+WHEN P.NO_RUJUKAN_UPT IS NOT NULL THEN TO_CHAR(P.NO_RUJUKAN_UPT)
+ELSE TO_CHAR(F.NO_FAIL)
+END AS NO_PTG
+,U.NO_PA,CAST($P!{type} AS INT) AS TYPEREPORT,
+TO_CHAR(
+CASE
+WHEN HM.NO_LOT IS NOT NULL AND HM.NO_PT IS NULL THEN HM.NO_LOT 
+WHEN HM.NO_LOT IS NULL AND HM.NO_PT IS NULL THEN JL.KETERANGAN || HM.NO_PT 
+WHEN HM.NO_LOT IS NULL AND HM.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || HM.NO_PT  
+WHEN HM.NO_LOT IS NOT NULL AND HM.NO_PT IS NOT NULL THEN JL.KETERANGAN  || HM.NO_PT || CHR(32) || CHR(40) || HM.NO_LOT  || CHR(41)
+ELSE ''  END) AS NO_LOT,U.NO_PU,JH.KOD_JENIS_HAKMILIK,HM.NO_HAKMILIK,P.TUJUAN,D.NAMA_DAERAH,
+TO_CHAR(U.TARIKH_HANTAR_JUPEM,'DD.MM.YYYY') AS TARIKH_HANTAR_JUPEM,
+U.NO_LOT_BARU,
+TO_CHAR(CASE
+    WHEN HM.ID_UNITLUASLOT_CONVERT = 1 THEN 'hektar'
+    WHEN HM.ID_UNITLUASLOT_CONVERT = 2 THEN 'mp'
+END) AS UNIT_LUAS_LOT,
+TO_CHAR(CASE
+    WHEN HM.ID_UNITLUASAMBIL_CONVERT = 1 THEN 'hektar'
+    WHEN HM.ID_UNITLUASAMBIL_CONVERT = 2 THEN 'mp'
+END) AS UNIT_LUAS_AMBIL,
+TO_CHAR(ROUND(HM.LUAS_LOT,4)) AS LUAS_LOT, 
+TO_CHAR(ROUND(HM.LUAS_AMBIL,4)) AS LUAS_AMBIL,
+TO_CHAR(U.BEZA_LUAS) AS BEZA_LUAS,
+S.UNIT_TANAH,S.NILAI_SEUNIT,
+TO_CHAR(ROUND(CASE
+WHEN S.UNIT_TANAH = '1' THEN U.BEZA_LUAS * S.NILAI_SEUNIT
+WHEN S.UNIT_TANAH = '2' THEN (U.BEZA_LUAS*10000) * S.NILAI_SEUNIT
+ELSE 0
+END,2),'999,999,999.99')
+AS BEZA_HARGA,HM.NO_SUBJAKET
+FROM TBLPPTPERMOHONAN P, TBLRUJPEJABATJKPTG PEJ, TBLPFDFAIL F, TBLRUJNEGERI NEG,TBLPPTHAKMILIK HM,TBLPPTSIASATAN S,
+TBLPPTHAKMILIKBORANGK BK,TBLPPTBORANGK K,TBLPPTPERMINTAANUKUR U,TBLRUJLOT JL,TBLRUJJENISHAKMILIK JH,TBLRUJDAERAH D,TBLRUJMUKIM M
+WHERE F.ID_FAIL = P.ID_FAIL
+AND HM.ID_MUKIM = M.ID_MUKIM
+AND S.ID_HAKMILIK = HM.ID_HAKMILIK
+AND S.ID_SIASATAN = (SELECT MAX(S1.ID_SIASATAN)FROM TBLPPTSIASATAN S1 WHERE S1.ID_HAKMILIK = HM.ID_HAKMILIK)
+AND S.ID_PENARIKANBALIK IS NULL
+AND HM.ID_LOT = JL.ID_LOT(+)
+AND P.ID_DAERAH = D.ID_DAERAH
+AND HM.ID_JENISHAKMILIK = JH.ID_JENISHAKMILIK(+)
+AND F.ID_SUBURUSAN = '52'
+AND HM.ID_HAKMILIK = U.ID_HAKMILIK
+AND HM.ID_HAKMILIK = BK.ID_HAKMILIK
+AND BK.ID_BORANGK = K.ID_BORANGK
+AND BK.ID_HAKMILIKBORANGK IS NOT NULL
+AND HM.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND TO_CHAR(K.TARIKH_BORANGK,'yyyy') IS NOT NULL
+AND PEJ.ID_SEKSYEN = 1
+AND (($P!{ID_DAERAH} = '000' AND D.ID_DAERAH = P.ID_DAERAH) OR ($P!{ID_DAERAH} <> '000' AND D.ID_DAERAH = P.ID_DAERAH AND P.ID_DAERAH = $P!{ID_DAERAH} ))
+AND (($P!{ID_PEJABAT} = '16' AND PEJ.ID_JENISPEJABAT IN ('21') AND F.ID_NEGERI = NEG.ID_NEGERI) 
+OR ($P!{ID_PEJABAT} <> '16' AND PEJ.ID_JENISPEJABAT IN ('22') AND PEJ.ID_NEGERI = F.ID_NEGERI 
+AND F.ID_NEGERI = NEG.ID_NEGERI AND PEJ.ID_NEGERI = $P!{ID_PEJABAT}))
+AND ((CAST($P!{type} AS INT) = '1' AND P.TARIKH_PERMOHONAN < ADD_MONTHS(TO_DATE($P!{bulantahun},'MM/YYYY'),1)) 
+      OR (CAST($P!{type} AS INT) = '2' AND P.TARIKH_PERMOHONAN BETWEEN TO_DATE($P!{bulantahun},'MM/YYYY') AND ADD_MONTHS(TO_DATE($P!{bulantahunSE},'MM/YYYY'),1))
+      OR (CAST($P!{type} AS INT) = '3' AND TO_CHAR(P.TARIKH_PERMOHONAN,'YYYY') = TO_CHAR(SYSDATE,'YYYY') ))]]></queryString>
+
+	<field name="NAMA_MUKIM" class="java.lang.String"/>
+	<field name="NO_PTG" class="java.lang.String"/>
+	<field name="NO_PA" class="java.lang.String"/>
+	<field name="TYPEREPORT" class="java.math.BigDecimal"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="NO_PU" class="java.lang.String"/>
+	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="TARIKH_HANTAR_JUPEM" class="java.lang.String"/>
+	<field name="NO_LOT_BARU" class="java.lang.String"/>
+	<field name="UNIT_LUAS_LOT" class="java.lang.String"/>
+	<field name="UNIT_LUAS_AMBIL" class="java.lang.String"/>
+	<field name="LUAS_LOT" class="java.lang.String"/>
+	<field name="LUAS_AMBIL" class="java.lang.String"/>
+	<field name="BEZA_LUAS" class="java.lang.String"/>
+	<field name="UNIT_TANAH" class="java.lang.String"/>
+	<field name="NILAI_SEUNIT" class="java.math.BigDecimal"/>
+	<field name="BEZA_HARGA" class="java.lang.String"/>
+	<field name="NO_SUBJAKET" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="85"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="17"
+						width="406"
+						height="13"
+						key="textField-65"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["<style pdfFontName='Helvetica-Bold'>LAPORAN PERMOHONAN PENDAFTARAN HAKMILIK SAMBUNGAN</style>"]]></textFieldExpression>
+				</textField>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="179"
+						y="38"
+						width="578"
+						height="36"
+						key="subreport-1"
+						positionType="Float"/>
+					<subreportParameter  name="BULAN">
+						<subreportParameterExpression><![CDATA[$P{BULAN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="TAHUN">
+						<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ID_PEJABAT">
+						<subreportParameterExpression><![CDATA[$P{ID_PEJABAT}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="type">
+						<subreportParameterExpression><![CDATA[$F{TYPEREPORT}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="BULANSE">
+						<subreportParameterExpression><![CDATA[$P{BULANSE}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="TAHUNSE">
+						<subreportParameterExpression><![CDATA[$P{TAHUNSE}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir}+"//ppt//LampiranB_sub.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="68"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="23"
+						y="5"
+						width="26"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="49"
+						y="5"
+						width="125"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="174"
+						y="5"
+						width="38"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="212"
+						y="5"
+						width="203"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="415"
+						y="5"
+						width="115"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-5"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="530"
+						y="5"
+						width="54"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-6"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="584"
+						y="5"
+						width="148"
+						height="33"
+						backcolor="#CCCCCC"
+						key="rectangle-7"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="732"
+						y="5"
+						width="113"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-8"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="845"
+						y="5"
+						width="80"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-9"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="28"
+						y="15"
+						width="16"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-3"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="52"
+						y="15"
+						width="120"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-4"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO. FAIL"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="178"
+						y="15"
+						width="31"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-6"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO SJ"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="218"
+						y="15"
+						width="187"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-7"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["PROJEK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="421"
+						y="15"
+						width="99"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-8"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["DAERAH/ MUKIM"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="533"
+						y="15"
+						width="49"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-9"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO PA"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="589"
+						y="15"
+						width="132"
+						height="14"
+						backcolor="#CCCCCC"
+						key="textField-10"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO LOT"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="738"
+						y="15"
+						width="99"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-11"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO FAIL JUPEM"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="853"
+						y="15"
+						width="66"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-12"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["TARIKH HANTAR KE PENDAFTAR"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="584"
+						y="38"
+						width="74"
+						height="30"
+						backcolor="#CCCCCC"
+						key="rectangle-53"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="592"
+						y="46"
+						width="58"
+						height="14"
+						backcolor="#CCCCCC"
+						key="textField-49"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ASAL"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="658"
+						y="38"
+						width="74"
+						height="30"
+						backcolor="#CCCCCC"
+						key="rectangle-54"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="666"
+						y="46"
+						width="58"
+						height="14"
+						backcolor="#CCCCCC"
+						key="textField-50"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BARU"]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="19"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="23"
+						y="0"
+						width="26"
+						height="19"
+						key="rectangle-14"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="49"
+						y="0"
+						width="125"
+						height="19"
+						key="rectangle-15"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="174"
+						y="0"
+						width="38"
+						height="19"
+						key="rectangle-16"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="212"
+						y="0"
+						width="203"
+						height="19"
+						key="rectangle-17"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="415"
+						y="0"
+						width="115"
+						height="19"
+						key="rectangle-18"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="530"
+						y="0"
+						width="54"
+						height="19"
+						key="rectangle-19"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="584"
+						y="0"
+						width="74"
+						height="19"
+						key="rectangle-20"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="732"
+						y="0"
+						width="113"
+						height="19"
+						key="rectangle-21"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="845"
+						y="0"
+						width="80"
+						height="19"
+						key="rectangle-22"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="24"
+						y="1"
+						width="24"
+						height="18"
+						key="textField-33"
+						stretchType="RelativeToTallestObject"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="178"
+						y="0"
+						width="31"
+						height="19"
+						key="textField-34"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[( $F{NO_SUBJAKET}!= null ? $F{NO_SUBJAKET}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="218"
+						y="0"
+						width="192"
+						height="19"
+						key="textField-35"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[( $F{TUJUAN}!= null ? $F{TUJUAN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="421"
+						y="0"
+						width="104"
+						height="19"
+						key="textField-36"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[( $F{NAMA_DAERAH}!= null ? $F{NAMA_DAERAH}:"")+"/"+( $F{NAMA_MUKIM}!= null ? $F{NAMA_MUKIM}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="533"
+						y="0"
+						width="49"
+						height="19"
+						key="textField-37"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[( $F{NO_PA}!= null ? $F{NO_PA}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="590"
+						y="0"
+						width="62"
+						height="19"
+						key="textField-38"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[( $F{NO_LOT}!= null ? $F{NO_LOT}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="738"
+						y="0"
+						width="99"
+						height="19"
+						key="textField-39"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="853"
+						y="0"
+						width="66"
+						height="19"
+						key="textField-40"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+( $F{TARIKH_HANTAR_JUPEM}!= null ? $F{TARIKH_HANTAR_JUPEM}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="53"
+						y="0"
+						width="119"
+						height="19"
+						key="textField-45"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[( $F{NO_PTG}!= null ? $F{NO_PTG}:"")]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="658"
+						y="0"
+						width="74"
+						height="19"
+						key="rectangle-55"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="664"
+						y="0"
+						width="62"
+						height="19"
+						key="textField-51"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[( $F{NO_LOT_BARU}!= null ? $F{NO_LOT_BARU}:"")]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+		<noData>
+			<band height="318"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="23"
+						y="152"
+						width="902"
+						height="19"
+						key="rectangle-52"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="345"
+						y="155"
+						width="246"
+						height="14"
+						key="textField-32"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tiada Rekod"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="23"
+						y="89"
+						width="26"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-56"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="49"
+						y="89"
+						width="125"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-57"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="174"
+						y="89"
+						width="38"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-58"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="212"
+						y="89"
+						width="203"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-59"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="415"
+						y="89"
+						width="115"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-60"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="530"
+						y="89"
+						width="54"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-61"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="584"
+						y="89"
+						width="148"
+						height="33"
+						backcolor="#CCCCCC"
+						key="rectangle-62"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="732"
+						y="89"
+						width="113"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-63"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<rectangle>
+					<reportElement
+						x="845"
+						y="89"
+						width="80"
+						height="63"
+						backcolor="#CCCCCC"
+						key="rectangle-64"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="28"
+						y="99"
+						width="16"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-52"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bil."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="52"
+						y="99"
+						width="120"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-53"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO. FAIL"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="178"
+						y="99"
+						width="31"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-54"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO SJ"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="218"
+						y="99"
+						width="187"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-55"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["PROJEK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="421"
+						y="99"
+						width="99"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-56"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["DAERAH/ MUKIM"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="533"
+						y="99"
+						width="49"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-57"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO PA"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="589"
+						y="99"
+						width="132"
+						height="14"
+						backcolor="#CCCCCC"
+						key="textField-58"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO LOT"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="738"
+						y="99"
+						width="99"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-59"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO FAIL JUPEM"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="853"
+						y="99"
+						width="66"
+						height="42"
+						backcolor="#CCCCCC"
+						key="textField-60"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["TARIKH HANTAR KE PENDAFTAR"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="584"
+						y="122"
+						width="74"
+						height="30"
+						backcolor="#CCCCCC"
+						key="rectangle-65"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="592"
+						y="130"
+						width="58"
+						height="14"
+						backcolor="#CCCCCC"
+						key="textField-61"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ASAL"]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="658"
+						y="122"
+						width="74"
+						height="30"
+						backcolor="#CCCCCC"
+						key="rectangle-66"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="666"
+						y="130"
+						width="58"
+						height="14"
+						backcolor="#CCCCCC"
+						key="textField-62"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BARU"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="16"
+						width="406"
+						height="13"
+						key="textField-66"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["<style pdfFontName='Helvetica-Bold'>LAPORAN PERMOHONAN PENDAFTARAN HAKMILIK SAMBUNGAN</style>"]]></textFieldExpression>
+				</textField>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="179"
+						y="37"
+						width="578"
+						height="36"
+						key="subreport-2"
+						positionType="Float"/>
+					<subreportParameter  name="BULAN">
+						<subreportParameterExpression><![CDATA[$P{BULAN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="TAHUN">
+						<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ID_PEJABAT">
+						<subreportParameterExpression><![CDATA[$P{ID_PEJABAT}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="type">
+						<subreportParameterExpression><![CDATA[$F{TYPEREPORT}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="BULANSE">
+						<subreportParameterExpression><![CDATA[$P{BULANSE}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="TAHUNSE">
+						<subreportParameterExpression><![CDATA[$P{TAHUNSE}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir}+"//ppt//LampiranB_sub.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</noData>
+</jasperReport>

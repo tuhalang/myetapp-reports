@@ -1,0 +1,715 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPRekodSenaraiRizabKementerianAgensi" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="8d9f3888-1ec6-4d2e-a95e-995d0178e068">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="LAPORAN" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ID_AGENSI" class="java.lang.Integer"/>
+	<parameter name="ID_KEMENTERIAN" class="java.lang.Integer" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[SELECT TPH.NO_WARTA NO_HAKMILIK,RK.NAMA_KEMENTERIAN,
+to_char(TPH.TARIKH_WARTA,'dd/mm/yyyy')as TARIKH_DAFTAR,
+TPH.NO_LOT,NVL(TPH.LUAS_BERSAMAAN,0.00000) LUAS,UPPER(TPH.KEGUNAAN_TANAH) KEGUNAAN_TANAH
+,RM.NAMA_MUKIM,RD.NAMA_DAERAH,RN.NAMA_NEGERI
+,TPH.NO_FAIL,UPPER(TPH.NO_FAIL_PTG) NO_FAIL_PTG,UPPER(TPH.NO_FAIL_PTD) NO_FAIL_PTD
+,RL.KETERANGAN AS JENIS_LOT, RA.NAMA_AGENSI
+,(	SELECT PP.NO_RUJUKAN_PTG FROM TBLHTPPERMOHONAN PP
+	WHERE PP.ID_PERMOHONAN = TPH.ID_PERMOHONAN
+) NO_FAIL_PTG_ 
+,(	SELECT PP.NO_RUJUKAN_PTD FROM TBLHTPPERMOHONAN PP
+	WHERE PP.ID_PERMOHONAN = TPH.ID_PERMOHONAN
+) NO_FAIL_PTD_ 
+,(	SELECT F.NO_FAIL FROM TBLPFDFAIL F,TBLPERMOHONAN P
+	WHERE F.ID_FAIL=P.ID_FAIL
+	AND P.ID_PERMOHONAN = TPH.ID_PERMOHONAN
+) NO_FAIL_
+FROM TBLHTPHAKMILIK TPH
+,TBLRUJMUKIM RM,TBLRUJDAERAH RD,TBLRUJNEGERI RN
+,TBLRUJLOT RL,TBLRUJAGENSI RA
+,TBLHTPHAKMILIKAGENSI TPHA
+,TBLRUJKEMENTERIAN RK,TBLRUJKEMENTERIANMAPPING RKME
+WHERE TPH.ID_HAKMILIK = TPHA.ID_HAKMILIK
+AND TPHA.STATUS ='Y'
+AND TPHA.ID_KEMENTERIAN=RKME.ID_KEMENTERIANLAMA
+AND RKME.ID_KEMENTERIANBARU=RK.ID_KEMENTERIAN
+AND RKME.STATUS = 'A'
+AND TPHA.ID_AGENSI = RA.ID_AGENSI
+AND TPH.ID_MUKIM = RM.ID_MUKIM
+AND TPH.ID_DAERAH = RD.ID_DAERAH
+AND TPH.ID_NEGERI = RN.ID_NEGERI
+AND TPH.ID_LOT = RL.ID_LOT 
+--155 -BATU PAHAT
+--198 -PDRM
+AND TPHA.ID_AGENSI = $P!{ID_AGENSI}
+--AND RK.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
+AND NVL(TPH.NO_WARTA,' ') <> ' ' 
+AND TPH.STATUS_SAH IN (
+    	SELECT STATUS_SAH FROM TBLHTPRUJSTATUSAH
+    	WHERE AKTIF=1
+)
+ORDER BY TPH.ID_NEGERI,TPH.ID_DAERAH,RM.ID_MUKIM]]>
+	</queryString>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
+	<field name="TARIKH_DAFTAR" class="java.lang.String"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="LUAS" class="java.math.BigDecimal"/>
+	<field name="KEGUNAAN_TANAH" class="java.lang.String"/>
+	<field name="NAMA_MUKIM" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NO_FAIL_PTG" class="java.lang.String"/>
+	<field name="NO_FAIL_PTD" class="java.lang.String"/>
+	<field name="JENIS_LOT" class="java.lang.String"/>
+	<field name="NAMA_AGENSI" class="java.lang.String"/>
+	<field name="NO_FAIL_PTG_" class="java.lang.String"/>
+	<field name="NO_FAIL_PTD_" class="java.lang.String"/>
+	<field name="NO_FAIL_" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="90" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="430f5276-a8f0-4dbc-87b0-f955a23c9f2b" key="staticText-1" x="0" y="10" width="828" height="20"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<text><![CDATA[SENARAI TANAH RIZAB PERSEKUTUAN MENGIKUT KEMENTERIAN DAN AGENSI]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="372f429f-d791-454e-aca0-35b8dab91e65" key="textField-26" x="95" y="40" width="500" height="20"/>
+				<box leftPadding="5"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_KEMENTERIAN}!=null?$F{NAMA_KEMENTERIAN}:"")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="23283bc9-1365-45a0-bf25-487613e696de" key="staticText-239" x="0" y="40" width="80" height="20"/>
+				<box leftPadding="5"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[KEMENTERIAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="19f5134a-9646-40a9-ac67-f876703922e2" key="staticText-240" x="85" y="40" width="5" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="9f4f6f5b-2c3a-4e52-b467-a62dc857183b" key="textField-27" x="95" y="60" width="500" height="20"/>
+				<box leftPadding="5"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_AGENSI}!=null?$F{NAMA_AGENSI}:"")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="d6e29279-3c5b-446f-a459-276d4b2ce3d0" key="staticText-241" x="0" y="60" width="80" height="20"/>
+				<box leftPadding="5"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[AGENSI]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="47d07911-73f3-4e8d-8325-6124e7cbf991" key="staticText-242" x="85" y="60" width="5" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="25" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="dcb23424-5774-4515-a044-a54323c6dcfa" key="staticText-185" mode="Opaque" x="250" y="0" width="70" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO. WARTA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="109cc539-aeb3-46fb-94bc-c9f1e0b7dd9e" key="staticText-207" mode="Opaque" x="360" y="0" width="50" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO.
+LOT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c2632c31-f4b0-44fb-b3c9-84a154a2e16f" key="staticText-208" mode="Opaque" x="320" y="0" width="40" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[TARIKH 
+WARTA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c41b8b1a-3d01-4ff6-b2d2-dfcbb58614ed" key="staticText-209" mode="Opaque" x="460" y="0" width="188" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[KEGUNAAN TANAH]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="08b5067f-edb9-40b5-9543-c13e03353552" key="staticText-210" mode="Opaque" x="648" y="0" width="95" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO. FAIL JKPTG]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="54594083-50d8-445d-a64c-cf735a0a9944" key="staticText-211" mode="Opaque" x="743" y="0" width="85" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO. FAIL PTG/PTD]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a16564fd-923a-4a24-9a74-bdd1800ba7ee" key="staticText-212" mode="Opaque" x="30" y="0" width="100" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NEGERI]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d52f195e-9946-43d2-98d3-09a180fc6ce1" key="staticText-213" mode="Opaque" x="410" y="0" width="50" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[LUAS
+(HEKTAR)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1e175193-8c4e-4c5e-84c2-b5dc45ad592f" key="staticText-224" mode="Opaque" x="0" y="0" width="30" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[BIL.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a21b3ace-475b-4b0d-b6e9-c8198ef229c4" key="staticText-225" mode="Opaque" x="130" y="0" width="60" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[DAERAH]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="68fbe471-e19d-4591-9412-523377cd8454" key="staticText-226" mode="Opaque" x="190" y="0" width="60" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[MUKIM]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Prevent"/>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="0f7be294-30e6-48b6-84f6-a30ed3f147ed" key="textField-2" positionType="Float" stretchType="RelativeToBandHeight" x="190" y="0" width="60" height="20"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_MUKIM}!=null?$F{NAMA_MUKIM}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="a6c00ef3-d544-466b-b32a-6022b6502fce" key="textField-5" positionType="Float" stretchType="RelativeToBandHeight" x="460" y="0" width="188" height="20"/>
+				<box topPadding="1" leftPadding="1" bottomPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{KEGUNAAN_TANAH}!=null?$F{KEGUNAAN_TANAH}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="19c59bcb-cf63-4287-8885-ed0fd9abb810" key="textField-8" positionType="Float" stretchType="RelativeToBandHeight" x="30" y="0" width="100" height="20"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_NEGERI}!=null?$F{NAMA_NEGERI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="e7e43139-beb1-4df1-9677-2f9aa58560a9" key="textField-9" positionType="Float" stretchType="RelativeToBandHeight" x="320" y="0" width="40" height="20"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TARIKH_DAFTAR}!=null?$F{TARIKH_DAFTAR}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="111199b5-ef90-4437-9a99-74c272d850f6" key="textField-10" positionType="Float" stretchType="RelativeToBandHeight" x="360" y="0" width="50" height="20"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{JENIS_LOT}+($F{NO_LOT}!=null?$F{NO_LOT}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="23bf0438-0ead-4e3f-8048-81f4882edac1" key="textField-11" positionType="Float" stretchType="RelativeToBandHeight" x="648" y="0" width="95" height="20"/>
+				<box topPadding="1" leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_FAIL}!=null?$F{NO_FAIL}:$F{NO_FAIL_})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="30308f6a-6aa7-4bcd-a641-5dbfefda2542" key="textField-12" positionType="Float" stretchType="RelativeToBandHeight" x="743" y="0" width="85" height="20"/>
+				<box topPadding="1" leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_FAIL_PTG}!=null && $F{NO_FAIL_PTD}!=null?$F{NO_FAIL_PTG}+"/"+$F{NO_FAIL_PTG}
+:$F{NO_FAIL_PTG}!=null ? $F{NO_FAIL_PTG}
+:$F{NO_FAIL_PTD}!=null ? $F{NO_FAIL_PTD}
+:$F{NO_FAIL_PTG_}!=null ? $F{NO_FAIL_PTG_}
+:$F{NO_FAIL_PTD_}!=null ? $F{NO_FAIL_PTD_}
+:$F{NO_FAIL_PTG_}!=null && $F{NO_FAIL_PTD_}!=null?$F{NO_FAIL_PTG_}+"/"+$F{NO_FAIL_PTD_}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="###0.00000" isBlankWhenNull="true">
+				<reportElement uuid="8b86ea99-97e7-41de-a526-67be6fd57747" key="textField-13" positionType="Float" stretchType="RelativeToBandHeight" x="410" y="0" width="50" height="20"/>
+				<box leftPadding="1" rightPadding="3">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{LUAS}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="85f74364-ea98-4eab-84e3-2ba2271ea3f1" key="textField-21" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="30" height="20"/>
+				<box topPadding="1" leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="7" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="ef02b02d-14b2-4060-97bb-c89d4e0de896" key="textField-22" positionType="Float" stretchType="RelativeToBandHeight" x="130" y="0" width="60" height="20"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NAMA_DAERAH}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="cfdcf154-bd8c-4b32-a7b3-d98698681500" key="textField-23" positionType="Float" stretchType="RelativeToBandHeight" x="250" y="0" width="70" height="20"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_HAKMILIK}!=null?$F{NO_HAKMILIK}:"")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Prevent"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="18" splitType="Stretch">
+			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
+				<reportElement uuid="f6c3889d-e0fa-44a5-9002-31063369e560" key="textField-15" x="54" y="0" width="100" height="18"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="e05fc514-1cf1-42e1-9195-3f53de95c1e6" key="staticText-214" x="0" y="0" width="53" height="18"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Tarikh Cetak :]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="ad3ff4c9-20e1-4655-936c-5e808e993d76" key="textField-16" x="583" y="0" width="116" height="18"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" Mukasurat " + $V{PAGE_NUMBER} + " dari "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" isBlankWhenNull="false">
+				<reportElement uuid="3c63ee4a-099e-4dd2-b336-828557d31b8b" key="textField-18" x="698" y="0" width="23" height="18"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "+$V{PAGE_NUMBER}+""]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="140" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="e14fc613-e114-4351-80ca-216c1372e31e" key="staticText-223" mode="Opaque" x="0" y="110" width="828" height="30"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[TIADA REKOD]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1da8bcda-e838-4704-abc2-8172db82e6bb" key="staticText-227" x="0" y="10" width="828" height="20"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<text><![CDATA[SENARAI TANAH RIZAB PERSEKUTUAN MENGIKUT KEMENTERIAN DAN AGENSI]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="09f206d9-ceb5-460e-99c6-a80326de2fcf" key="staticText-228" mode="Opaque" x="250" y="85" width="75" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO. WARTA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6058b440-19ca-4a3e-a29a-c111a361f556" key="staticText-229" mode="Opaque" x="365" y="85" width="50" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO.
+LOT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d0c07b74-0e05-4ac2-870e-ee0289a7675e" key="staticText-230" mode="Opaque" x="325" y="85" width="40" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[TARIKH 
+WARTA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="45c53ab0-fd41-4e15-8cff-aeac67c8d991" key="staticText-231" mode="Opaque" x="465" y="85" width="183" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[KEGUNAAN TANAH]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="000e22d9-ff0b-4e1d-9e24-7c33ca730d56" key="staticText-232" mode="Opaque" x="648" y="85" width="95" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO. FAIL JKPTG]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6a661abf-e560-467f-b31d-6d72401f8670" key="staticText-233" mode="Opaque" x="743" y="85" width="85" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO. FAIL PTG/PTD]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8dc24942-caea-473c-a51a-11ca00a29ea0" key="staticText-234" mode="Opaque" x="30" y="85" width="100" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NEGERI]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="aaf1ef2e-1e91-4f3a-a8a0-e2b32b9a2dcd" key="staticText-235" mode="Opaque" x="415" y="85" width="50" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[LUAS
+(HEKTAR)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7db87363-227c-453f-bf38-dea03b8be804" key="staticText-236" mode="Opaque" x="0" y="85" width="30" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[BIL.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3c1151e4-8547-4e8a-852a-35fd9620c41d" key="staticText-237" mode="Opaque" x="130" y="85" width="60" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[DAERAH]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="747a81dc-461a-4df9-bd6b-42725dd9c721" key="staticText-238" mode="Opaque" x="190" y="85" width="60" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[MUKIM]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="a90a126b-2f85-46bc-844f-f2392798bdf8" key="textField-28" x="95" y="40" width="500" height="20"/>
+				<box leftPadding="5"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_KEMENTERIAN}!=null?$F{NAMA_KEMENTERIAN}:"")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="4a95ff6c-e97b-4660-af70-93d001e2b675" key="staticText-243" x="0" y="40" width="80" height="20"/>
+				<box leftPadding="5"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[KEMENTERIAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="953c9d49-3cdc-47ff-9b43-e296f1c191ca" key="staticText-244" x="85" y="40" width="5" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="9d61d7d6-1733-4d41-8551-30e9d8eb831d" key="textField-29" x="95" y="60" width="500" height="20"/>
+				<box leftPadding="5"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_AGENSI}!=null?$F{NAMA_AGENSI}:"")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="10427796-d023-4a1f-95d6-116b84c10db3" key="staticText-245" x="0" y="60" width="80" height="20"/>
+				<box leftPadding="5"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[AGENSI]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6c5e5d98-86ff-4a29-a987-53e4cff4e2d4" key="staticText-246" x="85" y="60" width="5" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

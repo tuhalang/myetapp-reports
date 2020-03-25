@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SlipPendengaran" pageWidth="595" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="28" bottomMargin="28" uuid="b128923e-baf0-4474-9e76-cd2441cd91e6">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<import value="java.util.*"/>
+	<parameter name="namaPegawai" class="java.lang.String"/>
+	<parameter name="idDaerah" class="java.lang.String"/>
+	<parameter name="tarikhBicara" class="java.lang.String"/>
+	<parameter name="tarikhBicaraTo" class="java.lang.String"/>
+	<parameter name="id_pegawai" class="java.lang.String"/>
+	<parameter name="daerahMohon" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT DISTINCT A.PEG_PENGENDALI,    
+        (SELECT REPLACE(NVL(TO_CHAR(SUM(JUMLAH_HTA),'999,999,999.99'),'0.00'),' ') FROM (SELECT J.JUMLAH_HTA_TARIKHMOHON AS JUMLAH_HTA
+    FROM TBLPPKPERBICARAAN F,
+TBLPFDFAIL G,
+TBLPPKPEMOHON H,
+TBLPPKKEPUTUSANPERMOHONAN I,
+TBLPPKPERMOHONAN J
+WHERE G.ID_FAIL = J.ID_FAIL
+AND J.ID_PERMOHONAN = I.ID_PERMOHONAN
+AND I.ID_KEPUTUSANPERMOHONAN = F.ID_KEPUTUSANPERMOHONAN
+AND H.ID_PEMOHON = J.ID_PEMOHON
+--AND TO_DATE(F.TARIKH_BICARA,'dd/MM/yyyy') >= TO_DATE('$P!{tarikhBicara}','dd/MM/yyyy')
+--AND TO_DATE(F.TARIKH_BICARA,'dd/MM/yyyy') <= TO_DATE('$P!{tarikhBicaraTo}','dd/MM/yyyy')
+AND TO_DATE(TO_CHAR(F.TARIKH_BICARA,'dd/MM/yyyy'),'dd/MM/yyyy')  
+BETWEEN TO_DATE('$P!{tarikhBicara}' , 'dd/MM/yyyy') 
+AND TO_DATE('$P!{tarikhBicaraTo}' , 'dd/MM/yyyy') 
+AND (('$P!{id_pegawai}' != '000'  AND UPPER(F.PEG_PENGENDALI) IN (SELECT UPPER(NAMA_PEGAWAI) FROM TBLPPKRUJUNIT WHERE ID_UNITPSK = '$P!{id_pegawai}'))
+OR ('$P!{id_pegawai}' = '000'))
+AND J.ID_DAERAHMHN = $P!{idDaerah})) AS SUM_JUM_HTA,
+(SELECT REPLACE(NVL(TO_CHAR(SUM(JUMLAH_HA),'999,999,999.99'),'0.00'),' ') FROM (SELECT J.JUMLAH_HA_TARIKHMOHON AS JUMLAH_HA
+    FROM TBLPPKPERBICARAAN F,
+TBLPFDFAIL G,
+TBLPPKPEMOHON H,
+TBLPPKKEPUTUSANPERMOHONAN I,
+TBLPPKPERMOHONAN J
+WHERE G.ID_FAIL = J.ID_FAIL
+AND J.ID_PERMOHONAN = I.ID_PERMOHONAN
+AND I.ID_KEPUTUSANPERMOHONAN = F.ID_KEPUTUSANPERMOHONAN
+AND H.ID_PEMOHON = J.ID_PEMOHON
+--AND TO_CHAR(F.TARIKH_BICARA,'dd/MM/yyyy') = '$P!{tarikhBicara}'
+AND TO_DATE(TO_CHAR(F.TARIKH_BICARA,'dd/MM/yyyy'),'dd/MM/yyyy')  BETWEEN TO_DATE('$P!{tarikhBicara}' , 'dd/MM/yyyy') AND TO_DATE('$P!{tarikhBicaraTo}' , 'dd/MM/yyyy') 
+AND (('$P!{id_pegawai}' != '000'  AND UPPER(F.PEG_PENGENDALI) IN (SELECT UPPER(NAMA_PEGAWAI) FROM TBLPPKRUJUNIT WHERE ID_UNITPSK = '$P!{id_pegawai}'))
+OR ('$P!{id_pegawai}' = '000'))
+AND J.ID_DAERAHMHN = $P!{idDaerah})) AS SUM_JUM_HA,
+(SELECT REPLACE(NVL(TO_CHAR(SUM(JUMLAH_SELURUH),'999,999,999.99'),'0.00'),' ') FROM (SELECT (SUM(J.JUMLAH_HTA_TARIKHMOHON) + SUM(J.JUMLAH_HA_TARIKHMOHON)) AS JUMLAH_SELURUH
+    FROM TBLPPKPERBICARAAN F,
+TBLPFDFAIL G,
+TBLPPKPEMOHON H,
+TBLPPKKEPUTUSANPERMOHONAN I,
+TBLPPKPERMOHONAN J
+WHERE G.ID_FAIL = J.ID_FAIL
+AND J.ID_PERMOHONAN = I.ID_PERMOHONAN
+AND I.ID_KEPUTUSANPERMOHONAN = F.ID_KEPUTUSANPERMOHONAN
+AND H.ID_PEMOHON = J.ID_PEMOHON
+--AND TO_CHAR(F.TARIKH_BICARA,'dd/MM/yyyy') = '$P!{tarikhBicara}'
+AND TO_DATE(TO_CHAR(F.TARIKH_BICARA,'dd/MM/yyyy'),'dd/MM/yyyy')  BETWEEN TO_DATE('$P!{tarikhBicara}' , 'dd/MM/yyyy') AND TO_DATE('$P!{tarikhBicaraTo}' , 'dd/MM/yyyy') 
+AND (('$P!{id_pegawai}' != '000'  AND UPPER(F.PEG_PENGENDALI) IN (SELECT UPPER(NAMA_PEGAWAI) FROM TBLPPKRUJUNIT WHERE ID_UNITPSK = '$P!{id_pegawai}'))
+OR ('$P!{id_pegawai}' = '000'))
+AND J.ID_DAERAHMHN = $P!{idDaerah})) AS SUM_JUM_KESELURUHAN,
+        TO_CHAR(A.TARIKH_BICARA,'DD/MM/YYYY') AS TARIKH_BICARA,
+TO_DATE(A.TARIKH_BICARA) AS TARIKH_BICARA_DATE,
+UU.NAMA_PEGAWAI
+FROM TBLPPKPERBICARAAN A,TBLPPKBAYARAN BAY,
+TBLPFDFAIL B,
+TBLPPKPEMOHON C,
+TBLPPKKEPUTUSANPERMOHONAN D,
+TBLPPKPERMOHONAN E,TBLPPKRUJUNIT UU
+WHERE B.ID_FAIL = E.ID_FAIL AND UU.ID_UNITPSK = A.ID_UNITPSK AND BAY.ID_PERMOHONAN = E.ID_PERMOHONAN
+AND E.ID_PERMOHONAN = D.ID_PERMOHONAN
+AND D.ID_KEPUTUSANPERMOHONAN = A.ID_KEPUTUSANPERMOHONAN
+AND C.ID_PEMOHON = E.ID_PEMOHON
+--AND TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy') = '$P!{tarikhBicara}'
+AND TO_DATE(TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy'),'dd/MM/yyyy')  BETWEEN TO_DATE('$P!{tarikhBicara}' , 'dd/MM/yyyy') AND TO_DATE('$P!{tarikhBicaraTo}' , 'dd/MM/yyyy') 
+AND (('$P!{id_pegawai}' != '000'  AND UPPER(A.PEG_PENGENDALI) 
+IN (SELECT UPPER(NAMA_PEGAWAI) FROM TBLPPKRUJUNIT WHERE ID_UNITPSK = '$P!{id_pegawai}'))
+OR ('$P!{id_pegawai}' = '000'))
+AND E.ID_DAERAHMHN = $P!{idDaerah}
+ORDER BY TARIKH_BICARA_DATE ASC]]>
+	</queryString>
+	<field name="PEG_PENGENDALI" class="java.lang.String"/>
+	<field name="SUM_JUM_HTA" class="java.lang.String"/>
+	<field name="SUM_JUM_HA" class="java.lang.String"/>
+	<field name="SUM_JUM_KESELURUHAN" class="java.lang.String"/>
+	<field name="TARIKH_BICARA" class="java.lang.String"/>
+	<field name="TARIKH_BICARA_DATE" class="java.sql.Timestamp"/>
+	<field name="NAMA_PEGAWAI" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="46" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-1" x="89" y="3" width="450" height="14" uuid="75522960-d73c-40b1-aa8f-3c6e9e355ff2"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[SLIP PENDENGARAN DAN PERBICARAAN]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-2" positionType="Float" stretchType="RelativeToTallestObject" x="36" y="20" width="450" height="23" uuid="485868d9-fa08-43bc-8909-bfb442c163e5"/>
+				<textElement textAlignment="Left">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["DAERAH : "+$P{daerahMohon}
++($P{namaPegawai}!= null ? "\n"+"PEGAWAI : "+$P{namaPegawai}:"")]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Prevent"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="46" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-14" x="36" y="5" width="161" height="13" uuid="acd62791-de91-481d-a3f0-acb72869d9a6"/>
+				<textElement>
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["TARIKH BICARA : "+$F{TARIKH_BICARA}]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-1" positionType="Float" x="35" y="20" width="524" height="26" uuid="73054195-e871-4695-b9a8-7765ba5cca16"/>
+				<subreportParameter name="namaPegawai">
+					<subreportParameterExpression><![CDATA[$P{namaPegawai}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idDaerah">
+					<subreportParameterExpression><![CDATA[$P{idDaerah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tarikhBicara">
+					<subreportParameterExpression><![CDATA[$P{tarikhBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tarikhBicaraTo">
+					<subreportParameterExpression><![CDATA[$P{tarikhBicaraTo}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="id_pegawai">
+					<subreportParameterExpression><![CDATA[$P{id_pegawai}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="daerahMohon">
+					<subreportParameterExpression><![CDATA[$P{daerahMohon}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tarikh_bicara">
+					<subreportParameterExpression><![CDATA[$F{TARIKH_BICARA}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "\\ppk\\SlipPendengaran_sub.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Prevent"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Prevent"/>
+	</pageFooter>
+	<summary>
+		<band height="107" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-7" x="71" y="12" width="280" height="14" uuid="91c27218-9d3f-49e6-bb23-5471e59f044a"/>
+				<textElement textAlignment="Right">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["JUMLAH HARTA TAK ALIH (RM) "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-8" x="71" y="37" width="280" height="14" uuid="8d0cf3ac-4b72-4339-8a5a-78f57180f0ec"/>
+				<textElement textAlignment="Right">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["JUMLAH HARTA ALIH (RM) "]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement key="line-10" x="424" y="67" width="97" height="1" uuid="e8ad336d-aa0b-4ecb-b978-1f8cf0d4f715"/>
+			</line>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-9" x="71" y="77" width="280" height="14" uuid="5d938fa6-10a8-47fb-8184-b8d2e59d41b2"/>
+				<textElement textAlignment="Right">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["JUMLAH KESELURUHAN (RM) "]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement key="line-11" x="424" y="101" width="97" height="1" uuid="ce390e71-1433-4d4f-88ce-833cb34d5ad5"/>
+			</line>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="419" y="13" width="100" height="14" uuid="d52b578a-35cb-495b-bfdd-3274c1334818"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SUM_JUM_HTA}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="418" y="36" width="100" height="14" uuid="33f509b0-651f-4866-88af-9c477a26c71e"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SUM_JUM_HA}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="419" y="77" width="100" height="14" uuid="28f93fb3-700e-4717-8178-f6cc8dbca3e5"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SUM_JUM_KESELURUHAN}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+	<noData>
+		<band height="81" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-8" x="85" y="12" width="450" height="14" uuid="1468bf77-42a6-4f08-b527-447bae272c07"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[SLIP PENDENGARAN DAN PERBICARAAN]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-12" x="43" y="67" width="280" height="14" uuid="e8d3f2ec-167d-47a4-8515-9853cd5a6aa6"/>
+				<textElement textAlignment="Right">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Tiada Rekod"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-13" positionType="Float" x="43" y="36" width="450" height="24" uuid="df05c386-7f0b-4409-a4a7-1c974276b7d9"/>
+				<textElement textAlignment="Left">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["DAERAH : "+$P{daerahMohon}
++($P{namaPegawai}!= null ? "\n"+"PEGAWAI :"+$P{namaPegawai}:"")]]></textFieldExpression>
+			</textField>
+		</band>
+	</noData>
+</jasperReport>

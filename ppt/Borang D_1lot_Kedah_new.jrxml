@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Borang D_1lot_Kedah_new"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="535"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="id_mukim" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_Fail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT ROWNUM AS TURUTAN,
+INITCAP(NAMA_MUKIM) AS NAMA_MUKIM,
+INITCAP(NAMA_DAERAH) AS NAMA_DAERAH,
+NO_HAKMILIK,ID_HAKMILIK,ID_MUKIM,LUAS_AMBIL_H,LUAS_LOT_H,JUMLAH,NO_LOTPT,KOD_JENIS_HAKMILIK FROM
+(SELECT INITCAP(M.NAMA_MUKIM) AS NAMA_MUKIM, C.NO_HAKMILIK, TO_CHAR(C.ID_HAKMILIK)AS ID_HAKMILIK, TO_CHAR(M.ID_MUKIM)AS ID_MUKIM,
+REPLACE((SELECT 
+    TO_CHAR(SUM(case
+        when h.ID_UNITLUASAMBIL_CONVERT = 1 then TO_CHAR(ROUND(NVL(H.LUAS_AMBIL,0),4),'9999999990.9999')
+        when h.ID_UNITLUASAMBIL_CONVERT = 2 then TO_CHAR(ROUND((NVL(H.LUAS_AMBIL,0)/10000),4),'999999990.9999')
+        end),'999999990.9999')
+    FROM TBLPPTPERMOHONAN P,TBLPFDFAIL F,
+    TBLPPTHAKMILIK H,TBLRUJMUKIM M , TBLRUJJENISHAKMILIK HM, TBLRUJLOT JL
+    WHERE P.ID_FAIL= F.ID_FAIL
+    AND P.ID_PERMOHONAN = H.ID_PERMOHONAN
+    AND H.ID_MUKIM = M.ID_MUKIM
+    AND H.ID_JENISHAKMILIK = HM.ID_JENISHAKMILIK(+)
+    AND H.ID_LOT = JL.ID_LOT(+)
+    --AND F.ID_FAIL = 1612631268
+    AND F.ID_FAIL = $P!{id_Fail}
+    --AND H.ID_MUKIM = $P!{id_mukim}
+    ),' ') AS LUAS_AMBIL_H,
+REPLACE((SELECT 
+    TO_CHAR(SUM(case
+        when h.ID_UNITLUASLOT_CONVERT = 1 then TO_CHAR(ROUND(NVL(H.LUAS_LOT,0),4),'999999990.9999')
+        when h.ID_UNITLUASLOT_CONVERT = 2 then TO_CHAR(ROUND((NVL(H.LUAS_LOT,0)/10000),4),'99999990.9999')
+        end),'9999999990.9999')
+    FROM TBLPPTPERMOHONAN P,TBLPFDFAIL F,
+    TBLPPTHAKMILIK H,TBLRUJMUKIM M , TBLRUJJENISHAKMILIK HM, TBLRUJLOT JL
+    WHERE P.ID_FAIL= F.ID_FAIL
+    AND P.ID_PERMOHONAN = H.ID_PERMOHONAN
+    AND H.ID_MUKIM = M.ID_MUKIM
+    AND H.ID_JENISHAKMILIK = HM.ID_JENISHAKMILIK(+)
+    AND H.ID_LOT = JL.ID_LOT(+)
+    --AND F.ID_FAIL = 1612631268
+    AND F.ID_FAIL = $P!{id_Fail}
+    --AND H.ID_MUKIM = $P!{id_mukim}
+    ),' ') AS LUAS_LOT_H,
+'JUMLAH' AS JUMLAH, UPPER(DJ.NAMA_DAERAH)AS NAMA_DAERAH,
+CASE 
+    WHEN C.NO_LOT IS NOT NULL AND C.NO_PT IS NULL THEN C.NO_LOT 
+    WHEN C.NO_LOT IS NULL AND C.NO_PT IS NULL THEN LT.KETERANGAN || C.NO_PT 
+    WHEN C.NO_LOT IS NULL AND C.NO_PT IS NOT NULL THEN  LT.KETERANGAN  || CHR(32) || C.NO_PT  
+    WHEN C.NO_LOT IS NOT NULL AND C.NO_PT IS NOT NULL THEN C.NO_LOT || CHR(32) || CHR(40) || LT.KETERANGAN  || CHR(32) || C.NO_PT || CHR(41) 
+    ELSE ''
+    END AS NO_LOTPT,HM.KOD_JENIS_HAKMILIK
+FROM TBLPFDFAIL F, TBLPPTPERMOHONAN TPM, TBLRUJDAERAH DJ, TBLPPTHAKMILIK C, TBLRUJMUKIM M, TBLRUJLOT LT,TBLRUJJENISHAKMILIK HM 
+WHERE TPM.ID_FAIL = F.ID_FAIL
+AND TPM.ID_DAERAH = DJ.ID_DAERAH(+)
+AND C.ID_JENISHAKMILIK = HM.ID_JENISHAKMILIK(+)
+AND TPM.ID_PERMOHONAN = C.ID_PERMOHONAN
+AND C.ID_MUKIM = M.ID_MUKIM(+)
+AND C.ID_LOT = LT.ID_LOT(+)
+--AND F.ID_FAIL = 1612631268
+AND F.ID_FAIL = $P!{id_Fail}
+--AND C.ID_MUKIM = $P!{id_mukim}
+ORDER BY nama_mukim
+)]]></queryString>
+
+	<field name="TURUTAN" class="java.math.BigDecimal"/>
+	<field name="NAMA_MUKIM" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="ID_HAKMILIK" class="java.lang.String"/>
+	<field name="ID_MUKIM" class="java.lang.String"/>
+	<field name="LUAS_AMBIL_H" class="java.lang.String"/>
+	<field name="LUAS_LOT_H" class="java.lang.String"/>
+	<field name="JUMLAH" class="java.lang.String"/>
+	<field name="NO_LOTPT" class="java.lang.String"/>
+	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="58"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="1"
+						y="0"
+						width="67"
+						height="40"
+						key="textField-85"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Double"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Double"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="68"
+						y="0"
+						width="88"
+						height="40"
+						key="textField-84"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Double"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Double"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="156"
+						y="0"
+						width="231"
+						height="40"
+						key="textField-83"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Double"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Double"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="387"
+						y="0"
+						width="58"
+						height="40"
+						key="textField-82"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Double"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Double"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="445"
+						y="0"
+						width="69"
+						height="40"
+						key="textField-81"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Double"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Double"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="387"
+						y="1"
+						width="56"
+						height="18"
+						key="textField-76"
+						positionType="Float"
+						isPrintRepeatedValues="false"
+						isRemoveLineWhenBlank="true"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["(HEKTAR)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="1"
+						y="1"
+						width="66"
+						height="18"
+						key="textField-80"
+						positionType="Float"
+						isPrintRepeatedValues="false"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_MUKIM} != null ? $F{NAMA_MUKIM}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="1"
+						y="19"
+						width="67"
+						height="21"
+						key="textField-86"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_LOTPT} != null ? $F{NO_LOTPT}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="69"
+						y="19"
+						width="86"
+						height="21"
+						key="textField-87"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_HAKMILIK} != null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":"")+$F{NO_HAKMILIK}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="387"
+						y="19"
+						width="58"
+						height="21"
+						key="textField-88"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{LUAS_LOT_H}!=null ? $F{LUAS_LOT_H}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="445"
+						y="19"
+						width="69"
+						height="21"
+						key="textField-89"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{LUAS_AMBIL_H} != null ? $F{LUAS_AMBIL_H}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="447"
+						y="1"
+						width="64"
+						height="18"
+						key="textField-90"
+						positionType="Float"
+						isPrintRepeatedValues="false"
+						isRemoveLineWhenBlank="true"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["(HEKTAR)"]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

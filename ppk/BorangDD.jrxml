@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BorangDD"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="AllSectionsNoDetail"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idperbicaraan" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="namaPegawai" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="jawatan" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="idOB" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT 
+TBLPPKPEMOHON.ID_PEMOHON,
+TBLPPKOB.ID_OB,TBLPPKPERBICARAAN.ID_PERBICARAAN ,
+REPLACE(UPPER(REPLACE(TRIM(TBLRUJDAERAH.NAMA_DAERAH),'&','&#38;')),',') AS NAMA_DAERAH, TBLRUJNEGERI.NAMA_NEGERI,
+TBLPFDFAIL.NO_FAIL AS NO_FAIL_SEBENAR, TBLPFDFAIL.ID_FAIL, 
+CASE
+    WHEN LENGTH(TBLPFDFAIL.NO_FAIL)>=30 THEN ''||substr(TBLPFDFAIL.NO_FAIL,1,24)||''
+    WHEN LENGTH(TBLPFDFAIL.NO_FAIL)<=25 THEN ''||rtrim(TBLPFDFAIL.NO_FAIL)||''
+END AS NO_FAIL,
+TO_CHAR(TBLPPKPERMOHONAN.TARIKH_MOHON ,'yyyy') AS TAHUN_MOHON,
+UPPER(TBLPPKSIMATI.NAMA_SIMATI) AS NAMA_SIMATI , UPPER(TBLPPKSIMATI.NAMA_LAIN) AS NAMA_LAIN,
+CASE
+    WHEN LENGTH(AAA.NO_KP1) IS NULL THEN ''
+    WHEN LENGTH(AAA.NO_KP1)<12 THEN  ''||RTRIM(AAA.NO_KP1)||''
+    WHEN LENGTH(RTRIM(AAA.NO_KP1))=12 THEN SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4) 
+    ELSE SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4)  ||' ('||TRIM(SUBSTR(AAA.NO_KP1,13,LENGTH(AAA.NO_KP1)))||')'
+END AS NO_KP_SIMATI
+	,CASE
+		WHEN AAA.NO_KP_BARU IS NOT NULL OR AAA.NO_KP_LAMA IS NOT NULL THEN 'Y'
+		ELSE 'N'
+	END ISKPBARU_SIMATI
+      	,
+CASE 
+    WHEN LENGTH(BBB.NO_KP2) IS NULL THEN ''
+    WHEN LENGTH(BBB.NO_KP2)<12 THEN  ''||RTRIM(BBB.NO_KP2)||''
+    WHEN LENGTH(RTRIM(BBB.NO_KP2))=12 THEN SUBSTR(BBB.NO_KP2,1,6) || '-' || SUBSTR(BBB.NO_KP2,7,2) || '-' || SUBSTR(BBB.NO_KP2,9,4) 
+    ELSE SUBSTR(BBB.NO_KP2,1,6) || '-' || SUBSTR(BBB.NO_KP2,7,2) || '-' || SUBSTR(BBB.NO_KP2,9,4)  ||' ('||SUBSTR(BBB.NO_KP2,13,LENGTH(BBB.NO_KP2))||')'
+END  AS NO_KP_PEMOHON, 
+CASE
+		WHEN BBB.NO_KP_BARU IS NOT NULL OR BBB.NO_KP_LAMA IS NOT NULL THEN 'Y'
+		ELSE 'N'
+	END ISKPBARU_PEMOHON
+      	,                             
+NVL(TO_CHAR(TBLPPKSIMATI.TARIKH_MATI,'dd/mm/yyyy'),'') AS TARIKH_MATI, 
+TBLPPKSIMATI.NO_SIJIL_MATI,
+CASE 
+        WHEN TBLPPKSIMATI.ID_BUKTIMATI = 1 THEN ', No. Sijil Mati: '|| TBLPPKSIMATI.NO_SIJIL_MATI
+        WHEN TBLPPKSIMATI.ID_BUKTIMATI = 2 THEN ', Surat Sumpah Kematian: '|| TBLPPKSIMATI.NO_SIJIL_MATI
+        WHEN TBLPPKSIMATI.ID_BUKTIMATI = 3 THEN ', Anggapan Kematian dari Mahkamah Tinggi: '|| TBLPPKSIMATI.NO_SIJIL_MATI
+        WHEN TBLPPKSIMATI.ID_BUKTIMATI = 4 THEN ', No. Permit Kubur: '|| TBLPPKSIMATI.NO_SIJIL_MATI
+	ELSE ''
+       END AS BUKTI_MATI, 
+UPPER(TBLPPKPEMOHON.NAMA_PEMOHON) AS NAMA_PEMOHON,  
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKPEMOHON.ALAMAT1_SURAT),'&','&#38;')),',') AS ALAMAT1_PM,
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKPEMOHON.ALAMAT2_SURAT),'&','&#38;')),',') AS ALAMAT2_PM,
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKPEMOHON.ALAMAT3_SURAT),'&','&#38;')),',') AS ALAMAT3_PM,
+REPLACE(UPPER(TRIM(TBLPPKPEMOHON.POSKOD_SURAT)),',') AS POSKOD_PM,
+CASE
+   WHEN UPPER(TRIM(A.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(A.KETERANGAN)),'')
+   ELSE ''
+END AS BANDAR_PM,
+CASE
+   WHEN UPPER(TRIM(TBLRUJNEGERITBLPPKPEMOHON.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(TBLRUJNEGERITBLPPKPEMOHON.NAMA_NEGERI)),'')
+   ELSE ''
+END AS NEGERI_PM,
+-- ALAMAT PEMOHON
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKSIMATI.ALAMAT_1),'&','&#38;')),',') AS ALAMAT1_SM,
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKSIMATI.ALAMAT_2),'&','&#38;')),',') AS ALAMAT2_SM,
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKSIMATI.ALAMAT_3),'&','&#38;')),',') AS ALAMAT3_SM,
+REPLACE(UPPER(TRIM(TBLPPKSIMATI.POSKOD)),',') AS POSKOD_SM, 
+CASE
+   WHEN UPPER(TRIM(B.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(B.KETERANGAN)),'')
+   ELSE ''
+END AS BANDAR_SM,
+CASE
+   WHEN UPPER(TRIM(TLBRUJNEGERITBLPPKSIMATI.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(TLBRUJNEGERITBLPPKSIMATI.NAMA_NEGERI)),'')
+   ELSE ''
+END AS NEGERI_SM,
+---ALAMAT SIMATI                     
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKPERBICARAAN.TEMPAT_BICARA),'&','&#38;')),',') AS TEMPAT_BICARA,
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKPERBICARAAN.ALAMAT_BICARA1),'&','&#38;')),',') AS ALAMAT1_BC,
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKPERBICARAAN.ALAMAT_BICARA2),'&','&#38;')),',') AS ALAMAT2_BC,
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKPERBICARAAN.ALAMAT_BICARA1),'&','&#38;')),',') AS ALAMAT3_BC,
+REPLACE(UPPER(TRIM(TBLPPKPERBICARAAN.POSKOD)),',') AS POSKOD_BC,
+CASE
+   WHEN UPPER(TRIM(TBLPPKPERBICARAAN.BANDAR)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(TBLPPKPERBICARAAN.BANDAR)),'')
+   ELSE ''
+END AS BANDAR_BC,
+CASE
+   WHEN UPPER(TRIM(TBLRUJNEGERITBLPPKPERBICARAAN.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(TBLRUJNEGERITBLPPKPERBICARAAN.NAMA_NEGERI)),'')
+   ELSE ''
+END AS NEGERI_BC,             
+TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'DD') AS TARIKHHARI_BICARA, 
+CASE 
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='01' THEN 'Januari' 
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='02' THEN 'Febuari'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='03' THEN 'Mac'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='04' THEN 'April'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='05' THEN 'Mei'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='06' THEN 'Jun'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='07' THEN 'Julai'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='08' THEN 'Ogos' 
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='09' THEN 'September' 
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='10' THEN 'Oktober'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='11' THEN 'November'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'MM')='12' THEN 'Disember' 
+END || ' ' || TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'YYYY') AS BULAN, 
+CASE 
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'FMDAY')='SUNDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='AHAD' THEN 'Ahad'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'FMDAY')='MONDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='ISNIN' THEN 'Isnin'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'FMDAY')='TUESDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='SELASA' THEN 'Selasa'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'FMDAY')='WEDNESDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='RABU' THEN 'Rabu'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'FMDAY')='THURSDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='KHAMIS' THEN 'Khamis'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'FMDAY')='FRIDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='JUMAAT' THEN 'Jumaat'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'FMDAY')='SATURDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='SABTU' THEN 'Sabtu' 
+END AS HARI,           
+TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'dd/mm/yyyy') AS TARIKH_BICARA,        
+DECODE(SUBSTR(TBLPPKPERBICARAAN.MASA_BICARA,1,2),1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,
+13,1,14,2,15,3,16,4,17,5,18,6,19,7,20,8,21,9,22,10,23,11,24,12) 
+|| ':' 
+|| SUBSTR(TBLPPKPERBICARAAN.MASA_BICARA,3,4) 
+|| ' ' 
+||CASE 
+    WHEN TBLPPKPERBICARAAN.JENIS_MASA_BICARA = 1 THEN 'pagi'
+    WHEN TBLPPKPERBICARAAN.JENIS_MASA_BICARA = 2 THEN 'petang' 
+    ELSE ''
+  END  AS MASA_BICARA,
+TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'DD') AS TARIKHHARI_NOTIS, 
+CASE 
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='01' THEN 'Januari' 
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='02' THEN 'Febuari'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='03' THEN 'Mac'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='04' THEN 'April'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='05' THEN 'Mei'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='06' THEN 'Jun'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='07' THEN 'Julai'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='08' THEN 'Ogos'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='09' THEN 'September' 
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='10' THEN 'Oktober'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='11' THEN 'November'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'MM')='12' THEN 'Disember' 
+END || ' ' || TO_CHAR(TBLPPKPERBICARAAN.TARIKH_BICARA, 'YYYY') AS BULAN_NOTIS, 
+CASE 
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY')='SUNDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='AHAD' THEN 'Ahad'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY')='MONDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='ISNIN' THEN 'Isnin'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY')='TUESDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='SELASA' THEN 'Selasa'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY')='WEDNESDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='RABU' THEN 'Rabu'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY')='THURSDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='KHAMIS' THEN 'Khamis'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY')='FRIDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='JUMAAT' THEN 'Jumaat'
+    WHEN TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY')='SATURDAY' OR UPPER(TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'FMDAY'))='SABTU' THEN 'Sabtu' 
+END AS HARI_NOTIS,                
+TO_CHAR(TBLPPKPERBICARAAN.TARIKH_NOTIS, 'dd/mm/yyyy') AS TARIKH_NOTIS,
+UPPER(TBLPPKOB.NAMA_OB) AS NAMA_OB,   
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKOB.ALAMAT_1),'&','&#38;')),',') AS ALAMAT1_OB,
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKOB.ALAMAT_2),'&','&#38;')),',') AS ALAMAT2_OB,
+REPLACE(UPPER(REPLACE(TRIM(TBLPPKOB.ALAMAT_3),'&','&#38;')),',') AS ALAMAT3_OB,
+REPLACE(UPPER(TRIM(TBLPPKOB.POSKOD)),',') AS POSKOD_OB,
+CASE
+   WHEN UPPER(TRIM(D.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(D.KETERANGAN)),'')
+   ELSE ''
+END AS BANDAR_OB,
+CASE
+   WHEN UPPER(TRIM(TBLRUJNEGERITBLPPKOB.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(TBLRUJNEGERITBLPPKOB.NAMA_NEGERI)),'')
+   ELSE ''
+END AS NEGERI_OB,      
+---ALAMAT OB                                        
+CASE 
+    WHEN LENGTH(CCC.NO_KP2) IS NULL THEN ''
+    WHEN LENGTH(CCC.NO_KP2)<12 THEN  ''||RTRIM(CCC.NO_KP2)||''
+    WHEN LENGTH(RTRIM(CCC.NO_KP2))=12 THEN SUBSTR(CCC.NO_KP2,1,6) || '-' || SUBSTR(CCC.NO_KP2,7,2) || '-' || SUBSTR(CCC.NO_KP2,9,4) 
+    ELSE SUBSTR(CCC.NO_KP2,1,6) || '-' || SUBSTR(CCC.NO_KP2,7,2) || '-' || SUBSTR(CCC.NO_KP2,9,4)  ||' ('||SUBSTR(CCC.NO_KP2,12,LENGTH(CCC.NO_KP2))||')'
+END  AS NO_KP_OB ,
+CASE
+		WHEN CCC.NO_KP_BARU IS NOT NULL OR CCC.NO_KP_LAMA IS NOT NULL THEN 'Y'
+		ELSE 'N'
+	END ISKPBARU_OB       
+FROM TBLPFDFAIL,
+TBLPPKPERMOHONAN,
+TBLPPKPERMOHONANSIMATI,
+TBLPPKPEMOHON,
+TBLPPKKEPUTUSANPERMOHONAN,
+TBLPPKPERBICARAAN,
+TBLPPKSIMATI,
+TBLRUJDAERAH,
+TBLRUJNEGERI,
+TBLPPKOB,
+TBLRUJBANDAR A,
+TBLRUJBANDAR B,
+TBLRUJBANDAR D,
+TBLRUJNEGERI TBLRUJNEGERITBLPPKPEMOHON,
+TBLRUJNEGERI TLBRUJNEGERITBLPPKSIMATI,
+TBLRUJNEGERI TBLRUJNEGERITBLPPKPERBICARAAN,
+TBLRUJNEGERI TBLRUJNEGERITBLPPKOB,
+TBLPPKNOTISOB,
+(SELECT      
+     CASE 
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAIN IS NULL THEN  TBLPPKSIMATI.NO_KP_LAMA 
+         ELSE TBLPPKSIMATI.NO_KP_BARU
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NOT NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS  NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+     END AS NO_KP1,TBLPPKSIMATI.NO_KP_LAMA,TBLPPKSIMATI.NO_KP_BARU,ID_SIMATI      
+FROM TBLPPKSIMATI ) AAA,     
+(SELECT 
+     CASE 
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NOT NULL THEN  TBLPPKPEMOHON.NO_KP_LAMA
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NULL THEN  TBLPPKPEMOHON.NO_KP_LAIN
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS NULL AND TBLPPKPEMOHON.NO_KP_LAIN IS NULL THEN  TBLPPKPEMOHON.NO_KP_LAMA 
+         ELSE TBLPPKPEMOHON.NO_KP_BARU
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS NOT NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NOT NULL THEN TBLPPKPEMOHON.NO_KP_LAMA
+      END || '' ||     
+     CASE 
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS  NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NOT NULL THEN TBLPPKPEMOHON.NO_KP_LAIN     
+         END AS NO_KP2, ID_PEMOHON , TBLPPKPEMOHON.NO_KP_LAMA,TBLPPKPEMOHON .NO_KP_BARU
+FROM TBLPPKPEMOHON ) BBB,                    
+(SELECT 
+     CASE 
+         WHEN TBLPPKOB.NO_KP_BARU IS NULL AND TBLPPKOB.NO_KP_LAMA IS NOT NULL THEN  TBLPPKOB.NO_KP_LAMA
+         WHEN TBLPPKOB.NO_KP_BARU IS NULL AND TBLPPKOB.NO_KP_LAMA IS NULL THEN  TBLPPKOB.NO_KP_LAIN
+         WHEN TBLPPKOB.NO_KP_BARU IS NULL AND TBLPPKOB.NO_KP_LAIN IS NULL THEN  TBLPPKOB.NO_KP_LAMA 
+         ELSE TBLPPKOB.NO_KP_BARU
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKOB.NO_KP_BARU IS NOT NULL AND TBLPPKOB.NO_KP_LAMA IS NOT NULL THEN TBLPPKOB.NO_KP_LAMA
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKOB.NO_KP_BARU IS  NULL AND TBLPPKOB.NO_KP_LAMA IS NOT NULL THEN TBLPPKOB.NO_KP_LAIN     
+     END AS NO_KP2, TBLPPKOB.NO_KP_LAMA,TBLPPKOB.NO_KP_BARU, ID_OB     
+FROM TBLPPKOB ) CCC                 
+WHERE TBLPFDFAIL.ID_FAIL = TBLPPKPERMOHONAN.ID_FAIL
+AND TBLPPKPERMOHONAN.ID_PERMOHONAN =  TBLPPKPERMOHONANSIMATI.ID_PERMOHONAN
+AND TBLPPKSIMATI.ID_SIMATI = TBLPPKPERMOHONANSIMATI.ID_SIMATI
+AND TBLPPKNOTISOB.ID_OB = TBLPPKOB.ID_OB
+AND TBLPPKNOTISOB.ID_PERBICARAAN = TBLPPKPERBICARAAN.ID_PERBICARAAN
+AND TBLPPKKEPUTUSANPERMOHONAN.ID_KEPUTUSANPERMOHONAN =TBLPPKPERBICARAAN.ID_KEPUTUSANPERMOHONAN
+AND TBLPPKKEPUTUSANPERMOHONAN.ID_PERMOHONAN = TBLPPKPERMOHONANSIMATI.ID_PERMOHONAN
+AND TBLRUJDAERAH.ID_DAERAH = TBLPPKPERMOHONAN.ID_DAERAHMHN(+)
+AND TBLRUJNEGERI.ID_NEGERI = TBLRUJDAERAH.ID_NEGERI(+)
+AND TBLPPKPERMOHONAN.ID_PEMOHON =TBLPPKPEMOHON.ID_PEMOHON
+AND TBLRUJNEGERITBLPPKPEMOHON.ID_NEGERI (+)=TBLPPKPEMOHON.ID_NEGERISURAT
+AND TLBRUJNEGERITBLPPKSIMATI.ID_NEGERI (+)=TBLPPKSIMATI.ID_NEGERI
+AND TBLRUJNEGERITBLPPKOB.ID_NEGERI (+)= TBLPPKOB.ID_NEGERI
+AND TBLRUJNEGERITBLPPKPERBICARAAN.ID_NEGERI (+)=TBLPPKPERBICARAAN.ID_NEGERIBICARA
+AND TBLPPKSIMATI.ID_SIMATI = AAA.ID_SIMATI(+)
+AND TBLPPKPEMOHON.ID_PEMOHON = BBB.ID_PEMOHON(+)
+AND TBLPPKOB.ID_OB = CCC.ID_OB(+)
+AND TBLPPKPEMOHON.ID_BANDARSURAT = A.ID_BANDAR(+)
+AND TBLPPKSIMATI.ID_BANDAR = B.ID_BANDAR(+)
+AND TBLPPKOB.ID_BANDAR = D.ID_BANDAR(+)
+--AND TBLPFDFAIL.ID_FAIL = $P!{idfail} 
+AND TBLPPKPERBICARAAN.ID_PERBICARAAN = $P!{idperbicaraan}
+AND TBLPPKOB.STATUS_HIDUP = '0'
+AND TBLPPKOB.ID_TARAFKPTG = '1'
+AND (TBLPPKOB.UMUR IS NULL OR TBLPPKOB.UMUR >= 18)
+AND TBLPPKOB.STATUS_HIDUP = 0
+AND TBLPPKNOTISOB.FLAG_CETAK='1']]></queryString>
+
+	<field name="ID_PEMOHON" class="java.math.BigDecimal"/>
+	<field name="ID_OB" class="java.math.BigDecimal"/>
+	<field name="ID_PERBICARAAN" class="java.math.BigDecimal"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="NO_FAIL_SEBENAR" class="java.lang.String"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="TAHUN_MOHON" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="NAMA_LAIN" class="java.lang.String"/>
+	<field name="NO_KP_SIMATI" class="java.lang.String"/>
+	<field name="ISKPBARU_SIMATI" class="java.lang.String"/>
+	<field name="NO_KP_PEMOHON" class="java.lang.String"/>
+	<field name="ISKPBARU_PEMOHON" class="java.lang.String"/>
+	<field name="TARIKH_MATI" class="java.lang.String"/>
+	<field name="NO_SIJIL_MATI" class="java.lang.String"/>
+	<field name="BUKTI_MATI" class="java.lang.String"/>
+	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="ALAMAT1_PM" class="java.lang.String"/>
+	<field name="ALAMAT2_PM" class="java.lang.String"/>
+	<field name="ALAMAT3_PM" class="java.lang.String"/>
+	<field name="POSKOD_PM" class="java.lang.String"/>
+	<field name="BANDAR_PM" class="java.lang.String"/>
+	<field name="NEGERI_PM" class="java.lang.String"/>
+	<field name="ALAMAT1_SM" class="java.lang.String"/>
+	<field name="ALAMAT2_SM" class="java.lang.String"/>
+	<field name="ALAMAT3_SM" class="java.lang.String"/>
+	<field name="POSKOD_SM" class="java.lang.String"/>
+	<field name="BANDAR_SM" class="java.lang.String"/>
+	<field name="NEGERI_SM" class="java.lang.String"/>
+	<field name="TEMPAT_BICARA" class="java.lang.String"/>
+	<field name="ALAMAT1_BC" class="java.lang.String"/>
+	<field name="ALAMAT2_BC" class="java.lang.String"/>
+	<field name="ALAMAT3_BC" class="java.lang.String"/>
+	<field name="POSKOD_BC" class="java.lang.String"/>
+	<field name="BANDAR_BC" class="java.lang.String"/>
+	<field name="NEGERI_BC" class="java.lang.String"/>
+	<field name="TARIKHHARI_BICARA" class="java.lang.String"/>
+	<field name="BULAN" class="java.lang.String"/>
+	<field name="HARI" class="java.lang.String"/>
+	<field name="TARIKH_BICARA" class="java.lang.String"/>
+	<field name="MASA_BICARA" class="java.lang.String"/>
+	<field name="TARIKHHARI_NOTIS" class="java.lang.String"/>
+	<field name="BULAN_NOTIS" class="java.lang.String"/>
+	<field name="HARI_NOTIS" class="java.lang.String"/>
+	<field name="TARIKH_NOTIS" class="java.lang.String"/>
+	<field name="NAMA_OB" class="java.lang.String"/>
+	<field name="ALAMAT1_OB" class="java.lang.String"/>
+	<field name="ALAMAT2_OB" class="java.lang.String"/>
+	<field name="ALAMAT3_OB" class="java.lang.String"/>
+	<field name="POSKOD_OB" class="java.lang.String"/>
+	<field name="BANDAR_OB" class="java.lang.String"/>
+	<field name="NEGERI_OB" class="java.lang.String"/>
+	<field name="NO_KP_OB" class="java.lang.String"/>
+	<field name="ISKPBARU_OB" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="159"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="42"
+						y="2"
+						width="450"
+						height="11"
+						key="textField-10"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NO_FAIL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="42"
+						y="53"
+						width="450"
+						height="19"
+						key="textField-11"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled" lineSpacing="Single">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>"+"BORANG DD"+"</style>"
++"\n(Peraturan 4 (3))"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+"MALAYSIA"+"</style>"
++"\n\nNegeri <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NAMA_NEGERI}!= null ? $F{NAMA_NEGERI}:"TIADA")+"</style>"
++"\nDaerah <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NAMA_DAERAH}!= null ? $F{NAMA_DAERAH}:"TIADA")+"</style>"
++"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+"AKTA HARTA PUSAKA KECIL (PEMBAHAGIAN), 1955"+"</style>"
++"\nGUAMAN PEMBAHAGIAN NO. <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NO_FAIL}!= null ? $F{NO_FAIL}:"TIADA")+"</style> TAHUN <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{TAHUN_MOHON}!= null ? $F{TAHUN_MOHON}:"TIADA")+"</style>"
++"\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="42"
+						y="73"
+						width="450"
+						height="19"
+						key="textField-12"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Single">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Dalam hal Harta Pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"TIADA") + ($F{NO_KP_SIMATI} != null ? ($F{ISKPBARU_SIMATI}.equals("Y")?", No. KP: ":", ")  + $F{NO_KP_SIMATI}:"") + ($F{TARIKH_MATI} != null ? ", Tarikh Mati: "+ $F{TARIKH_MATI}:"")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null ? $F{NAMA_PEMOHON}:"TIADA")+ ($F{NO_KP_PEMOHON}!= null ? ($F{ISKPBARU_PEMOHON}.equals("Y")?", No. KP: ":", ") +$F{NO_KP_PEMOHON}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT1_PM}!=null ? $F{ALAMAT1_PM}:"")+($F{ALAMAT2_PM}!=null ? ", "+$F{ALAMAT2_PM}:"")+($F{ALAMAT3_PM}!=null ? ", "+$F{ALAMAT3_PM}:"")+($F{POSKOD_PM}!=null ? ", "+$F{POSKOD_PM}:"")+($F{BANDAR_PM}!=null ? " "+$F{BANDAR_PM}:"")+(($F{NEGERI_PM}!=null) && ($F{BANDAR_PM}==null) ? " "+$F{NEGERI_PM}:(($F{NEGERI_PM}!=null) && ($F{BANDAR_PM}!=null) ? ", "+$F{NEGERI_PM}:"TIADA"))+".</style>"
++"\n\n                                <style isBold='true' pdfFontName='Helvetica-Bold'>NOTIS YANG MENGHENDAKI KEHADIRAN DAN</style>"
++"\n                                                   <style isBold='true' pdfFontName='Helvetica-Bold'>PENGEMUKAAN DOKUMEN</style>"
++"\n                                                             (Seksyen 11A)"
++"\n\nKepada: <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_OB}!= null ? $F{NAMA_OB}:"")+ ($F{NO_KP_OB}!= null ? ($F{ISKPBARU_OB}.equals("Y")?", No. KP: ":", ") +$F{NO_KP_OB}:"") + "</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{ALAMAT1_OB}!=null ? $F{ALAMAT1_OB}:"")+($F{ALAMAT2_OB}!=null ? ", "+$F{ALAMAT2_OB}:"")+($F{ALAMAT3_OB}!=null ? ", "+$F{ALAMAT3_OB}:"")+($F{POSKOD_OB}!=null ? ", "+$F{POSKOD_OB}:"")+($F{BANDAR_OB}!=null ? " "+$F{BANDAR_OB}:"")+(($F{NEGERI_OB}!=null) && ($F{BANDAR_OB}==null) ? " "+$F{NEGERI_OB}:(($F{NEGERI_OB}!=null) && ($F{BANDAR_OB}!=null) ? ", "+$F{NEGERI_OB}:"TIADA"))+".</style>"
++"\n\nBAHAWASANYA suatu petisyen untuk pembahagian Harta Pusaka dan barang kepunyaan si mati yang tersebut di atas telah dibuat di hadapan saya dan bahawa petisyen itu akan didengar di <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{TEMPAT_BICARA}.toUpperCase()!= null ? $F{TEMPAT_BICARA}.toUpperCase():"")+" "+($F{ALAMAT1_BC}!=null ? $F{ALAMAT1_BC}:"")+($F{ALAMAT2_BC}!=null ? ", "+$F{ALAMAT2_BC}:"")+($F{ALAMAT3_BC}!=null ? ", "+$F{ALAMAT3_BC}:"")+($F{POSKOD_BC}!=null ? ", "+$F{POSKOD_BC}:"")+($F{BANDAR_BC}!=null ? " "+$F{BANDAR_BC}:"")+(($F{NEGERI_BC}!=null) && ($F{BANDAR_BC}==null) ? " "+$F{NEGERI_BC}:(($F{NEGERI_BC}!=null) && ($F{BANDAR_BC}!=null) ? ", "+$F{NEGERI_BC}:"TIADA"))+"</style> pada <style pdfFontName='Helvetica-Bold'>"+($F{TARIKHHARI_BICARA}!= null ? $F{TARIKHHARI_BICARA}:"")+"</style> hari bulan <style pdfFontName='Helvetica-Bold'>"+($F{BULAN}!= null ? $F{BULAN}:"")+"</style> pada <style pdfFontName='Helvetica-Bold'>"+($F{MASA_BICARA}!= null ? $F{MASA_BICARA}:"")+"</style>."
++"\n\n       DAN BAHAWASANYA saya dapati tuan berkemungkinan boleh memberi keterangan tentang petisyen itu dan mengemukakan semua dokumen, termasuklah mengeluarkan dokumen hakmilik keluaran dan dokumen lain yang menerangkan hakmilik, dalam pemilikan tuan dan tuan dengan ini dikehendaki hadir di hadapan saya pada masa dan tempat yang dinyatakan di atas;"
++"\n\n       MAKA, OLEH YANG DEMIKIAN tuan diberi amaran bahawa sekiranya tuan, tanpa sebab atau alasan yang munasabah, abai atau enggan untuk hadir atau gagal untuk mengemukakan dokumen itu, suatu tindakan akan dibawa terhadap tuan di bawah seksyen 174 atau 175 Kanun Keseksaan."
++"\n\nDiberikan di bawah tandatangan dan meterai saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{TEMPAT_BICARA}.toUpperCase()!= null ? $F{TEMPAT_BICARA}.toUpperCase():"")+" "+($F{ALAMAT1_BC}!=null ? $F{ALAMAT1_BC}:"")+($F{ALAMAT2_BC}!=null ? ", "+$F{ALAMAT2_BC}:"")+($F{ALAMAT3_BC}!=null ? ", "+$F{ALAMAT3_BC}:"")+($F{POSKOD_BC}!=null ? ", "+$F{POSKOD_BC}:"")+($F{BANDAR_BC}!=null ? " "+$F{BANDAR_BC}:"")+(($F{NEGERI_BC}!=null) && ($F{BANDAR_BC}==null) ? " "+$F{NEGERI_BC}:(($F{NEGERI_BC}!=null) && ($F{BANDAR_BC}!=null) ? ", "+$F{NEGERI_BC}:"TIADA"))+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{TARIKHHARI_NOTIS}!= null ? $F{TARIKHHARI_NOTIS}:"")+"</style> hari bulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{BULAN_NOTIS}!= null ? $F{BULAN_NOTIS}:"")+".</style>"]]></textFieldExpression>
+				</textField>
+				<break>
+					<reportElement
+						x="0"
+						y="158"
+						width="535"
+						height="0"
+						key="element-1"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+				</break>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="344"
+						y="111"
+						width="161"
+						height="8"
+						key="textField-13"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="276"
+						y="111"
+						width="50"
+						height="8"
+						key="textField-14"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

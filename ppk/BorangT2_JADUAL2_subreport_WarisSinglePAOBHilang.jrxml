@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BorangT2_JADUAL2_subreport_WarisSinglePAOBHilang"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idPerintahHAOBMST" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT ROWNUM,A.BA_WARIS, A.BB_WARIS,
+       A.STATUS_TADBIR, A.ID_PA1,
+       B.NAMA_OB, B.NO_KP_BARU,
+       B.NO_KP_LAMA, B.NO_KP_LAIN, B.JENIS_WARGA,B.CATATAN,
+       A.ID_PERINTAHHAOBDTL,
+       CASE 
+         WHEN B.NO_KP_BARU IS NULL AND B.NO_KP_LAMA IS NOT NULL THEN B.NO_KP_LAMA
+         WHEN B.NO_KP_BARU IS NULL AND B.NO_KP_LAMA IS NULL THEN B.NO_KP_LAIN
+         WHEN B.NO_KP_BARU IS NOT NULL AND B.NO_KP_LAMA IS NOT NULL THEN SUBSTR(B.NO_KP_BARU,1,6) || '-' || SUBSTR(B.NO_KP_BARU,7,2) || '-' || SUBSTR(B.NO_KP_BARU,9,4)
+         WHEN B.NO_KP_BARU IS NOT NULL AND B.NO_KP_LAMA IS NULL THEN SUBSTR(B.NO_KP_BARU,1,6) || '-' || SUBSTR(B.NO_KP_BARU,7,2) || '-' || SUBSTR(B.NO_KP_BARU,9,4)
+       END  AS NO_KP,
+       CASE 
+        WHEN B.JENIS_WARGA IS NULL THEN ''
+        WHEN B.JENIS_WARGA = 1 THEN 'MALAYSIA'
+        WHEN B.JENIS_WARGA = 0 THEN 'BUKAN WARGANEGARA'
+        END AS WARGANEGARA,
+  (SELECT COUNT(*)
+   FROM TBLPPKPERINTAHHAOBDTL A, TBLPPKOB B 
+   WHERE B.ID_OB = A.ID_OB
+       AND A.ID_PERINTAHHAOBMST = $P!{idPerintahHAOBMST}
+       AND A.ID_PA1 IS NULL
+       AND A.BA_WARIS != 0) AS singleWaris,
+  (SELECT COUNT(COUNT(*))
+   FROM TBLPPKPERINTAHHAOBDTL A, TBLPPKOB B 
+   WHERE B.ID_OB = A.ID_OB
+       AND A.ID_PERINTAHHAOBMST = $P!{idPerintahHAOBMST}
+       AND A.ID_PA1 IS NOT NULL
+       AND A.ID_PA2 IS NULL
+       AND A.BA_WARIS != 0
+       GROUP BY A.STATUS_TADBIR) AS singlePA,
+   (SELECT COUNT(COUNT(*))
+   FROM TBLPPKPERINTAHHAOBDTL A, TBLPPKOB B 
+   WHERE B.ID_OB = A.ID_OB
+       AND A.ID_PERINTAHHAOBMST = $P!{idPerintahHAOBMST}
+       AND A.ID_PA1 IS NOT NULL
+       AND A.ID_PA2 IS NOT NULL
+       AND A.ID_PA3 IS NULL
+       AND A.BA_WARIS != 0
+       GROUP BY A.STATUS_TADBIR) AS doublePA,
+   (SELECT COUNT(COUNT(*))
+   FROM TBLPPKPERINTAHHAOBDTL A, TBLPPKOB B 
+   WHERE B.ID_OB = A.ID_OB
+       AND A.ID_PERINTAHHAOBMST = $P!{idPerintahHAOBMST}
+       AND A.ID_PA1 IS NOT NULL
+       AND A.ID_PA2 IS NOT NULL
+       AND A.ID_PA3 IS NOT NULL
+       AND A.ID_PA4 IS NULL
+       AND A.BA_WARIS != 0
+       GROUP BY A.STATUS_TADBIR ) AS triplePA,
+     (SELECT COUNT(COUNT(*))
+   FROM TBLPPKPERINTAHHAOBDTL A, TBLPPKOB B 
+   WHERE B.ID_OB = A.ID_OB
+       AND A.ID_PERINTAHHAOBMST = $P!{idPerintahHAOBMST}
+       AND A.ID_PA1 IS NOT NULL
+       AND A.ID_PA2 IS NOT NULL
+       AND A.ID_PA3 IS NOT NULL
+       AND A.ID_PA4 IS NOT NULL
+       AND A.BA_WARIS != 0
+       GROUP BY A.STATUS_TADBIR ) as fourPA
+  FROM TBLPPKPERINTAHHAOBDTL A, TBLPPKOB B, TBLPPKPERINTAHHAOBMST C
+ 
+ WHERE A.ID_PA1 = B.ID_OB
+       AND C.ID_PERINTAHHAOBMST = A.ID_PERINTAHHAOBMST
+       AND A.ID_PERINTAHHAOBMST = $P!{idPerintahHAOBMST}
+       AND A.ID_PA1 IS NOT NULL
+       AND A.ID_PA2 IS NULL
+       AND A.ID_OB IS NULL
+       AND A.STATUS_TADBIR = 'Y'
+       AND A.BA_WARIS != 0
+ORDER BY ROWNUM]]></queryString>
+
+	<field name="BA_WARIS" class="java.math.BigDecimal"/>
+	<field name="BB_WARIS" class="java.math.BigDecimal"/>
+	<field name="ID_PERINTAHHAOBDTL" class="java.math.BigDecimal"/>
+	<field name="STATUS_TADBIR" class="java.lang.String"/>
+	<field name="ID_PA1" class="java.lang.String"/>
+	<field name="NAMA_OB" class="java.lang.String"/>
+	<field name="NO_KP_BARU" class="java.lang.String"/>
+	<field name="NO_KP_LAMA" class="java.lang.String"/>
+	<field name="NO_KP_LAIN" class="java.lang.String"/>
+	<field name="JENIS_WARGA" class="java.lang.String"/>
+	<field name="CATATAN" class="java.lang.String"/>
+	<field name="NO_KP" class="java.lang.String"/>
+	<field name="WARGANEGARA" class="java.lang.String"/>
+	<field name="ROWNUM" class="java.lang.Integer"/>
+	<field name="SINGLEWARIS" class="java.lang.Integer"/>
+	<field name="SINGLEPA" class="java.lang.Integer"/>
+	<field name="DOUBLEPA" class="java.lang.Integer"/>
+	<field name="TRIPLEPA" class="java.lang.Integer"/>
+	<field name="FOURPA" class="java.lang.Integer"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="14"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="0"
+						width="10"
+						height="13"
+						key="textField-4"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[new java.lang.Integer( ($F{ROWNUM}.intValue()) +  ($F{SINGLEWARIS}.intValue()) +($F{SINGLEPA}.intValue()) + ($F{DOUBLEPA}.intValue()) + ($F{TRIPLEPA}.intValue()) + + ($F{FOURPA}.intValue()))]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="10"
+						y="0"
+						width="9"
+						height="13"
+						key="staticText-3"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<text><![CDATA[.]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="175"
+						y="0"
+						width="62"
+						height="13"
+						key="textField-5"
+						positionType="Float"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BA_WARIS}+" / "+$F{BB_WARIS}+" bhg"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="19"
+						y="1"
+						width="126"
+						height="13"
+						key="textField-6"
+						positionType="Float"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_OB} != null ? $F{NAMA_OB}:"TIADA")+ ($F{NO_KP} != null ? "\nNo. KP : "+ $F{NO_KP}:"")+($F{WARGANEGARA} != null? "\nWarganegara : "+$F{WARGANEGARA}: "")+"\nadalah pentadbir"]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</summary>
+</jasperReport>

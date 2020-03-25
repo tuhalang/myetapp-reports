@@ -1,0 +1,919 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="LaporanOnlinePrestasiSPHPMengikutTahunSR"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="842"
+		 pageHeight="595"
+		 columnWidth="842"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="TAHUN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ID_URUSAN" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select distinct(ru.id_urusan)
+,ru.nama_urusan xnama_urusan
+, RSU.ID_SEKSYEN
+,case
+    when RSU.ID_SUBURUSAN = 59 OR RSU.ID_SUBURUSAN = 60 
+        THEN 'PERMOHONAN PEMBAHAGIAN PUSAKA KECIL'
+    when RSU.ID_SUBURUSAN = 51 OR RSU.ID_SUBURUSAN = 52 
+        THEN 'PERMOHONAN '||RU.NAMA_URUSAN
+    when RSU.ID_SUBURUSAN = 35 OR RSU.ID_SUBURUSAN = 36
+        THEN 'PERMOHONAN PENYEWAAN TANAH PERSEKUTUAN'
+    when RSU.ID_SUBURUSAN = 32 OR RSU.ID_SUBURUSAN = 33 OR RSU.ID_SUBURUSAN = 34
+        THEN 'PERMOHONAN PELEPASAN TANAH PERSEKUTUAN'
+    when RSU.ID_SUBURUSAN = 57 
+        THEN 'PERMOHONAN LESEN PASIR DI BAWAH '||RU.NAMA_URUSAN
+end NAMA_URUSAN
+, (	NVL(JUMLAHPER.JUMLAHPER,0) - NVL(JUMLAHPER_TERLEBIH.JUMLAHPER_TERLEBIH,0)
+) JUMLAHPER
+,JUMLAHPER_SEMASA.JUMLAHPER_SEMASA
+,NVL(JUMLAHPER_TERLEBIH.JUMLAHPER_TERLEBIH,0) JUMLAHPER_TERLEBIH
+,(
+    NVL(JUMLAHPER.JUMLAHPER,0)
+    - ( NVL(JUMLAHPER_SEMASA.JUMLAHPER_SEMASA,0) + NVL(JUMLAHPER_TERLEBIH.JUMLAHPER_TERLEBIH,0) )
+) JUMLAHPER_TERDAHULU
+,NVL(JUMLAH_PERMOHONANJAN.JUMLAH_PERMOHONANJAN,0) JUMLAH_PERMOHONANJAN
+,NVL(JUMLAH_PERMOHONANFEB.JUMLAH_PERMOHONANFEB,0) JUMLAH_PERMOHONANFEB
+,NVL(JUMLAH_PERMOHONANMAC.JUMLAH_PERMOHONANMAC,0) JUMLAH_PERMOHONANMAC
+,NVL(JUMLAH_PERMOHONANAPRIL.JUMLAH_PERMOHONANAPRIL,0) JUMLAH_PERMOHONANAPRIL
+,NVL(JUMLAH_PERMOHONANMEI.JUMLAH_PERMOHONANMEI,0) JUMLAH_PERMOHONANMEI
+,NVL(JUMLAH_PERMOHONANJUN.JUMLAH_PERMOHONANJUN,0) JUMLAH_PERMOHONANJUN
+,NVL(JUMLAH_PERMOHONANJUL.JUMLAH_PERMOHONANJUL,0) JUMLAH_PERMOHONANJUL
+,NVL(JUMLAH_PERMOHONANOGOS.JUMLAH_PERMOHONANOGOS,0) JUMLAH_PERMOHONANOGOS
+,NVL(JUMLAH_PERMOHONANSEPT.JUMLAH_PERMOHONANSEPT,0) JUMLAH_PERMOHONANSEPT
+,NVL(JUMLAH_PERMOHONANOKT.JUMLAH_PERMOHONANOKT,0) JUMLAH_PERMOHONANOKT
+,NVL(JUMLAH_PERMOHONANNOV.JUMLAH_PERMOHONANNOV,0) JUMLAH_PERMOHONANNOV
+,NVL(JUMLAH_PERMOHONANDIS.JUMLAH_PERMOHONANDIS,0) JUMLAH_PERMOHONANDIS
+from tblrujurusan ru, tblrujsuburusan rsu
+--
+,(  SELECT COUNT(*) JUMLAHPER,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+    GROUP BY F.ID_URUSAN
+) JUMLAHPER
+,(  SELECT COUNT(*) JUMLAHPER_SEMASA,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+    GROUP BY F.ID_URUSAN
+) JUMLAHPER_SEMASA
+,(  SELECT COUNT(*) JUMLAHPER_TERLEBIH,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') > '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') > '2012' 
+    GROUP BY F.ID_URUSAN
+) JUMLAHPER_TERLEBIH
+,(SELECT COUNT(*) JUMLAH_PERMOHONANJAN,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '01' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANJAN
+,(SELECT COUNT(*) JUMLAH_PERMOHONANFEB,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '02' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANFEB
+,(SELECT COUNT(*) JUMLAH_PERMOHONANMAC,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '03' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANMAC
+,(SELECT COUNT(*) JUMLAH_PERMOHONANAPRIL,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '04' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANAPRIL
+,(SELECT COUNT(*) JUMLAH_PERMOHONANMEI,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '05' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANMEI
+,(SELECT COUNT(*) JUMLAH_PERMOHONANJUN,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '06' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANJUN
+,(SELECT COUNT(*) JUMLAH_PERMOHONANJUL,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '07' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANJUL
+,(SELECT COUNT(*) JUMLAH_PERMOHONANOGOS,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '08' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANOGOS
+,(SELECT COUNT(*) JUMLAH_PERMOHONANSEPT,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '09' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANSEPT
+,(SELECT COUNT(*) JUMLAH_PERMOHONANOKT,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '10' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANOKT
+,(SELECT COUNT(*) JUMLAH_PERMOHONANNOV,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '11' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANNOV
+,(SELECT COUNT(*) JUMLAH_PERMOHONANDIS,F.ID_URUSAN FROM TBLPFDFAIL F,TBLPERMOHONAN P 
+    WHERE F.ID_FAIL = P.ID_FAIL
+    AND F.ID_STATUS <> '999'
+    AND F.FLAG_JENIS_FAIL = '4'     
+    --
+	AND TO_CHAR(P.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}' 
+    --AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '2012' 
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '12' 
+    GROUP BY F.ID_URUSAN
+) JUMLAH_PERMOHONANDIS
+--
+where 
+RSU.ID_URUSAN = RU.ID_URUSAN
+AND RSU.ID_SUBURUSAN IN (
+--59,60 
+--,51,52,
+35,36
+,32,33,34
+,57
+)
+AND RU.ID_URUSAN =  ($P!{ID_URUSAN})
+AND RU.ID_URUSAN = JUMLAHPER.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAHPER_SEMASA.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAHPER_TERLEBIH.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANJAN.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANFEB.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANMAC.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANAPRIL.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANMEI.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANJUN.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANJUL.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANOGOS.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANSEPT.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANOKT.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANNOV.ID_URUSAN(+)
+AND RU.ID_URUSAN = JUMLAH_PERMOHONANDIS.ID_URUSAN(+)
+--
+ORDER BY RSU.ID_SEKSYEN,RU.NAMA_URUSAN 
+]]></queryString>
+
+	<field name="ID_URUSAN" class="java.math.BigDecimal"/>
+	<field name="XNAMA_URUSAN" class="java.lang.String"/>
+	<field name="ID_SEKSYEN" class="java.math.BigDecimal"/>
+	<field name="NAMA_URUSAN" class="java.lang.String"/>
+	<field name="JUMLAHPER" class="java.math.BigDecimal"/>
+	<field name="JUMLAHPER_SEMASA" class="java.math.BigDecimal"/>
+	<field name="JUMLAHPER_TERLEBIH" class="java.math.BigDecimal"/>
+	<field name="JUMLAHPER_TERDAHULU" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANJAN" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANFEB" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANMAC" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANAPRIL" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANMEI" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANJUN" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANJUL" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANOGOS" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANSEPT" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANOKT" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANNOV" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_PERMOHONANDIS" class="java.math.BigDecimal"/>
+
+	<variable name="TAHUNSEBELUM" class="java.lang.Integer" resetType="Report" calculation="Nothing">
+		<variableExpression><![CDATA[new Integer($P{TAHUN})]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer($P{TAHUN})]]></initialValueExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="2"
+						y="0"
+						width="145"
+						height="20"
+						key="textField-1"/>
+					<box leftPadding="2" rightPadding="1" topPadding="1">					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NAMA_URUSAN}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="191"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-36"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUMLAH_PERMOHONANJAN}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="236"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-43"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+$F{JUMLAH_PERMOHONANFEB}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="734"
+						y="0"
+						width="50"
+						height="20"
+						key="textField-120"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+$F{JUMLAHPER}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="281"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-144"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUMLAH_PERMOHONANMAC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="326"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-145"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+$F{JUMLAH_PERMOHONANAPRIL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="371"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-154"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUMLAH_PERMOHONANMEI}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="416"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-155"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+$F{JUMLAH_PERMOHONANJUN}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="461"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-156"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUMLAH_PERMOHONANJUL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="506"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-157"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+$F{JUMLAH_PERMOHONANOGOS}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="551"
+						y="0"
+						width="48"
+						height="20"
+						key="textField-158"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUMLAH_PERMOHONANSEPT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="599"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-159"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+$F{JUMLAH_PERMOHONANOKT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="644"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-160"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUMLAH_PERMOHONANNOV}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="689"
+						y="0"
+						width="45"
+						height="20"
+						key="textField-161"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""+$F{JUMLAH_PERMOHONANDIS}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="147"
+						y="0"
+						width="44"
+						height="20"
+						key="textField-163"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUMLAHPER_TERDAHULU}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+		<noData>
+			<band height="60"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="30"
+						width="778"
+						height="30"
+						key="textField-119"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["TIADA REKOD"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="209"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-164"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["JANUARI"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="254"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-165"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["FEBRUARI"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="752"
+						y="0"
+						width="50"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-166"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["JUMLAH"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="20"
+						y="0"
+						width="145"
+						height="30"
+						backcolor="#CCCCCC"
+						key="staticText-18"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<text><![CDATA[URUSAN]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="299"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-167"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["MAC"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="344"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-168"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["APRIL"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="389"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-169"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["MEI"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="434"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-170"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["JUN"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="479"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-171"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["JULAI"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="524"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-172"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["OGOS"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="569"
+						y="0"
+						width="48"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-173"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["SEPTEMBER"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="617"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-174"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["OKTOBER"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="662"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-175"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NOVEMBER"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="707"
+						y="0"
+						width="45"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-176"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["DISEMBER"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="165"
+						y="0"
+						width="44"
+						height="30"
+						backcolor="#CCCCCC"
+						key="textField-177"/>
+					<box>					<pen lineWidth="0.25"/>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["JUMLAH TERDAHULU"]]></textFieldExpression>
+				</textField>
+			</band>
+		</noData>
+</jasperReport>

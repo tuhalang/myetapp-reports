@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BORANGD_KEDAH_1LOT"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="525"
+		 columnSpacing="0"
+		 leftMargin="42"
+		 rightMargin="28"
+		 topMargin="56"
+		 bottomMargin="56"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="id_fail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="nama_pengarah" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="bilSurat" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="nama_mukim" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="no_fail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="sysdate" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="sysdateBI" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT UPPER(B.TUJUAN_BI)AS TUJUAN_BI, initcap(D.NAMA_DAERAH)as NAMA_DAERAH_INIT,A.ID_FAIL,B.NO_RUJUKAN_PTG,UPPER(B.TUJUAN)AS TUJUAN,upper(D.NAMA_DAERAH) as NAMA_DAERAH,
+    TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
+    CASE
+       WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'Februari'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '03' THEN 'Mac'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '04' THEN 'April'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '05' THEN 'Mei'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '06' THEN 'Jun'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '07' THEN 'Julai'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '08' THEN 'Ogos'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '09' THEN 'September'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '10' THEN 'Oktober'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '11' THEN 'November'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '12' THEN 'Disember'
+       ELSE 'TIADA'
+    END AS BULAN_SURAT,
+ CASE
+       WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'January'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'February'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '03' THEN 'March'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '04' THEN 'April'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '05' THEN 'May'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '06' THEN 'June'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '07' THEN 'July'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '08' THEN 'August'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '09' THEN 'September'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '10' THEN 'October'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '11' THEN 'November'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '12' THEN 'December'
+       ELSE 'TIADA'
+    END AS BULAN_SURAT_BI,
+    TO_CHAR(SYSDATE, 'YYYY') AS TAHUN_SURAT,
+    (
+select 
+ substr(rtrim (xmlagg (xmlelement (e, nama)).extract ('//text()'), ','),3) list_mukim
+from    
+   (        
+   select to_char(
+     case 
+     when  
+     (count(*) OVER 
+     ( partition by m.id_masuk ) = 
+     ROW_NUMBER () OVER ( partition by m.id_masuk order by m.nama_mukim)) 
+     and
+     (count(*) OVER 
+     ( partition by m.id_masuk ) <> 1)
+     then
+     ' dan '
+     when  count(*) OVER 
+     ( partition by m.id_masuk ) = 1 then ', '
+     else
+     ', '
+     end || initcap(m.nama_mukim)) as nama,
+        count(*) OVER 
+     ( partition by m.id_masuk ) 
+     cnt,
+     ROW_NUMBER () OVER ( partition by m.id_masuk order by m.nama_mukim) seq,
+     case when  
+     (count(*) OVER 
+     ( partition by m.id_masuk ) = 
+     ROW_NUMBER () OVER ( partition by m.id_masuk order by m.nama_mukim))
+     and
+     (count(*) OVER 
+     ( partition by m.id_masuk ) <> 1)  
+     then
+     ' dan '
+     when  count(*) OVER 
+     ( partition by m.id_masuk ) = 1 then ', '
+  else
+     ', '
+  end as 
+  symbol    
+   from
+     tblrujmukim m    
+  where
+  m.id_mukim in (     
+     select distinct m.id_mukim
+     from
+     tblrujmukim m,tblpptpermohonan p,tblppthakmilik h,tblpfdfail f  where  
+     p.id_permohonan = h.id_permohonan and m.id_mukim = h.id_mukim and f.id_fail = p.id_fail
+    and f.id_fail = $P!{id_fail}  
+    --and m.id_mukim in (1,2,3,4,5,6)              
+   ))
+) as LIST_MUKIM,INITCAP(NN.NAMA_NEGERI) AS NAMA_NEGERI
+    FROM TBLPFDFAIL A,TBLPPTPERMOHONAN B,TBLRUJDAERAH D,TBLRUJNEGERI NN
+    WHERE A.ID_FAIL = B.ID_FAIL
+AND A.ID_NEGERI = NN.ID_NEGERI
+   AND B.ID_DAERAH = D.ID_DAERAH
+    --AND A.ID_FAIL = 1610602360
+    AND A.ID_FAIL = $P!{id_fail}]]></queryString>
+
+	<field name="TUJUAN_BI" class="java.lang.String"/>
+	<field name="NAMA_DAERAH_INIT" class="java.lang.String"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="NO_RUJUKAN_PTG" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="HARI_SURAT" class="java.lang.String"/>
+	<field name="BULAN_SURAT" class="java.lang.String"/>
+	<field name="BULAN_SURAT_BI" class="java.lang.String"/>
+	<field name="TAHUN_SURAT" class="java.lang.String"/>
+	<field name="LIST_MUKIM" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="328"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="45"
+						y="28"
+						width="451"
+						height="15"
+						key="textField-2"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BORANG D"
++"\n\n"
++"AKTA PENGAMBILAN TANAH 1960"
++"\n<style isBold='true' isItalic='true' pdfFontName='Helvetica-BoldOblique'>(Seksyen 8)</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="71"
+						width="475"
+						height="15"
+						key="textField-3"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Adalah dengan ini diisytiharkan bahawa tanah-tanah dan kawasan-kawasan "
++"tertentu yang dinyatakan dalam "
++"Jadual di bawah ini adalah diperlukan bagi maksud yang berikut:"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="45"
+						y="50"
+						width="451"
+						height="15"
+						key="textField-14"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\nPERISYTIHARAAN PENGAMBILAN TANAH YANG DICADANGKAN"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="45"
+						y="132"
+						width="451"
+						height="15"
+						key="textField-17"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-BoldOblique" size="10" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["FORM D"
++"\n\n"
++"LAND ACQUISITION ACT 1960"
++"\n(Section 8)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="187"
+						width="475"
+						height="15"
+						key="textField-18"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Oblique" size="10" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["It is hereby declared that the particular lands and areas specified "
++"in the Schedule here to are needed for the following purpose:\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="45"
+						y="152"
+						width="451"
+						height="15"
+						key="textField-19"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-BoldOblique" size="10" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\nDECLARATION OF INTENDED ACQUISITION"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="98"
+						y="90"
+						width="342"
+						height="15"
+						key="textField-21"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["TUJUAN AWAM IAITU PENGAMBILAN TANAH UNTUK "+($F{TUJUAN}!=null?$F{TUJUAN}:"")+"\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="105"
+						width="475"
+						height="21"
+						key="textField-22"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["2.\tSuatu pelan tanah dan kawasan tertentu yang dinyatakan itu boleh diperiksa semasa waktu kerja biasa di Pejabat Daerah dan Tanah "+($F{NAMA_DAERAH}!=null?$F{NAMA_DAERAH}:"")+"\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="98"
+						y="202"
+						width="342"
+						height="15"
+						key="textField-23"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-BoldOblique" size="10" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["THE PUBLIC PURPOSES OF LAND ACQUISITION FOR "+($F{TUJUAN_BI}!=null?$F{TUJUAN_BI}:"")+"\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="217"
+						width="475"
+						height="15"
+						key="textField-24"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Oblique" size="10" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["2.\tA plan of the particular land and area so specified maybe inspected during the normal working hours at District Land Office of "+($F{NAMA_DAERAH_INIT}!=null?$F{NAMA_DAERAH_INIT}:"")+"\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="0"
+						width="269"
+						height="15"
+						key="textField-31"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{no_fail}!=""?$P{no_fail}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="202"
+						y="270"
+						width="306"
+						height="15"
+						key="textField-11"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n........................................................"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{nama_pengarah} != null ? $P{nama_pengarah}:"")+")</style>"
++"\n"
++"KETUA PENOLONG PENGARAH TANAH DAN GALIAN"
++"\nB.P. PENGARAH TANAH DAN GALIAN"
++"\nNEGERI KEDAH DARUL AMAN"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="45"
+						y="236"
+						width="74"
+						height="15"
+						key="textField-12"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bertarikh"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="45"
+						y="251"
+						width="74"
+						height="15"
+						key="textField-32"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bersamaan"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="119"
+						y="236"
+						width="16"
+						height="15"
+						key="textField-33"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="135"
+						y="236"
+						width="186"
+						height="15"
+						key="textField-35"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[".............................."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="135"
+						y="251"
+						width="186"
+						height="15"
+						key="textField-36"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[".............................."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="119"
+						y="251"
+						width="16"
+						height="15"
+						key="textField-37"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="55"
+						y="293"
+						width="451"
+						height="15"
+						key="textField-48"
+						positionType="Float"
+						isPrintRepeatedValues="false"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>JADUAL/<style isItalic='true' isBold='true' pdfFontName='Helvetica-BoldOblique'>SCHEDULE</style></style> "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="31"
+						y="311"
+						width="67"
+						height="15"
+						key="textField-49"
+						positionType="Float"
+						isPrintRepeatedValues="false"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["DAERAH"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="113"
+						y="311"
+						width="393"
+						height="15"
+						key="textField-50"
+						positionType="Float"
+						isPrintRepeatedValues="false"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_DAERAH}!= null ?$F{NAMA_DAERAH}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="98"
+						y="311"
+						width="15"
+						height="15"
+						key="textField-51"
+						positionType="Float"
+						isPrintRepeatedValues="false"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[" : "]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+				<printWhenExpression><![CDATA[new Boolean($V{PAGE_NUMBER}.intValue() == 3)]]></printWhenExpression>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="false" >
+				<printWhenExpression><![CDATA[new Boolean($V{PAGE_NUMBER}.intValue() == 1)]]></printWhenExpression>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="15"  isSplitAllowed="true" >
+				<subreport  isUsingCache="true">
+					<reportElement
+						mode="Opaque"
+						x="7"
+						y="0"
+						width="511"
+						height="15"
+						key="subreport-2"
+						positionType="Float"/>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="id_Fail">
+						<subreportParameterExpression><![CDATA[$P{id_fail}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="no_fail">
+						<subreportParameterExpression><![CDATA[$P{no_fail}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir} + "//ppt//Borang D_1lot_Kedah.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

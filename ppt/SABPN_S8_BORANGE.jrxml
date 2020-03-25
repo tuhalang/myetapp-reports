@@ -1,0 +1,662 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="SABPN_S8_BORANGE"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="451"
+		 columnSpacing="0"
+		 leftMargin="72"
+		 rightMargin="72"
+		 topMargin="85"
+		 bottomMargin="72"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="namaPenghantar" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="no_fail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="bil_surat" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="tempatSAPBN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="negeriSAPBN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_buktipenyampaian" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="keterangan_waktu_hantar" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_permohonan" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT  
+(CASE WHEN F.ID_NEGERI = '1' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Johor'
+ WHEN F.ID_NEGERI = '2' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Kedah'
+ WHEN F.ID_NEGERI = '3' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Kelantan'
+ WHEN F.ID_NEGERI = '4' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Melaka'
+ WHEN F.ID_NEGERI = '5' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Sembilan'
+ WHEN F.ID_NEGERI = '6' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Pahang'
+ WHEN F.ID_NEGERI = '7' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Pulau Pinang'
+ WHEN F.ID_NEGERI = '8' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Perak'
+ WHEN F.ID_NEGERI = '9' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Perlis'
+ WHEN F.ID_NEGERI = '10' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Selangor'
+ WHEN F.ID_NEGERI = '11' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Terengganu'
+ WHEN F.ID_NEGERI = '12' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Sabah'
+ WHEN F.ID_NEGERI = '13' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Negeri Sarawak'
+ WHEN F.ID_NEGERI = '14' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Wilayah Persekutuan Kuala Lumpur'
+ WHEN F.ID_NEGERI = '15' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Wilayah Persekutuan Labuan'
+ WHEN F.ID_NEGERI = '16' THEN 'Jabatan Ketua Pengarah Tanah Dan Galian Wilayah Persekutuan Putrajaya'
+ELSE '' END) AS NAMA_PEJABAT
+,
+UPPER(B.NAMA_PB) AS NAMA_PB, UPPER(A.NAMA_PENGHANTAR) AS NAMA_PENGHANTAR, TO_CHAR(A.TARIKH_HANTAR,'DD/MM/YYYY') AS TARIKH_SERAH_NOTIS,
+((CASE WHEN REPLACE((NVL(D.ALAMAT1,'')),'&','&#38;') IS NOT NULL OR  REPLACE((NVL(D.ALAMAT1,'')),'&','&#38;') <> '' THEN REPLACE((NVL(D.ALAMAT1,'')),'&','&#38;') || ' ' ELSE '' END ) || 
+(CASE WHEN REPLACE((NVL(D.ALAMAT2,'')),'&','&#38;') IS NOT NULL OR  REPLACE((NVL(D.ALAMAT2,'')),'&','&#38;') <> '' THEN REPLACE((NVL(D.ALAMAT2,'')),'&','&#38;') || ' ' ELSE '' END ) ||
+(CASE WHEN REPLACE((NVL(D.ALAMAT3,'')),'&','&#38;') IS NOT NULL OR  REPLACE((NVL(D.ALAMAT3,'')),'&','&#38;') <> '' THEN REPLACE((NVL(D.ALAMAT3,'')),'&','&#38;') || ' ' ELSE '' END ) || 
+(CASE WHEN D.POSKOD IS NOT NULL OR  D.POSKOD <> '' THEN D.POSKOD || ', ' ELSE '' END ) || 
+(CASE WHEN UPPER(BN.KETERANGAN) IS NOT NULL OR  UPPER(BN.KETERANGAN) <> '' THEN UPPER(BN.KETERANGAN) || ', ' ELSE '' END ) || 
+(CASE WHEN UPPER(N.NAMA_NEGERI) IS NOT NULL OR  UPPER(N.NAMA_NEGERI) <> '' THEN UPPER(N.NAMA_NEGERI) || ' ' ELSE '' END )) AS ALAMAT,
+(
+SELECT rtrim (xmlagg (xmlelement (e,TARIKH_TAMPAL || ', ')).extract ('//text()'), ', ') FROM
+(
+SELECT DISTINCT TO_CHAR(B1.TARIKH_TAMPAL,'DD/MM/YYYY') AS TARIKH_TAMPAL, B3.ID_HAKMILIK
+FROM TBLPPTNOTISAWAM B1,TBLPPTNOTISAWAMHAKMILIK B2,TBLPPTHAKMILIK B3 
+WHERE B1.ID_NOTISAWAM = B2.ID_NOTISAWAM AND B2.ID_HAKMILIK = B3.ID_HAKMILIK AND B3.ID_PERMOHONAN  = '$P!{id_permohonan}'
+) KKK
+WHERE KKK.ID_HAKMILIK = C.ID_HAKMILIK
+) AS TARIKH_TAMPAL,C.NO_SUBJAKET
+FROM TBLPPTBUKTIPENYAMPAIAN A, TBLPPTPIHAKBERKEPENTINGAN B, TBLPPTHAKMILIK C, TBLPPTHAKMILIKPB D,TBLRUJNEGERI N,TBLRUJBANDAR BN,TBLPPTPERMOHONAN PPP,TBLPFDFAIL F
+WHERE A.ID_PIHAKBERKEPENTINGAN = B.ID_PIHAKBERKEPENTINGAN(+) AND D.ID_NEGERI = N.ID_NEGERI(+) AND D.ID_BANDAR = BN.ID_BANDAR(+) 
+AND D.ID_PIHAKBERKEPENTINGAN = B.ID_PIHAKBERKEPENTINGAN  AND PPP.ID_PERMOHONAN = C.ID_PERMOHONAN AND  PPP.ID_FAIL = F.ID_FAIL
+AND D.ID_HAKMILIK = C.ID_HAKMILIK 
+AND A.ID_BUKTIPENYAMPAIAN = '$P!{id_buktipenyampaian}'
+ORDER BY NO_SUBJAKET]]></queryString>
+
+	<field name="NAMA_PEJABAT" class="java.lang.String"/>
+	<field name="NAMA_PB" class="java.lang.String"/>
+	<field name="NAMA_PENGHANTAR" class="java.lang.String"/>
+	<field name="TARIKH_SERAH_NOTIS" class="java.lang.String"/>
+	<field name="ALAMAT" class="java.lang.String"/>
+	<field name="TARIKH_TAMPAL" class="java.lang.String"/>
+	<field name="NO_SUBJAKET" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="384"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="27"
+						width="451"
+						height="30"
+						key="textField-19"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["<style isBold='true'>SURAT AKUAN BERKANUN PENGHANTAR NOTIS</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="261"
+						width="216"
+						height="13"
+						key="textField-41"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{namaPenghantar} != null ? "<style pdfFontName='Helvetica-Bold'>"+$P{namaPenghantar}+"</style>":".................................................................................")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="368"
+						width="451"
+						height="16"
+						key="textField-42"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n*   Potong mana-mana yang berkenaan"+
+"\n** 	Potong sebagaimana yang sesuai"]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="365"
+						width="451"
+						height="1"
+						key="line-2"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="0"
+						y="1"
+						width="451"
+						height="18"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center" lineSpacing="Single">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<text><![CDATA[BORANG SABPN 2
+]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="75"
+						width="451"
+						height="15"
+						key="textField-44"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bahawa saya "+
+""+
+($P{namaPenghantar} != null ? "<style pdfFontName='Helvetica-Bold'>"+$P{namaPenghantar}+"</style>":".................................................................................")+
+"Penghantar Notis "+
+""+($F{NAMA_PEJABAT} != null ? "<style pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEJABAT}+"</style>.":".................................................................................")+""
++ "\ndengan sesungguh dan sebenarnya mengaku bahawa:-"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="216"
+						y="261"
+						width="235"
+						height="13"
+						key="textField-47"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["................................................."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="291"
+						width="157"
+						height="19"
+						key="textField-49"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Di "+(($P{tempatSAPBN} != null && $P{tempatSAPBN} != "") ? ""+$P{tempatSAPBN}+"":".................................")+"\n"+
+"Di "+(($P{negeriSAPBN} != null && $P{negeriSAPBN} != "") ? ""+$P{negeriSAPBN}+"":".................................")+"\n"+
+"Pada ............................"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="94"
+						width="30"
+						height="15"
+						key="textField-50"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["1."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="64"
+						y="94"
+						width="387"
+						height="15"
+						key="textField-52"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Saya telah diarahkan untuk menyerahkan notis Borang E / Ulang Bicara seperti "+
+"surat Bil.("+
+($P{bil_surat}  != null ? $P{bil_surat} :"..........")+       
+") dalam Fail "+
+""+($P{no_fail} != null ? "<style pdfFontName='Helvetica-Bold'>"+$P{no_fail}+($F{NO_SUBJAKET}  != null ? " sj."+$F{NO_SUBJAKET} :" sj...........")+"</style>":".......................................................")+" "+
+"beralamat "+
+($F{ALAMAT}  != null ? "<style pdfFontName='Helvetica-Bold'>"+$F{ALAMAT}+"</style>" :"............................................................................................")
++" "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="109"
+						width="451"
+						height="4"
+						key="textField-58"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="90"
+						width="451"
+						height="4"
+						key="textField-59"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="257"
+						width="451"
+						height="4"
+						key="textField-71"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="287"
+						width="451"
+						height="4"
+						key="textField-72"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="216"
+						y="274"
+						width="198"
+						height="13"
+						key="textField-73"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["(Tandatangan)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="325"
+						width="157"
+						height="19"
+						key="textField-74"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Di hadapan saya"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="344"
+						width="451"
+						height="4"
+						key="textField-75"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="348"
+						width="189"
+						height="11"
+						key="textField-76"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["………………………………………\n"+
+"(Hakim Mahkamah Seksyen,\n"+
+"Majistret, Pesuruhjaya Sumpah)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="359"
+						width="451"
+						height="4"
+						key="textField-77"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="113"
+						width="30"
+						height="15"
+						key="textField-78"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["2."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="64"
+						y="113"
+						width="387"
+						height="15"
+						key="textField-79"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Saya telah pergi ke alamat tersebut pada "+
+""+($F{TARIKH_SERAH_NOTIS} != null ? "<style pdfFontName='Helvetica-Bold'>"+$F{TARIKH_SERAH_NOTIS}+"</style>.":".....................")+" "+
+""+($P{keterangan_waktu_hantar} != null ? "<style pdfFontName='Helvetica-Bold'>"+$P{keterangan_waktu_hantar}+"</style>.":"")+""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="132"
+						width="30"
+						height="15"
+						key="textField-81"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["3."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="64"
+						y="132"
+						width="387"
+						height="15"
+						key="textField-82"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["** Saya TELAH BERTEMU dengan *orang yang dinamakan pada notis "+
+"Borang E itu / *keluarga yang tinggal bersama-sama dengannya "+
+"tetapi beliau *enggan menerima/ *tidak dapat menandatangani *notis Borang E itu."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="64"
+						y="150"
+						width="387"
+						height="15"
+						key="textField-86"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"+
+"** Saya TIDAK BERTEMU dengan *orang yang dinamakan pada notis Borang/ E /keluarga "+
+"yang dewasa yang tinggal bersama-sama dengannya."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="169"
+						width="30"
+						height="15"
+						key="textField-88"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["4."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="64"
+						y="169"
+						width="387"
+						height="15"
+						key="textField-89"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Saya telah menampalkan notis Borang E Itu di tempat-tempat yang "+
+"disebutkan pada seksyen 53(2), Akta Pengambilan Tanah 1960 "+
+"pada hari "+
+""+($F{TARIKH_TAMPAL} != null ? "<style pdfFontName='Helvetica-Bold'>"+$F{TARIKH_TAMPAL}+"</style>.":".....................")+""+
+"Iaitu di pintu luar rumah/kedai/pejabat orang yang dinamakan pada "+
+"Borang E itu biasanya tinggal DAN di papan notis Bandar/pecan/mukim "+
+"di mana orang yang dinamakan itu biasanya bermastautin."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="188"
+						width="30"
+						height="15"
+						key="textField-91"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["5."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="64"
+						y="188"
+						width="387"
+						height="15"
+						key="textField-92"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["* Sebagai tambahan kepada tempat-tempat yang dinyatakan pada 53(2) itu "+
+"saya juga telah menampalkan satu salinan notis itu di atas tanah yang "+
+"berkenaan seperti yang diwajibkan di bawah seksyen 53(3)."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="207"
+						width="30"
+						height="15"
+						key="textField-94"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["6."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="64"
+						y="207"
+						width="387"
+						height="15"
+						key="textField-95"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Saya membuat Surat Akuan Berkanun ini dengan kepercayaan bahawa apa-apa "+
+"yang tersebut di dalamnya adalah benar serta menurut Undang-Undang Surat "+
+"Akuan Berkanun 1960."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="128"
+						width="451"
+						height="4"
+						key="textField-96"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="147"
+						width="451"
+						height="4"
+						key="textField-97"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="165"
+						width="451"
+						height="4"
+						key="textField-98"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="184"
+						width="451"
+						height="4"
+						key="textField-99"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="203"
+						width="451"
+						height="4"
+						key="textField-100"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="222"
+						width="451"
+						height="4"
+						key="textField-101"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Double">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

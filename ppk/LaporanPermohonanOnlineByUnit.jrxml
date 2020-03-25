@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="LaporanPermohonanOnlineByUnit"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="926"
+		 pageHeight="595"
+		 columnWidth="926"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.zoom" value="0.8264462809917359" />
+	<property name="ireport.x" value="0" />
+	<property name="ireport.y" value="0" />
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="userId" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="nama" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="noKP" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="seksyen" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="idPejabat" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="noFail" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="startTempoh" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="endTempoh" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT   A.ID_PERMOHONANTERDAHULU, F.ID_FAIL, UPPER (F.NO_FAIL) AS NO_FAIL,
+         A.ID_PERMOHONAN, A.TARIKH_MOHON, A.TARIKH_MASUK,
+         F.TARIKH_DAFTAR_FAIL, S.KETERANGAN, P.ID_SIMATI,
+         UPPER (P.NAMA_SIMATI) AS NAMA_SIMATI, A.ID_DAERAHMHN,
+         A.TARIKH_MOHON_ONLINE,
+         UPPER (A.NO_PERMOHONAN_ONLINE) AS NO_PERMOHONAN_ONLINE,
+         UPPER (PM.NAMA_PEMOHON) AS NAMA_PEMOHON, PM.NO_KP_BARU,
+         PM.ID_PEMOHON, P.NO_KP_BARU, P.NO_KP_BARU, A.SEKSYEN, A.NO_SUBJAKET,
+         E.NAMA_PEJABAT
+    FROM TBLPPKPERMOHONAN A,
+         TBLPFDFAIL F,
+         TBLRUJSTATUS S,
+         TBLPPKSIMATI P,
+         TBLPPKPEMOHON PM,
+         TBLPPKPERMOHONANSIMATI MS,
+         TBLRUJDAERAH D,
+         TBLRUJPEJABATJKPTG E,
+         TBLRUJPEJABATURUSAN F,
+         TBLRUJNEGERI N
+   WHERE D.ID_DAERAH IN (
+            SELECT DISTINCT U.ID_DAERAHURUS
+                       FROM TBLRUJPEJABATURUSAN U, USERS_INTERNAL UR
+                      WHERE U.ID_PEJABATJKPTG = UR.ID_PEJABATJKPTG
+                        AND UR.USER_ID = '$P!{userId}')
+     AND N.ID_NEGERI IN (
+            SELECT DISTINCT U.ID_NEGERIURUS
+                       FROM TBLRUJPEJABATURUSAN U, USERS_INTERNAL UR
+                      WHERE U.ID_PEJABATJKPTG = UR.ID_PEJABATJKPTG
+                        AND UR.USER_ID = '$P!{userId}')
+     AND E.ID_PEJABATJKPTG = F.ID_PEJABATJKPTG
+     AND D.ID_DAERAH = F.ID_DAERAHURUS
+     AND N.ID_NEGERI = F.ID_NEGERIURUS
+     AND E.ID_NEGERI = F.ID_NEGERIURUS
+     AND E.ID_JENISPEJABAT IN (21, 22)
+     AND A.ID_STATUS = S.ID_STATUS(+)
+     AND A.ID_PEMOHON = PM.ID_PEMOHON(+)
+     AND A.ID_FAIL = F.ID_FAIL(+)
+     AND A.ID_DAERAHMHN = D.ID_DAERAH
+     AND A.ID_PERMOHONAN = MS.ID_PERMOHONAN
+     AND P.ID_SIMATI = MS.ID_SIMATI
+     AND A.ID_STATUS <> '999'
+     AND A.NO_PERMOHONAN_ONLINE IS NOT NULL
+     AND (   UPPER (TRIM (P.NO_KP_BARU)) LIKE '%' || '$P!{noKP}' || '%'
+          OR UPPER (TRIM (P.NO_KP_LAMA)) LIKE '%' || '$P!{noKP}' || '%'
+          OR UPPER (TRIM (P.NO_KP_LAIN)) LIKE '%' || '$P!{noKP}' || '%'
+          OR UPPER (TRIM (PM.NO_KP_BARU)) LIKE '%' || '$P!{noKP}' || '%'
+          OR UPPER (TRIM (PM.NO_KP_LAMA)) LIKE '%' || '$P!{noKP}' || '%'
+          OR UPPER (TRIM (PM.NO_KP_LAIN)) LIKE '%' || '$P!{noKP}' || '%'
+         )
+     AND (   UPPER (P.NAMA_SIMATI) LIKE '%' || '$P!{nama}' || '%'
+          OR UPPER (PM.NAMA_PEMOHON) LIKE '%' || '$P!{nama}' || '%'
+         )
+     AND (   UPPER (TRIM (F.NO_FAIL)) LIKE
+                                      '%' || '$P!{noFail}' || '%'
+          OR UPPER (TRIM (A.NO_PERMOHONAN_ONLINE)) LIKE
+                                      '%' || '$P!{noFail}' || '%'
+         )
+     AND A.SEKSYEN LIKE '%' || '$P!{seksyen}' || '%'
+     AND E.ID_PEJABATJKPTG LIKE '%' || '$P!{idPejabat}' || '%'
+     AND A.TARIKH_MOHON_ONLINE BETWEEN TO_DATE('$P!{startTempoh}','DD/MM/YYYY') AND TO_DATE('$P!{endTempoh}','DD/MM/YYYY')
+ORDER BY A.TARIKH_MOHON DESC]]></queryString>
+
+	<field name="ID_PERMOHONANTERDAHULU" class="java.math.BigDecimal"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
+	<field name="TARIKH_MOHON" class="java.sql.Timestamp"/>
+	<field name="TARIKH_MASUK" class="java.sql.Timestamp"/>
+	<field name="TARIKH_DAFTAR_FAIL" class="java.sql.Timestamp"/>
+	<field name="KETERANGAN" class="java.lang.String"/>
+	<field name="ID_SIMATI" class="java.math.BigDecimal"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
+	<field name="TARIKH_MOHON_ONLINE" class="java.lang.String"/>
+	<field name="NO_PERMOHONAN_ONLINE" class="java.lang.String"/>
+	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="NO_KP_BARU" class="java.lang.String"/>
+	<field name="ID_PEMOHON" class="java.math.BigDecimal"/>
+	<field name="SEKSYEN" class="java.lang.String"/>
+	<field name="NO_SUBJAKET" class="java.lang.String"/>
+	<field name="NAMA_PEJABAT" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="56"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="43"
+						y="16"
+						width="841"
+						height="40"
+						key="textField-7"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="14" isBold="true" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["LAPORAN PERMOHONAN ONLINE (UNIT)"
++"\n"+($P{idPejabat} != null && $P{idPejabat} != "" ?"UNIT : "+$F{NAMA_PEJABAT}:"")]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="31"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="43"
+						y="0"
+						width="841"
+						height="31"
+						backcolor="#CCCCCC"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<line direction="TopDown">
+					<reportElement
+						x="307"
+						y="1"
+						width="1"
+						height="29"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="100"
+						y="1"
+						width="1"
+						height="29"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="512"
+						y="1"
+						width="1"
+						height="29"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="614"
+						y="1"
+						width="1"
+						height="29"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="771"
+						y="1"
+						width="1"
+						height="29"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="43"
+						y="0"
+						width="58"
+						height="31"
+						key="textField-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BIL"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="100"
+						y="0"
+						width="207"
+						height="31"
+						key="textField-2"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO RUJUKAN ONLINE"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="307"
+						y="0"
+						width="205"
+						height="31"
+						key="textField-3"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO FAIL"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="512"
+						y="0"
+						width="101"
+						height="31"
+						key="textField-4"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["TARIKH PERMOHONAN"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="615"
+						y="0"
+						width="157"
+						height="31"
+						key="textField-5"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NAMA PEMOHON"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="771"
+						y="0"
+						width="112"
+						height="31"
+						key="textField-6"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["SEKSYEN"]]></textFieldExpression>
+				</textField>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="32"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="43"
+						y="0"
+						width="841"
+						height="32"
+						key="rectangle-2"
+						positionType="Float"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<line direction="TopDown">
+					<reportElement
+						mode="Transparent"
+						x="771"
+						y="0"
+						width="1"
+						height="32"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="614"
+						y="0"
+						width="1"
+						height="32"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						mode="Transparent"
+						x="512"
+						y="0"
+						width="1"
+						height="32"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="307"
+						y="0"
+						width="1"
+						height="32"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="100"
+						y="0"
+						width="1"
+						height="32"
+						key="line"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="614"
+						y="1"
+						width="157"
+						height="31"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NAMA_PEMOHON}!= null?$F{NAMA_PEMOHON}:""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="100"
+						y="1"
+						width="207"
+						height="31"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NO_PERMOHONAN_ONLINE}!= null?$F{NO_PERMOHONAN_ONLINE}:""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="307"
+						y="1"
+						width="205"
+						height="31"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NO_FAIL}!=null?$F{NO_FAIL}:"-"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="514"
+						y="1"
+						width="101"
+						height="31"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{TARIKH_MOHON_ONLINE}!=null?$F{TARIKH_MOHON_ONLINE}:""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="772"
+						y="1"
+						width="112"
+						height="31"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SEKSYEN}!=null?$F{SEKSYEN}:""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="43"
+						y="1"
+						width="58"
+						height="31"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

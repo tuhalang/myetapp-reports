@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Borang G_mukim"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="535"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_Fail" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select 
+ substr(rtrim (xmlagg (xmlelement (e, nama)).extract ('//text()'), ','),3) list_mukim
+from    
+   (        
+   select to_char(
+     case 
+     when  
+     (count(*) OVER 
+     ( partition by m.id_masuk ) = 
+     ROW_NUMBER () OVER ( partition by m.id_masuk order by m.nama_mukim)) 
+     and
+     (count(*) OVER 
+     ( partition by m.id_masuk ) <> 1)
+     then
+     ' dan '
+     when  count(*) OVER 
+     ( partition by m.id_masuk ) = 1 then ', '
+     else
+     ', '
+     end || 
+     --initcap(m.nama_mukim)     
+     REPLACE((regexp_replace(INITCAP(REGEXP_REPLACE(UPPER(TRIM(m.NAMA_MUKIM)), 
+'(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', ' (\2)')),
+'\([[:alnum:]]+\)',upper(regexp_substr(INITCAP(REGEXP_REPLACE(UPPER(TRIM(m.NAMA_MUKIM)),
+'(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', 
+' (\2)')),'\((.*?)\)',1,1,null,1)))),'-','- ')
+    ) as nama,
+        count(*) OVER 
+     ( partition by m.id_masuk ) 
+     cnt,
+     ROW_NUMBER () OVER ( partition by m.id_masuk order by m.nama_mukim) seq,
+     case when  
+     (count(*) OVER 
+     ( partition by m.id_masuk ) = 
+     ROW_NUMBER () OVER ( partition by m.id_masuk order by m.nama_mukim))
+     and
+     (count(*) OVER 
+     ( partition by m.id_masuk ) <> 1)  
+     then
+     ' dan '
+     when  count(*) OVER 
+     ( partition by m.id_masuk ) = 1 then ', '
+  else
+     ', '
+  end as 
+  symbol    
+   from
+     tblrujmukim m    
+  where
+  m.id_mukim in (     
+     select distinct m.id_mukim
+     from
+     tblrujmukim m,tblpptpermohonan p,tblppthakmilik h,tblpfdfail f  where  
+     p.id_permohonan = h.id_permohonan and m.id_mukim = h.id_mukim and f.id_fail = p.id_fail
+     AND NVL(h.FLAG_PENARIKAN_KESELURUHAN,'0') <> 'Y'
+     AND NVL(h.FLAG_PEMBATALAN_KESELURUHAN,'0') <> 'Y'
+     --AND F.NO_FAIL = 'JKPTG(S).MLK/03/881/04/2012/120 '
+     and f.id_fail = $P!{id_Fail} 
+    --AND P.ID_NEGERI = '4' 
+    AND ROWNUM < 100              
+   ))]]></queryString>
+
+	<field name="LIST_MUKIM" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="19"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="0"
+						width="200"
+						height="19"
+						key="textField-1"
+						positionType="Float"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{LIST_MUKIM}!=null?$F{LIST_MUKIM}:"")]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

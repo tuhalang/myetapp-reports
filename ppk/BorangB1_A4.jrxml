@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BorangB1_A4"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT
+                a.NO_FAIL,
+                UPPER(g.nama_simati) AS nama_simati,
+                NVL (g.nama_lain, '') AS nama_lain_simati,
+                CASE
+                   WHEN g.no_kp_baru IS NOT NULL
+                   AND LENGTH (RTRIM (g.no_kp_baru)) = 12
+                      THEN    SUBSTR (g.no_kp_baru, 1, 6)
+                           || '-'
+                           || SUBSTR (g.no_kp_baru, 7, 2)
+                           || '-'
+                           || SUBSTR (g.no_kp_baru, 9, 4)
+                END AS no_kp_baru,
+                CASE
+                   WHEN g.no_kp_lama IS NOT NULL
+                   AND LENGTH (RTRIM (g.no_kp_lama)) = 8
+                      THEN g.no_kp_lama
+                END AS no_kp_lama,
+                CASE
+                   WHEN g.no_kp_lain IS NOT NULL
+                   AND g.no_kp_baru IS NULL
+                   AND g.no_kp_lama IS NULL
+                      THEN g.no_kp_lain
+                END AS no_kp_lain,
+               TO_CHAR (g.tarikh_mati, 'DD/MM/YYYY') AS tarikh_mati,
+               TO_CHAR (e.tarikh_perintah, 'DD/MM/YYYY') AS tarikh_perintah,
+               e.id_perintah,
+               CASE 
+                    WHEN k.id_ob is not null AND l.id_ob is not null
+                    THEN
+                    (select nama_ob from tblppkob where id_ob=k.id_ob and rownum<=1 ) 
+                    ||'  (' || (select keterangan from tblppkrujjenisperintah where id_jenisperintah=H.ID_JENISPERINTAH) ||')'
+                    WHEN k.id_ob is not null AND l.id_ob is null
+                    THEN
+                    (select nama_ob from tblppkob where id_ob=k.id_ob and rownum<=1 ) 
+                    ||'  (' || (select keterangan from tblppkrujjenisperintah where id_jenisperintah=H.ID_JENISPERINTAH) ||')'  
+                    ELSE
+                    (select nama_ob from tblppkob where id_ob=l.id_ob and rownum<=1 ) 
+                    ||'  (' || (select keterangan from tblppkrujjenisperintah where id_jenisperintah=I.ID_JENISPERINTAH) ||')'
+               END as NAMA_OB_HA_PERINTAH,
+TO_CHAR(sysdate,'dd/MM/yyyy') AS TARIKH
+FROM        tblpfdfail a,    
+            tblppkpermohonan b,
+            tblppkkeputusanpermohonan c,
+            tblppkperbicaraan d,
+            tblppkperintah e,
+            tblppkpermohonansimati f,
+            tblppksimati g,
+            tblppkperintahhtaobmst h,
+            tblppkperintahhaobmst i,
+            tblppkrujjenisperintah j,
+            tblppkperintahhtaobdtl k,
+            tblppkperintahhaobdtl l
+            --tblppkob n         
+WHERE       a.id_fail                   =   b.id_fail           
+        and b.id_permohonan             =   c.ID_PERMOHONAN   
+        and c.id_keputusanpermohonan    =   d.id_keputusanpermohonan
+        and d.id_perbicaraan            =   e.id_perbicaraan
+        and b.id_permohonan             =   f.ID_PERMOHONAN 
+        and f.id_simati                 =   g.id_simati
+        and e.id_perintah               =   h.id_perintah(+)
+        and e.id_perintah               =   i.id_perintah(+)
+        and i.id_jenisperintah          =   j.id_jenisperintah(+)
+        and h.id_perintahhtaobmst       =   k.id_perintahhtaobmst(+)
+        and i.id_perintahhaobmst        =   l.id_perintahhaobmst(+)
+        and e.flag_jenis_keputusan      =   0
+        and a.ID_FAIL=$P!{idfail}]]></queryString>
+
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="NAMA_LAIN_SIMATI" class="java.lang.String"/>
+	<field name="NO_KP_BARU" class="java.lang.String"/>
+	<field name="NO_KP_LAMA" class="java.lang.String"/>
+	<field name="NO_KP_LAIN" class="java.lang.String"/>
+	<field name="TARIKH_MATI" class="java.lang.String"/>
+	<field name="TARIKH_PERINTAH" class="java.lang.String"/>
+	<field name="ID_PERINTAH" class="java.math.BigDecimal"/>
+	<field name="NAMA_OB_HA_PERINTAH" class="java.lang.String"/>
+	<field name="TARIKH" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="140"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="115"
+						y="14"
+						width="357"
+						height="19"
+						key="textField-10"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["PROBET DAN PENTADBIRAN"
++"\nNOTIS PENGELUARAN GERAN"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="28"
+						y="69"
+						width="450"
+						height="12"
+						key="textField-19"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["1. Nama si mati <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NAMA_SIMATI}!=null ? $F{NAMA_SIMATI}:"")+"</style>"
++"\n\n    Nama lain (jika ada) <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NAMA_LAIN_SIMATI}!=null ? $F{NAMA_LAIN_SIMATI}:"")+"</style>"
++"\n\n2. No. Kad Pengenalan si mati <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NO_KP_LAMA}!=null ? $F{NO_KP_LAMA}:"")+($F{NO_KP_LAIN}!=null ? $F{NO_KP_LAIN}:"")+"</style>"
++"\n\n3. No. Kad Pengenalan Mutu Tinggi si mati (jika ada) <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NO_KP_BARU}!=null ? $F{NO_KP_BARU}:"")+"</style>"
++"\n\n4. Tarikh mati <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{TARIKH_MATI}+"</style>"
++"\n\n5. Nombor petisyen dan Mahkamah <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NO_FAIL}+"</style>"
++"\n\n6. Tarikh yang Geran dikeluarkan/Perintah Pembahagian dibuat <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{TARIKH_PERINTAH}+"</style>"
++"\n\n7. Nama dan hak orang yang geran dikeluarkan atau Perintah Pembahagian dibuat memihak kepadanya <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NAMA_OB_HA_PERINTAH}!=null ? $F{NAMA_OB_HA_PERINTAH}:"")+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="28"
+						y="118"
+						width="102"
+						height="12"
+						key="textField-20"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{TARIKH}+"</style>"]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</summary>
+</jasperReport>

@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Borang G_lebihDrpdSatuHakmilik_jadual_mukim_SELANGOR" pageWidth="566" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="566" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="272f2d5a-a6a6-4a5a-ba1e-35d2eb2b0917">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="id_mukim" class="java.lang.String"/>
+	<parameter name="id_Fail" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="id_hakmilik" class="java.lang.String"/>
+	<parameter name="no_fail" class="java.lang.String"/>
+	<parameter name="noMT" class="java.lang.String"/>
+	<parameter name="noARB" class="java.lang.String"/>
+	<parameter name="bankARB" class="java.lang.String"/>
+	<parameter name="bankMT" class="java.lang.String"/>
+	<parameter name="akaunMT" class="java.lang.String"/>
+	<parameter name="akaunARB" class="java.lang.String"/>
+	<parameter name="valMT" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT
+--INITCAP(M.NAMA_MUKIM) AS NAMA_MUKIM,
+(regexp_replace(INITCAP(REGEXP_REPLACE(UPPER(M.NAMA_MUKIM),
+'(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', ' (\2)')),
+'\([[:alnum:]]+\)',upper(regexp_substr(INITCAP(REGEXP_REPLACE(UPPER(M.NAMA_MUKIM),
+'(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', ' (\2)')),'\((.*?)\)',1,1,null,1))))
+as NAMA_MUKIM,
+TO_CHAR(H.ID_HAKMILIK) AS ID_HAKMILIK,
+/*CASE
+    WHEN H.NO_LOT IS NOT NULL AND H.NO_PT IS NULL THEN H.NO_LOT
+    WHEN H.NO_LOT IS NULL AND H.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || H.NO_PT
+    WHEN H.NO_LOT IS NOT NULL AND H.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || H.NO_PT || CHR(32) || CHR(40) || H.NO_LOT  || CHR(41)
+    ELSE  ''
+END AS NO_LOT,
+H.NO_PT,*/
+H.NO_LOT AS NO_LOT,
+(TRIM(JL.KETERANGAN)  || TRIM(H.NO_PT)) AS NO_PT,
+H.NO_HAKMILIK, HM.KOD_JENIS_HAKMILIK,
+ROUND(H.LUAS_AMBIL,4) AS LUAS_AMBIL,
+CASE
+    WHEN h.ID_UNITLUASAMBIL_CONVERT = 1 THEN 'hektar'
+    WHEN h.ID_UNITLUASAMBIL_CONVERT = 2 THEN 'meter persegi'
+END AS unit_AMBIL,
+ROUND(H.LUAS_LOT,4) AS LUAS_LOT,
+CASE
+    WHEN h.ID_UNITLUASLOT_CONVERT = 1 THEN 'hektar'
+    WHEN h.ID_UNITLUASLOT_CONVERT = 2 THEN 'meter persegi'
+END AS unit_LOT,
+ROUND(S.LUAS_MUKTAMAD,4) AS LUAS_MUKTAMAD,/*
+case
+    when h.ID_UNITLUASLOT_CONVERT = 1 then 'hektar'
+    when h.ID_UNITLUASLOT_CONVERT = 2 then 'meter persegi'
+    end as unit_LOT,
+    ROUND(S.LUAS_MUKTAMAD,4) AS LUAS_MUKTAMAD,*/
+    (case
+    when S.ID_UNIT_LUAS_MUKTAMAD = 1 then 'hektar'
+    when S.ID_UNIT_LUAS_MUKTAMAD  = 2 then 'meter persegi'
+    end) AS UNIT_LUAS_MUKTAMAD,
+TO_CHAR(M.ID_MUKIM) AS ID_MUKIM, INITCAP(D.NAMA_DAERAH) AS NAMA_DAERAH,
+P.tujuan,
+REPLACE(TO_CHAR(S.NILAI_SEUNIT,'999,999,990.99'),' ') AS JUM,
+CASE WHEN S.UNIT_TANAH = 2 THEN 'semeter persegi'
+WHEN S.UNIT_TANAH = 1 THEN 'sehektar'
+WHEN S.UNIT_TANAH = 3 THEN 'sekar'
+WHEN S.UNIT_TANAH = 4 THEN 'sekaki persegi'
+ELSE '' END AS UNIT, H.NO_SUBJAKET,
+'$P!{no_fail}' AS NO_FAIL,
+CASE
+    WHEN '$P!{valMT}' = 'no' THEN ''
+    WHEN '$P!{valMT}' = 'yes' THEN '(Bayaran pampasan hendaklah dibuat setelah Jabatan ini mengemukakan perintah  termeterai daripada Mahkamah)'
+    ELSE ''
+END AS KGN
+FROM TBLPPTPERMOHONAN P,TBLPFDFAIL F,
+TBLPPTHAKMILIK H,TBLRUJMUKIM M , TBLRUJJENISHAKMILIK HM, TBLRUJLOT JL,TBLRUJDAERAH D,TBLPPTSIASATAN S
+WHERE P.ID_FAIL= F.ID_FAIL
+AND P.ID_PERMOHONAN = H.ID_PERMOHONAN
+AND P.ID_DAERAH = D.ID_DAERAH(+)
+AND H.ID_HAKMILIK = S.ID_HAKMILIK(+)
+AND S.ID_SIASATAN = (SELECT MAX(SS.ID_SIASATAN) FROM TBLPPTSIASATAN SS WHERE SS.ID_HAKMILIK = H.ID_HAKMILIK)
+AND ((S.ID_SIASATAN IS NULL) OR (S.STATUS_SIASATAN = '6' AND S.ID_SIASATAN IS NOT NULL))
+AND H.ID_MUKIM = M.ID_MUKIM(+)
+AND H.ID_JENISHAKMILIK = HM.ID_JENISHAKMILIK(+)
+AND H.ID_LOT = JL.ID_LOT(+)
+AND H.ID_HAKMILIK = $P!{id_hakmilik}
+ORDER BY NO_LOT ASC]]>
+	</queryString>
+	<field name="NAMA_MUKIM" class="java.lang.String"/>
+	<field name="ID_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="NO_PT" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
+	<field name="LUAS_AMBIL" class="java.math.BigDecimal"/>
+	<field name="UNIT_AMBIL" class="java.lang.String"/>
+	<field name="LUAS_LOT" class="java.math.BigDecimal"/>
+	<field name="UNIT_LOT" class="java.lang.String"/>
+	<field name="LUAS_MUKTAMAD" class="java.math.BigDecimal"/>
+	<field name="UNIT_LUAS_MUKTAMAD" class="java.lang.String"/>
+	<field name="ID_MUKIM" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="JUM" class="java.lang.String"/>
+	<field name="UNIT" class="java.lang.String"/>
+	<field name="NO_SUBJAKET" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="KGN" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="23" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="42a2a874-9c89-40c2-804b-80c5b367d28a" key="textField-68" positionType="Float" stretchType="RelativeToBandHeight" isPrintRepeatedValues="false" x="332" y="5" width="116" height="17"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="5241f5dc-0bd2-459e-91ec-64e292ecead4" key="textField-67" positionType="Float" stretchType="RelativeToBandHeight" isPrintRepeatedValues="false" x="265" y="5" width="67" height="17"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="c4e421cf-f3fb-4e4f-894c-0b2fe93b7977" key="textField-66" positionType="Float" stretchType="RelativeToBandHeight" isPrintRepeatedValues="false" x="110" y="5" width="155" height="17"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement uuid="9b6adaea-473b-43db-b384-064cc9e97193" key="subreport-2" positionType="Float" stretchType="RelativeToTallestObject" mode="Opaque" x="113" y="5" width="334" height="17"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="id_hakmilik">
+					<subreportParameterExpression><![CDATA[$F{ID_HAKMILIK}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="id_mukim">
+					<subreportParameterExpression><![CDATA[$P{id_mukim}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="id_Fail">
+					<subreportParameterExpression><![CDATA[$P{id_Fail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="no_fail">
+					<subreportParameterExpression><![CDATA[$P{no_fail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="noMT">
+					<subreportParameterExpression><![CDATA[$P{noMT}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="noARB">
+					<subreportParameterExpression><![CDATA[$P{noARB}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bankARB">
+					<subreportParameterExpression><![CDATA[$P{bankARB}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bankMT">
+					<subreportParameterExpression><![CDATA[$P{bankMT}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="akaunMT">
+					<subreportParameterExpression><![CDATA[$P{akaunMT}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="akaunARB">
+					<subreportParameterExpression><![CDATA[$P{akaunARB}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir}+"//ppt//Borang G_pb.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="ca83638e-0204-403f-8e51-907838aac2af" key="textField-57" positionType="Float" stretchType="RelativeToBandHeight" x="48" y="5" width="62" height="17" isPrintWhenDetailOverflows="true"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="529e017c-279f-45a4-a48d-5fb882b1a6de" key="textField-27" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="49" y="5" width="60" height="17" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[//($F{LUAS_AMBIL} != null ? $F{LUAS_AMBIL}+($F{UNIT_AMBIL} != null ? " "+$F{UNIT_AMBIL}:""):"")
+($F{LUAS_MUKTAMAD} != null ? $F{LUAS_MUKTAMAD}+($F{UNIT_LUAS_MUKTAMAD} != null ? " \n"+$F{UNIT_LUAS_MUKTAMAD}:""):($F{LUAS_AMBIL} != null ? $F{LUAS_AMBIL}+($F{UNIT_AMBIL} != null ? " "+$F{UNIT_AMBIL}:""):"")
+)]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="e5b9de6d-d37d-4812-b96e-e1d0d1349b7e" key="textField-58" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="5" width="48" height="17" isPrintWhenDetailOverflows="true"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="d1a187c5-ccd4-44ee-94a3-fd0c39aa2e68" key="textField-65" positionType="Float" stretchType="RelativeToBandHeight" x="448" y="5" width="85" height="17" isPrintWhenDetailOverflows="true"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="d490d85e-94aa-4268-b55f-98716a6a4ee9" key="textField-69" positionType="Float" stretchType="RelativeToBandHeight" isPrintRepeatedValues="false" x="448" y="5" width="85" height="17"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="9a1041cc-879b-476e-8373-9755a4fd9384" key="textField-70" positionType="Float" stretchType="RelativeToTallestObject" x="449" y="5" width="83" height="17" isPrintWhenDetailOverflows="true"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_FAIL} != null ? "\n"+$F{NO_FAIL}+($F{NO_SUBJAKET} != null ? " Sj."+$F{NO_SUBJAKET}:""):"")
++"\n\n"
++($F{JUM} != null ? "Tanah dinilai dengan harga  "
++"\nRM "+($F{JUM} != null ? $F{JUM}:"")+"\n/"+($F{UNIT} != null ? $F{UNIT}:"") :"")
++"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{KGN} != null ? $F{KGN}:"")
++"</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="65acb130-aa9c-4dc7-a07d-fb1bf9119aca" key="textField-26" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="1" y="5" width="46" height="17" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_LOT} != null ? $F{NO_LOT}:($F{NO_PT} != null ? $F{NO_PT}:""))+
+/*($F{NO_LOT} != null ? $F{NO_LOT}:"")+
+($F{NO_LOT} != null ? ($F{NO_PT} != null ? "\n(" + $F{NO_PT}+")":""):($F{NO_PT} != null ? "(" + $F{NO_PT}+")":""))
++*/
+"\n\n"+
+($F{NO_HAKMILIK} != null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":"")+$F{NO_HAKMILIK}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="c86ebd60-c3a0-4afc-b55a-9beaf8e10729" key="textField-74" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="0" y="6" width="46" height="17" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\n\n\n\n\n"+
+($F{NAMA_MUKIM} != null ? "\nMukim : \n"+($F{NAMA_MUKIM} != null ? $F{NAMA_MUKIM}:"")+"\n\n":"")
++
+($F{NAMA_DAERAH} != null ? "Daerah :\n"+($F{NAMA_DAERAH} != null ? $F{NAMA_DAERAH}:"")+"\n":"")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

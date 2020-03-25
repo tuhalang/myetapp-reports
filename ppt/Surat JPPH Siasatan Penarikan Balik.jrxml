@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Surat JPPH Siasatan Penarikan Balik"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="451"
+		 columnSpacing="0"
+		 leftMargin="72"
+		 rightMargin="72"
+		 topMargin="144"
+		 bottomMargin="72"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="id_siasatan" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="nama_pegawai" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="pemilik" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_pejabat" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="id_jawatan" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT I.KOD_JENIS_HAKMILIK AS JENIS_HAKMILIK,C.NO_FAIL, C.ID_NEGERI, A.ID_SIASATAN, B.NO_RUJUKAN_PTG, TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
+    CASE
+       WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'Februari'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '03' THEN 'Mac'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '04' THEN 'April'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '05' THEN 'Mei'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '06' THEN 'Jun'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '07' THEN 'Julai'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '08' THEN 'Ogos'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '09' THEN 'September'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '10' THEN 'Oktober'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '11' THEN 'November'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '12' THEN 'Disember'
+       ELSE 'TIADA'
+    END AS BULAN_SURAT,
+    TO_CHAR(SYSDATE, 'YYYY') AS TAHUN_SURAT, REPLACE(INITCAP(E.NAMA_AGENSI),'&','&#38;') AS NAMA_AGENSI, REPLACE(INITCAP(D.NAMA_KEMENTERIAN),'&','&#38;') AS NAMA_KEMENTERIAN,
+    REPLACE((NVL(D.ALAMAT1,'')),'&','&#38;') AS ALAMAT1, REPLACE((NVL(D.ALAMAT2,'')),'&','&#38;') AS ALAMAT2,
+    REPLACE((NVL(D.ALAMAT3,'')),'&','&#38;') AS ALAMAT3, NVL(D.POSKOD,'') AS POSKOD, H.NAMA_NEGERI, UPPER(B.TUJUAN) AS TUJUAN, G.NO_WARTA,
+    TO_CHAR(G.TARIKH_WARTA,'DD.MM.YYYY') AS TARIKH_WARTA, 
+    CASE  
+    WHEN F.NO_LOT IS NOT NULL AND F.NO_PT IS NULL THEN F.NO_LOT  
+    WHEN F.NO_LOT IS NULL AND F.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || F.NO_PT   
+    WHEN F.NO_LOT IS NOT NULL AND F.NO_PT IS NOT NULL THEN JL.KETERANGAN  || F.NO_PT || CHR(32) || CHR(40) || F.NO_LOT  || CHR(41) 
+    ELSE  ''  
+END AS NO_LOT, F.NO_HAKMILIK, TO_CHAR(A.TARIKH_SIASATAN,'DD.MM.YYYY') AS TARIKH_SIASATAN,
+    CASE
+    WHEN TO_CHAR(A.TARIKH_SIASATAN, 'FMDAY') = 'MONDAY' THEN 'Isnin'
+    WHEN TO_CHAR(A.TARIKH_SIASATAN, 'FMDAY') = 'TUESDAY' THEN 'Selasa'
+    WHEN TO_CHAR(A.TARIKH_SIASATAN, 'FMDAY') = 'WEDNESDAY' THEN 'Rabu'
+    WHEN TO_CHAR(A.TARIKH_SIASATAN, 'FMDAY') = 'THURSDAY' THEN 'Khamis'
+    WHEN TO_CHAR(A.TARIKH_SIASATAN, 'FMDAY') = 'FRIDAY' THEN 'Jumaat'
+    WHEN TO_CHAR(A.TARIKH_SIASATAN, 'FMDAY') = 'SATURDAY' THEN 'Sabtu'
+    WHEN TO_CHAR(A.TARIKH_SIASATAN, 'FMDAY') = 'SUNDAY' THEN 'Ahad'
+END 
+AS HARI,
+    CASE
+        WHEN SUBSTR(A.MASA_SIASATAN,1,1) = 0 THEN SUBSTR(A.MASA_SIASATAN,2,1) || CHR(46) || SUBSTR(A.MASA_SIASATAN,3,2)
+        WHEN SUBSTR(A.MASA_SIASATAN,1,1) != 0 THEN SUBSTR(A.MASA_SIASATAN,1,2) || CHR(46) || SUBSTR(A.MASA_SIASATAN,3,2)
+        ELSE ''
+    END AS MASA_SIASATAN,
+    CASE
+        WHEN A.JENIS_WAKTU_SIASATAN = 1 THEN 'pagi'
+        WHEN A.JENIS_WAKTU_SIASATAN = 2 THEN 'tengahari'
+        WHEN A.JENIS_WAKTU_SIASATAN = 3 THEN 'petang'
+    END AS WAKTU_SIASATAN, REPLACE((A.TEMPAT),'&','&#38;') AS TEMPAT, REPLACE((A.ALAMAT1),'&','&#38;') AS ALAMAT1_S,
+    REPLACE((A.ALAMAT2),'&','&#38;') AS ALAMAT2_S, REPLACE((A.ALAMAT3),'&','&#38;') AS ALAMAT3_S, NVL(A.POSKOD,'') AS POSKOD_S,
+    INITCAP(J.KETERANGAN) AS NAMA_BANDAR, INITCAP(I.NAMA_NEGERI) AS NAMA_NEGERI_S, INITCAP(K.NAMA_NEGERI_PENUH) AS NEGERIBWH, REPLACE(INITCAP(NVL(L.JAWATAN,'')),'&','&#38;') AS JAWATAN,
+    REPLACE((NVL(L.NAMA_PEJABAT,'')),'&','&#38;') AS NAMA_PEJABAT_JPPH, REPLACE((NVL(L.ALAMAT1,'')),'&','&#38;') AS ALAMAT_JPPH1,
+    REPLACE((NVL(L.ALAMAT2,'')),'&','&#38;') AS ALAMAT_JPPH2, REPLACE((NVL(L.ALAMAT3,'')),'&','&#38;') AS ALAMAT_JPPH3,
+    NVL(L.POSKOD,'') AS POSKOD_JPPH, O.KETERANGAN AS NAMA_BANDAR_JPPH, INITCAP(M.NAMA_DAERAH) AS NAMA_DAERAH_JPPH, N.NAMA_NEGERI AS NAMA_NEGERI_JPPH, F.NO_SUBJAKET,
+    CASE
+        WHEN $P!{id_jawatan} = 1 THEN 'Pengarah'
+        WHEN $P!{id_jawatan} = 4 THEN 'Pengarah'
+        ELSE 'b.p. Pengarah'
+    END AS PENGARAH,
+    TO_CHAR(SYSDATE,'DD','NLS_CALENDAR=''ENGLISH HIJRAH''') AS HARI_ISLAM,
+    CASE 
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 01 THEN 'Muharam'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 02 THEN 'Safar'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 03 THEN 'Rabiulawal'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 04 THEN 'Rabiulakhir'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 05 THEN 'Jamadilawal'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 06 THEN 'Jamadilakhir'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 07 THEN 'Rejab'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 08 THEN 'Syaaban'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 09 THEN 'Ramadhan'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 10 THEN 'Syawal'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 11 THEN 'Zulkaedah'
+        WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 12 THEN 'Zulhijjah'
+    END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM
+    FROM TBLPPTSIASATAN A, TBLPPTPERMOHONAN B, TBLPFDFAIL C, TBLRUJKEMENTERIAN D, TBLRUJAGENSI E, TBLPPTHAKMILIK F, TBLPPTWARTA G, TBLRUJNEGERI H,
+    TBLRUJNEGERI I, TBLRUJBANDAR J, TBLRUJNEGERI K,TBLRUJJENISHAKMILIK I, TBLRUJPEJABAT L, TBLRUJDAERAH M, TBLRUJNEGERI N, TBLRUJLOT JL,
+    TBLRUJBANDAR O
+    WHERE A.ID_HAKMILIK = F.ID_HAKMILIK
+    AND L.ID_BANDAR = O.ID_BANDAR(+)
+    AND F.ID_JENISHAKMILIK(+) = I.ID_JENISHAKMILIK
+    AND B.ID_FAIL = C.ID_FAIL
+    AND C.ID_KEMENTERIAN = D.ID_KEMENTERIAN
+    AND B.ID_AGENSI = E.ID_AGENSI(+)
+    AND B.ID_PERMOHONAN = F.ID_PERMOHONAN
+    AND D.ID_NEGERI = H.ID_NEGERI
+    AND A.ID_NEGERI = I.ID_NEGERI
+    AND A.ID_BANDAR = J.ID_BANDAR
+    AND C.ID_NEGERI = K.ID_NEGERI
+    AND C.ID_NEGERI = L.ID_NEGERI
+    AND L.ID_DAERAH = M.ID_DAERAH
+    AND L.ID_NEGERI = N.ID_NEGERI
+    AND F.ID_LOT = JL.ID_LOT(+)
+    AND L.ID_SEKSYEN = 1
+    AND L.ID_JENISPEJABAT = 3
+    AND L.ID_PEJABAT = $P!{id_pejabat}
+    AND A.ID_SIASATAN = (SELECT MAX(ID_SIASATAN) FROM TBLPPTSIASATAN WHERE F.ID_HAKMILIK = TBLPPTSIASATAN.ID_HAKMILIK)
+    AND G.ID_WARTA = (SELECT MAX(ID_WARTA) FROM TBLPPTWARTA WHERE B.ID_PERMOHONAN = TBLPPTWARTA.ID_PERMOHONAN)
+    AND A.ID_SIASATAN = $P!{id_siasatan}]]></queryString>
+
+	<field name="JENIS_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
+	<field name="ID_SIASATAN" class="java.math.BigDecimal"/>
+	<field name="NO_RUJUKAN_PTG" class="java.lang.String"/>
+	<field name="HARI_SURAT" class="java.lang.String"/>
+	<field name="BULAN_SURAT" class="java.lang.String"/>
+	<field name="TAHUN_SURAT" class="java.lang.String"/>
+	<field name="NAMA_AGENSI" class="java.lang.String"/>
+	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
+	<field name="ALAMAT1" class="java.lang.String"/>
+	<field name="ALAMAT2" class="java.lang.String"/>
+	<field name="ALAMAT3" class="java.lang.String"/>
+	<field name="POSKOD" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="NO_WARTA" class="java.lang.String"/>
+	<field name="TARIKH_WARTA" class="java.lang.String"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="TARIKH_SIASATAN" class="java.lang.String"/>
+	<field name="HARI" class="java.lang.String"/>
+	<field name="MASA_SIASATAN" class="java.lang.String"/>
+	<field name="WAKTU_SIASATAN" class="java.lang.String"/>
+	<field name="TEMPAT" class="java.lang.String"/>
+	<field name="ALAMAT1_S" class="java.lang.String"/>
+	<field name="ALAMAT2_S" class="java.lang.String"/>
+	<field name="ALAMAT3_S" class="java.lang.String"/>
+	<field name="POSKOD_S" class="java.lang.String"/>
+	<field name="NAMA_BANDAR" class="java.lang.String"/>
+	<field name="NAMA_NEGERI_S" class="java.lang.String"/>
+	<field name="NEGERIBWH" class="java.lang.String"/>
+	<field name="JAWATAN" class="java.lang.String"/>
+	<field name="NAMA_PEJABAT_JPPH" class="java.lang.String"/>
+	<field name="ALAMAT_JPPH1" class="java.lang.String"/>
+	<field name="ALAMAT_JPPH2" class="java.lang.String"/>
+	<field name="ALAMAT_JPPH3" class="java.lang.String"/>
+	<field name="POSKOD_JPPH" class="java.lang.String"/>
+	<field name="NAMA_BANDAR_JPPH" class="java.lang.String"/>
+	<field name="NAMA_DAERAH_JPPH" class="java.lang.String"/>
+	<field name="NAMA_NEGERI_JPPH" class="java.lang.String"/>
+	<field name="NO_SUBJAKET" class="java.lang.String"/>
+	<field name="PENGARAH" class="java.lang.String"/>
+	<field name="HARI_ISLAM" class="java.lang.String"/>
+	<field name="BULAN_ISLAM" class="java.lang.String"/>
+	<field name="TAHUN_ISLAM" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="192"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="176"
+						width="451"
+						height="15"
+						key="textField-45"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=14)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n\nSekian, terima kasih."
++"\n"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
++"\nSaya yang menurut perintah"
++"\n"
++"\n"
++"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{nama_pegawai} != null ? $P{nama_pegawai}:"\t\t\t\t")+")</style>"
++"\n"+($F{PENGARAH} != null ? $F{PENGARAH}:"")
++"\nJabatan Ketua Pengarah Tanah dan Galian (Persekutuan)"
++"\nNegeri "+($F{NEGERIBWH} != null ? $F{NEGERIBWH}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="176"
+						width="451"
+						height="15"
+						key="textField-47"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==14)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n\nSekian, terima kasih."
++"\n"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
++"\nSaya yang menurut perintah"
++"\n"
++"\n"
++"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{nama_pegawai} != null ? $P{nama_pegawai}:"\t\t\t\t")+")</style>"
++"\n"+($F{PENGARAH} != null ? $F{PENGARAH}:"")
++"\nJabatan Ketua Pengarah Tanah dan Galian (Persekutuan)"
++"\n"+($F{NEGERIBWH} != null ? $F{NEGERIBWH}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="65"
+						width="451"
+						height="15"
+						key="textField-29"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Pengarah\n"
++($F{NAMA_PEJABAT_JPPH} != null ? $F{NAMA_PEJABAT_JPPH}+"\n":"")
++($F{ALAMAT_JPPH1} != null ? $F{ALAMAT_JPPH1}+"\n":"")
++($F{ALAMAT_JPPH2} != null ? $F{ALAMAT_JPPH2}+"\n":"")
++($F{ALAMAT_JPPH3} != null ? $F{ALAMAT_JPPH3}+"\n":"")
++($F{POSKOD_JPPH} != null ? $F{POSKOD_JPPH}+" ":"")
++($F{NAMA_BANDAR_JPPH} != null ? $F{NAMA_BANDAR_JPPH}+"\n":"")
++"<style isBold='true' pdfFontName='Helvetica-Bold'>"
++($F{NAMA_NEGERI_JPPH} != null ? $F{NAMA_NEGERI_JPPH}:"")
++"</style>"
++"\n\n"
++"Tuan,"
++"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>PENARIKAN BALIK DARIPADA PENGAMBILAN YANG DICADANGKAN BAGI "+$F{TUJUAN}+"</style> "
++"<style isBold='true' pdfFontName='Helvetica-Bold'>WKN "+($F{NO_WARTA} != null ? $F{NO_WARTA}:"")+" / "+($F{TARIKH_WARTA} != null ? $F{TARIKH_WARTA}:"")+"</style>"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>PEMILIK : "+$P{pemilik}+($F{NO_LOT} != null ? " "+$F{NO_LOT}:"")+" HAKMILIK : "+($F{JENIS_HAKMILIK} != null ? $F{JENIS_HAKMILIK}:"")+""+($F{NO_HAKMILIK} != null ? $F{NO_HAKMILIK}:"")+"</style>"
++"\n\nDengan hormatnya saya diarah merujuk kepada perkara di atas."
++"\n\n2.\tUntuk makluman pihak tuan, siasatan bagi menentukan pampasan bagi penarikan balik daripada pengambilan tanah di bawah Seksyen 35, APT 1960 bagi projek tersebut akan diadakan pada :"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="42"
+						y="90"
+						width="58"
+						height="15"
+						key="textField-30"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="42"
+						y="120"
+						width="58"
+						height="15"
+						key="textField-31"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tempat"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="119"
+						y="120"
+						width="316"
+						height="15"
+						key="textField-32"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TEMPAT} != null ? $F{TEMPAT}+"\n":"")
++($F{ALAMAT1_S} != null ? $F{ALAMAT1_S}+"\n":"")
++($F{ALAMAT2_S} != null ? $F{ALAMAT2_S}+"\n":"")
++($F{ALAMAT3_S} != null ? $F{ALAMAT3_S}+"\n":"")
++($F{POSKOD_S} != null ? $F{POSKOD_S}+" ":"")
++($F{NAMA_BANDAR} != null ? $F{NAMA_BANDAR}+"\n":"")
++($F{NAMA_NEGERI_S} != null ? $F{NAMA_NEGERI_S}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="42"
+						y="105"
+						width="58"
+						height="15"
+						key="textField-33"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Masa"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="100"
+						y="90"
+						width="19"
+						height="15"
+						key="textField-34"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="100"
+						y="105"
+						width="19"
+						height="15"
+						key="textField-35"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="119"
+						y="90"
+						width="316"
+						height="15"
+						key="textField-36"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_SIASATAN} != null ? $F{TARIKH_SIASATAN}+" / ":"")
++($F{HARI} != null ? "("+$F{HARI}+")":"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="119"
+						y="105"
+						width="316"
+						height="15"
+						key="textField-37"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{MASA_SIASATAN} != null ? $F{MASA_SIASATAN}+" "+($F{WAKTU_SIASATAN} != null ? $F{WAKTU_SIASATAN}:""):"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="100"
+						y="120"
+						width="19"
+						height="15"
+						key="textField-38"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
+				</textField>
+				<break>
+					<reportElement
+						x="0"
+						y="175"
+						width="451"
+						height="0"
+						key="element-1"/>
+				</break>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="145"
+						width="451"
+						height="30"
+						key="textField-46"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["3.\tSehubungan dengan itu, tuan/wakil tuan dipohon menghadiri siasatan berkenaan pada tarikh, masa dan tempat sebagaimana yang telah ditetapkan."
++"\n\n4.\tKerjasama dari pihak tuan amatlah dihargai dan didahului dengan ucapan ribuan terima kasih."]]></textFieldExpression>
+				</textField>
+				<break>
+					<reportElement
+						x="0"
+						y="191"
+						width="451"
+						height="0"
+						key="element-2"/>
+				</break>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="286"
+						y="0"
+						width="165"
+						height="15"
+						key="textField-48">
+							<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=10)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_FAIL} != null ? $F{NO_FAIL}+($F{NO_SUBJAKET} != null ? "Sj."+$F{NO_SUBJAKET}:""):"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="196"
+						y="0"
+						width="80"
+						height="15"
+						key="textField-49"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Rujukan Kami"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="196"
+						y="15"
+						width="80"
+						height="15"
+						key="textField-50"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="286"
+						y="0"
+						width="165"
+						height="15"
+						key="textField-51">
+							<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==10)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_RUJUKAN_PTG} != null ? $F{NO_RUJUKAN_PTG}+($F{NO_SUBJAKET} != null ? "Sj."+$F{NO_SUBJAKET}:""):"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="286"
+						y="15"
+						width="165"
+						height="15"
+						key="textField-52"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Bookman Old Style" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{HARI_SURAT}+" "+$F{BULAN_SURAT}+" "+$F{TAHUN_SURAT}
++"\n"+$F{HARI_ISLAM}+" "+$F{BULAN_ISLAM}+" "+$F{TAHUN_ISLAM}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="276"
+						y="0"
+						width="10"
+						height="15"
+						key="textField-53"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="276"
+						y="15"
+						width="10"
+						height="15"
+						key="textField-54"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>
