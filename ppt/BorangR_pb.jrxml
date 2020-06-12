@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Borang G_pb" pageWidth="535" pageHeight="842" columnWidth="535" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="6a755cdb-1a7f-4ea5-99ac-12b9e0499f4c">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="id_bahagian" class="java.lang.String"/>
+	<parameter name="id_hakmilik" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="noMT" class="java.lang.String"/>
+	<parameter name="noARB" class="java.lang.String"/>
+	<parameter name="akaunARB" class="java.lang.String"/>
+	<parameter name="akaunMT" class="java.lang.String"/>
+	<parameter name="bankMT" class="java.lang.String"/>
+	<parameter name="bankARB" class="java.lang.String" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[SELECT a.id_hakmilik, INITCAP (REPLACE(REPLACE(d.nama_pb,'&','&#38;'),'@','&#64;')) AS nama_pb,
+          TO_CHAR (aw.id_award) AS id_award,
+          TO_CHAR (CASE
+                      WHEN jpb.id_jenisnopb = 1
+                         THEN    SUBSTR (d.no_pb, 1, 6)
+                              || '-'
+                              || SUBSTR (d.no_pb, 7, 2)
+                              || '-'
+                              || SUBSTR (d.no_pb, 9, 4)
+                      ELSE d.no_pb
+                   END
+                  ) AS no_pb,
+          INITCAP (jpb.keterangan) AS jenis_no_pb, b.no_akaun, INITCAP(b.nama_bank)AS NAMA_BANK,
+          c.keterangan_syer, TO_CHAR (c.syer_atas) AS syer_atas,
+          TO_CHAR (c.syer_bawah) AS syer_bawah, jppb.keterangan AS jenispb,
+          f.id_negeri, aw.status_penerima,B.ID_JENISPB
+     FROM tblppthakmilik a,
+          tblppthakmilikpb b,
+          tblrujjenisnopb jpb,
+          tblpptbahagianpb c,
+          tblpptpihakberkepentingan d,
+          tblrujjenispb e,
+          tblrujjenispb jppb,
+          tblpptaward aw,
+          tblpptpermohonan p,
+          tblpfdfail f
+    WHERE a.id_hakmilik = b.id_hakmilik
+      AND a.id_permohonan = p.id_permohonan
+      AND p.id_fail = f.id_fail
+      AND aw.id_hakmilikpb = b.id_hakmilikpb
+      AND b.id_bahagianpb = c.id_bahagianpb(+)
+      AND d.id_jenisnopb = jpb.id_jenisnopb(+)
+      AND b.id_jenispb = jppb.id_jenispb(+)
+      AND b.id_pihakberkepentingan = d.id_pihakberkepentingan
+      and a.id_hakmilik = $P!{id_hakmilik}
+      AND b.id_jenispb = e.id_jenispb(+)
+     -- AND NVL (b.flag_borangg, '0') = '1'
+	--AND b.flag_borangg = '1'
+      AND b.id_hakmilikpb IN (
+             SELECT DISTINCT hpb.id_hakmilikpb
+                        FROM tblppthakmilikpb hpb,
+                             tblpptaward j1,
+                             tblpptsubaward sd
+                       WHERE sd.id_award = j1.id_award
+                         AND hpb.id_hakmilikpb = j1.id_hakmilikpb
+                         AND hpb.id_hakmilik = a.id_hakmilik
+                         AND sd.flag_jenis_award <> 'BAYAR_LAIN'
+                        )
+ORDER BY (CASE WHEN  ID_JENISPB = 1 THEN 1
+                WHEN   ID_JENISPB = 2 THEN 2
+                ELSE 3 END) ASC,
+                (CASE WHEN (TO_NUMBER(SYER_ATAS) > 0) AND (TO_NUMBER(SYER_BAWAH) > 0) THEN (TO_NUMBER(SYER_ATAS)/TO_NUMBER(SYER_BAWAH))
+                ELSE 0 END) DESC, TRIM(NAMA_PB) ASC]]>
+	</queryString>
+	<field name="ID_HAKMILIK" class="java.math.BigDecimal"/>
+	<field name="NAMA_PB" class="java.lang.String"/>
+	<field name="ID_AWARD" class="java.lang.String"/>
+	<field name="NO_PB" class="java.lang.String"/>
+	<field name="JENIS_NO_PB" class="java.lang.String"/>
+	<field name="NO_AKAUN" class="java.lang.String"/>
+	<field name="NAMA_BANK" class="java.lang.String"/>
+	<field name="KETERANGAN_SYER" class="java.lang.String"/>
+	<field name="SYER_ATAS" class="java.lang.String"/>
+	<field name="SYER_BAWAH" class="java.lang.String"/>
+	<field name="JENISPB" class="java.lang.String"/>
+	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
+	<field name="STATUS_PENERIMA" class="java.math.BigDecimal"/>
+	<field name="ID_JENISPB" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="10" splitType="Prevent">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="3828381c-153e-4f1e-82e4-14f432a1345e" key="textField-2" positionType="Float" x="15" y="0" width="124" height="10" isPrintWhenDetailOverflows="true"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="57c90d00-0f7d-458c-89b5-3d75936252e1" key="textField-5" positionType="Float" x="139" y="0" width="67" height="10" isPrintWhenDetailOverflows="true"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement uuid="1626c5b8-54d8-4208-9136-1a9ef0de7957" key="textField-7" positionType="Float" mode="Transparent" x="15" y="0" width="124" height="10" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[new Boolean($F{STATUS_PENERIMA}.intValue()!=2 && $F{STATUS_PENERIMA}.intValue()!=3)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""+($F{NAMA_PB} != null ? $F{NAMA_PB}+"\n":"")
++($F{JENIS_NO_PB}!= null ? $F{JENIS_NO_PB}+" : \n"+($F{NO_PB} != null ? $F{NO_PB}+"\n":""):"")+""
++($F{NO_AKAUN}!=null ? "No. Akaun"+" : \n"+($F{NO_AKAUN} != null ? $F{NO_AKAUN}+"\n":""):"")+""
++($F{NAMA_BANK} != null ? $F{NAMA_BANK}+"\n":"")
++($F{KETERANGAN_SYER} != null ? $F{KETERANGAN_SYER}+"\n":"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement uuid="dcc832e3-9b8d-4acd-9c73-8d80b3773130" key="textField-1" positionType="Float" mode="Transparent" x="15" y="0" width="124" height="10" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[new Boolean($F{STATUS_PENERIMA}.intValue()==2)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""+($F{NAMA_PB} != null ? $F{NAMA_PB}+"\n":"")
++($F{JENIS_NO_PB}!=null?$F{JENIS_NO_PB}+" : \n"+($F{NO_PB} != null ? $F{NO_PB}+"\n":""):"")
++($P{akaunMT} != "" ? $P{akaunMT}+"\n":"")
++($P{noMT} != "" ? $P{noMT}+"\n":"")
++($P{bankMT} != "" ? $P{bankMT}+"\n":"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement uuid="3bb9ab7c-5f5c-48df-97a0-a782604c4959" key="textField-6" positionType="Float" mode="Transparent" x="15" y="0" width="124" height="10" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[new Boolean($F{STATUS_PENERIMA}.intValue()==3)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""+($F{NAMA_PB} != null ? $F{NAMA_PB}+"\n":"")
++($F{JENIS_NO_PB}!=null?$F{JENIS_NO_PB}+" : \n"+($F{NO_PB} != null ? $F{NO_PB}+"\n":""):"")
++($P{akaunARB} != "" ? $P{akaunARB}+"\n":"Amanah Raya Berhad\n")
++"No. Akaun:"+($P{noARB} != "" ? $P{noARB}:"")+"\n"
++($P{bankARB} != "" ? $P{bankARB}+"\n\n":"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="e59db5bd-faf2-48d7-abd1-0282d88fbd97" key="textField-4" positionType="Float" x="222" y="0" width="109" height="10" isPrintWhenDetailOverflows="true"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement uuid="8d566f9c-7e6b-4f84-afaa-f39e5e9146c3" key="subreport-1" positionType="Float" mode="Opaque" x="206" y="0" width="134" height="10"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="id_hakmilik">
+					<subreportParameterExpression><![CDATA[$P{id_hakmilik}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idSubaward">
+					<subreportParameterExpression><![CDATA[$F{ID_AWARD}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir}+"//ppt//BorangR_jadual_subreport.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="def4402b-30ff-49da-83f6-0e05cf4dfc8f" key="textField-3" positionType="Float" x="137" y="0" width="67" height="10"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="0.0" lineStyle="Double"/>
+					<leftPen lineWidth="0.0" lineStyle="Double"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double"/>
+					<rightPen lineWidth="0.0" lineStyle="Double"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{JENISPB} != null ? $F{JENISPB}+"\n":"")
++""+($F{SYER_ATAS}!=null?"( "+$F{SYER_ATAS}+"/"+($F{SYER_BAWAH} != null ? $F{SYER_BAWAH}+" bhgn. )":""):"")
++"\n"]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>
