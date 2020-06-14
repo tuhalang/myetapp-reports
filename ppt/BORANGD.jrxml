@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BORANGD_N9_1LOT" pageWidth="595" pageHeight="842" columnWidth="539" leftMargin="28" rightMargin="28" topMargin="72" bottomMargin="72" uuid="c3ef74ab-45a1-4f14-8841-325b102c9b16">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="28"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="id_fail" class="java.lang.String"/>
+	<parameter name="nama_pengarah" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="bilSurat" class="java.lang.String"/>
+	<parameter name="nama_mukim" class="java.lang.String"/>
+	<parameter name="no_fail" class="java.lang.String"/>
+	<parameter name="sysdate" class="java.lang.String"/>
+	<parameter name="sysdateBI" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT REPLACE(INITCAP(NVL(B.TUJUAN_BI,'')),'&','&#38;') AS TUJUAN_BI, A.ID_FAIL,B.NO_RUJUKAN_PTG,REPLACE(INITCAP(NVL(B.TUJUAN,'')),'&','&#38;') AS TUJUAN,initcap(D.NAMA_DAERAH) as NAMA_DAERAH,
+    TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
+    CASE
+       WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'Februari'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '03' THEN 'Mac'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '04' THEN 'April'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '05' THEN 'Mei'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '06' THEN 'Jun'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '07' THEN 'Julai'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '08' THEN 'Ogos'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '09' THEN 'September'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '10' THEN 'Oktober'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '11' THEN 'November'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '12' THEN 'Disember'
+       ELSE 'TIADA'
+    END AS BULAN_SURAT,
+ CASE
+       WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'January'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'February'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '03' THEN 'March'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '04' THEN 'April'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '05' THEN 'May'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '06' THEN 'June'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '07' THEN 'July'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '08' THEN 'August'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '09' THEN 'September'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '10' THEN 'October'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '11' THEN 'November'
+       WHEN TO_CHAR (SYSDATE, 'MM') = '12' THEN 'December'
+       ELSE 'TIADA'
+    END AS BULAN_SURAT_BI,
+    TO_CHAR(SYSDATE, 'YYYY') AS TAHUN_SURAT,
+    (
+select
+ substr(rtrim (xmlagg (xmlelement (e,
+(regexp_replace(INITCAP(REGEXP_REPLACE(UPPER(nama),
+'(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', ' (\2)')),
+'\([[:alnum:]]+\)',upper(regexp_substr(INITCAP(REGEXP_REPLACE(UPPER(nama),
+'(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', ' (\2)')),'\((.*?)\)',1,1,null,1))))
+)).extract ('//text()'), ','),3) list_mukim
+from
+   (
+   select to_char(
+     case
+     when
+     (count(*) OVER
+     ( partition by m.id_masuk ) =
+     ROW_NUMBER () OVER ( partition by m.id_masuk order by m.nama_mukim))
+     and
+     (count(*) OVER
+     ( partition by m.id_masuk ) <> 1)
+     then
+     ' dan '
+     when  count(*) OVER
+     ( partition by m.id_masuk ) = 1 then ', '
+     else
+     ', '
+     end || initcap(m.nama_mukim)) as nama,
+        count(*) OVER
+     ( partition by m.id_masuk )
+     cnt,
+     ROW_NUMBER () OVER ( partition by m.id_masuk order by m.nama_mukim) seq,
+     case when
+     (count(*) OVER
+     ( partition by m.id_masuk ) =
+     ROW_NUMBER () OVER ( partition by m.id_masuk order by m.nama_mukim))
+     and
+     (count(*) OVER
+     ( partition by m.id_masuk ) <> 1)
+     then
+     ' dan '
+     when  count(*) OVER
+     ( partition by m.id_masuk ) = 1 then ', '
+  else
+     ', '
+  end as
+  symbol
+   from
+     tblrujmukim m
+  where
+  m.id_mukim in (
+     select distinct m.id_mukim
+     from
+     tblrujmukim m,tblpptpermohonan p,tblppthakmilik h,tblpfdfail f  where
+     p.id_permohonan = h.id_permohonan and m.id_mukim = h.id_mukim and f.id_fail = p.id_fail
+    and f.id_fail = $P!{id_fail}
+    --and m.id_mukim in (1,2,3,4,5,6)
+   ))
+) as LIST_MUKIM,INITCAP(NN.NAMA_NEGERI) AS NAMA_NEGERI
+    FROM TBLPFDFAIL A,TBLPPTPERMOHONAN B,TBLRUJDAERAH D,TBLRUJNEGERI NN
+    WHERE A.ID_FAIL = B.ID_FAIL
+AND A.ID_NEGERI = NN.ID_NEGERI
+   AND B.ID_DAERAH = D.ID_DAERAH
+    --AND A.ID_FAIL = 1610602360
+    AND A.ID_FAIL = $P!{id_fail}]]>
+	</queryString>
+	<field name="TUJUAN_BI" class="java.lang.String"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="NO_RUJUKAN_PTG" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="HARI_SURAT" class="java.lang.String"/>
+	<field name="BULAN_SURAT" class="java.lang.String"/>
+	<field name="BULAN_SURAT_BI" class="java.lang.String"/>
+	<field name="TAHUN_SURAT" class="java.lang.String"/>
+	<field name="LIST_MUKIM" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="241" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="764fb40f-a4c2-4158-9627-0781e6f3cf03" key="textField-2" positionType="Float" x="45" y="-13" width="451" height="15"/>
+				<textElement textAlignment="Center" markup="styled">
+					<font fontName="Cambria" size="12" isBold="false"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' >BORANG D</style>\n"
++"<style isItalic='true' >Akta Pengambilan Tanah 1960</style>\n[ Seksyen 8 ]"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="5b81932e-6d19-409c-b48c-beb267503b36" key="textField-3" positionType="Float" x="21" y="30" width="475" height="15"/>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dengan ini diisytiharkan bahawa tanah dan kawasan tertentu yang dinyatakan dalam Jadual di bawah diperlukan bagi maksud yang berikut:\n"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="14640782-d146-44a8-ab59-8b0fa03ed636" key="textField-13" positionType="Float" x="21" y="222" width="474" height="15"/>
+				<textElement textAlignment="Center" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["JADUAL"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="eebb5b7a-68f8-4f09-8beb-20e2dbc9e786" key="textField-14" positionType="Float" x="45" y="5" width="451" height="15"/>
+				<textElement textAlignment="Center" markup="styled">
+					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\nPERISYTIHARAN PENGAMBILAN YANG DICADANGKAN"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="99a267c3-f21f-48c4-aa0b-718ca3f1cd0e" key="textField-21" positionType="Float" x="21" y="45" width="474" height="15"/>
+				<textElement textAlignment="Center" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{TUJUAN}!=null?$F{TUJUAN}:"")+"</style>\n"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="26310c5c-4e0e-4f1d-b503-75e24bd37a1b" key="textField-22" positionType="Float" x="21" y="60" width="475" height="21"/>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["2.      Pelan bagi tanah dan kawasan tertentu yang dinyatakan itu boleh diperiksa semasa waktu bekerja biasa di Pejabat Tanah bagi Daerah di mana terletaknya tanah dan kawasan itu."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="5ffc9789-5f98-4e2b-b926-303b5a86ebfe" key="textField-25" positionType="Float" x="21" y="185" width="388" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Bandar/Pekan/Mukim"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="71ddd493-f62d-45c1-87df-eb5739e6571e" key="textField-26" positionType="Float" x="21" y="168" width="388" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Daerah"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="97e0674e-0457-4b69-a663-f19e9ae96912" key="textField-29" positionType="Float" x="175" y="168" width="234" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" : "+($F{NAMA_DAERAH}!= null ?$F{NAMA_DAERAH}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="9d72b54c-eb02-406a-b53a-acbdaa817985" key="textField-30" positionType="Float" x="175" y="185" width="234" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" : "+($F{LIST_MUKIM}!= null ?$F{LIST_MUKIM}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="128cbaf8-57bb-4ca8-87b7-fa04f79d90c3" key="textField-11" positionType="Float" x="268" y="129" width="227" height="15"/>
+				<textElement textAlignment="Center" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["…………………………………………………"
++"\nPengarah Negeri\n"+($F{NAMA_NEGERI} != null ? $F{NAMA_NEGERI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="af1dffe5-0990-4954-aa65-a12031b12f6d" key="textField-12" positionType="Float" x="21" y="101" width="97" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Bertarikh pada "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="4d2b3d2d-3d8b-4b4a-aa8a-586659c46f1c" key="textField-32" positionType="Float" x="121" y="101" width="164" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Cambria" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{HARI_SURAT} != null ? $F{HARI_SURAT}: ".......haribulan")+" "
++($F{BULAN_SURAT} != null ? $F{BULAN_SURAT} : "................")+" "
++($F{TAHUN_SURAT} != null ? $F{TAHUN_SURAT} : "20....")]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<subreport isUsingCache="true">
+				<reportElement uuid="350abf07-a07b-47e5-9443-f15d147fff29" key="subreport-1" positionType="Float" mode="Transparent" x="21" y="0" width="498" height="15"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="id_Fail">
+					<subreportParameterExpression><![CDATA[$P{id_fail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppt//Borang D_N9_B1_1lot.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="5" splitType="Stretch"/>
+	</summary>
+</jasperReport>
