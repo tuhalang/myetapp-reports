@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPajakanLaporanPemantauanMengikutTahunRange" pageWidth="1300" pageHeight="842" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="1286" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="2575c998-8109-4321-93b3-3beac4a695da">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPajakanLaporanPemantauanMengikutNegeriKementerianBlnThnRange" pageWidth="1300" pageHeight="842" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="1286" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="dcba96bd-0f66-44e7-ab5f-bcbb44239a93">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
@@ -10,10 +10,12 @@
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="IDSUBURUSAN1" class="java.lang.String"/>
-	<parameter name="TAHUN" class="java.lang.String"/>
-	<parameter name="TAHUN_TAMAT" class="java.lang.String"/>
+	<parameter name="ID_KEMENTERIAN" class="java.lang.String"/>
+	<parameter name="ID_NEGERI" class="java.lang.String"/>
 	<parameter name="BULANMM" class="java.lang.String"/>
 	<parameter name="BULANTAMAT" class="java.lang.String"/>
+	<parameter name="TAHUN" class="java.lang.String"/>
+	<parameter name="TAHUN_TAMAT" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT DISTINCT
     F.NO_FAIL,F.TAJUK_FAIL
@@ -38,22 +40,65 @@
     --,TO_CHAR(LP.TARIKH_TANDATANGAN,'DD/MM/YYYY') PERTARIKH_TANDATANGAN
     ,RS.KETERANGAN STATUS_SEMASA
     ,NVL(LP.CATATAN_PAJAKAN,'') CATATAN_PAJAKAN, P.ID_PERMOHONAN,RU.NAMA_SUBURUSAN
-,F.TARIKH_DAFTAR_FAIL
-FROM TBLPFDFAIL F
+    ,F.TARIKH_DAFTAR_FAIL,RN.NAMA_NEGERI,RN.ID_NEGERI,RK.NAMA_KEMENTERIAN
+    ,CASE
+    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 14
+	THEN 'W.P KUALA LUMPUR'
+    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 15
+	THEN 'W.P LABUAN'
+    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 16
+	THEN 'W.P PUTRAJAYA'
+    ELSE UPPER(TRIM(RN.NAMA_NEGERI))
+    END NEGERI
+,   CASE
+        WHEN $P!{BULANMM}='01' THEN 'JANUARI'
+        WHEN $P!{BULANMM}='02' THEN 'FEBRUARI'
+        WHEN $P!{BULANMM}='03' THEN 'MAC'
+        WHEN $P!{BULANMM}='04' THEN 'APRIL'
+        WHEN $P!{BULANMM}='05' THEN 'MEI'
+        WHEN $P!{BULANMM}='06' THEN 'JUN'
+        WHEN $P!{BULANMM}='07' THEN 'JULAI'
+        WHEN $P!{BULANMM}='08' THEN 'OGOS'
+        WHEN $P!{BULANMM}='09' THEN 'SEPTEMBER'
+        WHEN $P!{BULANMM}='10' THEN 'OKTOBER'
+        WHEN $P!{BULANMM}='11' THEN 'NOVEMBER'
+        WHEN $P!{BULANMM}='12' THEN 'DISEMBER'
+    END AS BULAN_SEBELUM
+,   CASE
+        WHEN $P!{BULANTAMAT}='01' THEN 'JANUARI'
+        WHEN $P!{BULANTAMAT}='02' THEN 'FEBRUARI'
+        WHEN $P!{BULANTAMAT}='03' THEN 'MAC'
+        WHEN $P!{BULANTAMAT}='04' THEN 'APRIL'
+        WHEN $P!{BULANTAMAT}='05' THEN 'MEI'
+        WHEN $P!{BULANTAMAT}='06' THEN 'JUN'
+        WHEN $P!{BULANTAMAT}='07' THEN 'JULAI'
+        WHEN $P!{BULANTAMAT}='08' THEN 'OGOS'
+        WHEN $P!{BULANTAMAT}='09' THEN 'SEPTEMBER'
+        WHEN $P!{BULANTAMAT}='10' THEN 'OKTOBER'
+        WHEN $P!{BULANTAMAT}='11' THEN 'NOVEMBER'
+        WHEN $P!{BULANTAMAT}='12' THEN 'DISEMBER'
+    END AS BULAN_SEMASA
+ FROM TBLPFDFAIL F
 ,TBLPERMOHONAN P
 ,TBLHTPPERMOHONAN PP
 ,TBLRUJSUBURUSAN RU
 ,TBLHTPLPRPAJAKANAKT LP
 ,TBLRUJSTATUS RS
+,TBLRUJKEMENTERIAN RK
+,TBLRUJNEGERI RN
 WHERE P.ID_FAIL = F.ID_FAIL
 AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
 AND P.ID_PERMOHONAN = LP.ID_PERMOHONAN
 AND P.ID_STATUS = RS.ID_STATUS
 AND F.ID_URUSAN=3
 AND F.ID_SUBURUSAN = RU.ID_SUBURUSAN
+AND F.ID_KEMENTERIAN = RK.ID_KEMENTERIAN
+AND F.ID_NEGERI = RN.ID_NEGERI
 --AND F.ID_SUBURUSAN=17
-AND F.ID_SUBURUSAN in ($P!{IDSUBURUSAN1})
-AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'YYYY') BETWEEN $P!{TAHUN} AND $P!{TAHUN_TAMAT}
+AND F.ID_SUBURUSAN IN ($P!{IDSUBURUSAN1})
+AND F.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
+AND F.ID_NEGERI = $P!{ID_NEGERI}
+AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') BETWEEN '$P!{TAHUN}' AND '$P!{TAHUN_TAMAT}'
 AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') BETWEEN '$P!{BULANMM}' AND '$P!{BULANTAMAT}'
 --ORDER BY PP.TARIKH_SURAT_RUJUKAN_LAIN
 ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
@@ -83,13 +128,19 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
 	<field name="NAMA_SUBURUSAN" class="java.lang.String"/>
 	<field name="TARIKH_DAFTAR_FAIL" class="java.sql.Timestamp"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
+	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
+	<field name="NEGERI" class="java.lang.String"/>
+	<field name="BULAN_SEBELUM" class="java.lang.String"/>
+	<field name="BULAN_SEMASA" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
 		<band height="50" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="3eddf986-17d1-4b12-90a1-bd9bd03acf3d" key="textField-1" positionType="Float" x="368" y="16" width="501" height="13"/>
+				<reportElement uuid="a8c90fc1-73ea-46ed-8e42-d426c8db2708" key="textField-1" positionType="Float" x="0" y="16" width="1286" height="13"/>
 				<textElement textAlignment="Center" markup="styled">
 					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
@@ -98,7 +149,9 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
     || !$P{IDSUBURUSAN1}.equals("17")
     || !$P{IDSUBURUSAN1}.equals("18")
     ?"SEMUA PAJAKAN":$F{NAMA_SUBURUSAN})
-+ "\nTAHUN "+$P{TAHUN}+ " SEHINGGA "+$P{TAHUN_TAMAT}]]></textFieldExpression>
++ "\n"+$F{NAMA_NEGERI}
++ "\n"+$F{NAMA_KEMENTERIAN}
++"\nDARI BULAN "+$F{BULAN_SEBELUM}+" TAHUN "+$P{TAHUN}+" SEHINGGA BULAN "+$F{BULAN_SEMASA}+" TAHUN "+ $P{TAHUN_TAMAT}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -108,7 +161,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 	<columnHeader>
 		<band height="48" splitType="Stretch">
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="a03fbf3a-7b6a-4a9c-8074-fbf69f165962" key="textField-2" mode="Opaque" x="0" y="0" width="540" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="033e32d3-8549-494a-b418-33926dcdebf9" key="textField-2" mode="Opaque" x="0" y="0" width="540" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -122,7 +175,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["MAKLUMAT PAJAKAN"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="9bf2e629-80d3-45f2-8d11-db7cec550082" key="textField-3" stretchType="RelativeToTallestObject" mode="Opaque" x="0" y="12" width="20" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="7437dfa8-4b73-4692-845c-bf274c56fc34" key="textField-3" stretchType="RelativeToTallestObject" mode="Opaque" x="0" y="12" width="20" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -136,7 +189,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Bil."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="1f285e74-7084-4c55-8c7a-647148837530" key="textField-4" stretchType="RelativeToTallestObject" mode="Opaque" x="20" y="12" width="80" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="9c0733b2-43f9-4eb6-9ffb-100e68da0905" key="textField-4" stretchType="RelativeToTallestObject" mode="Opaque" x="20" y="12" width="80" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -150,7 +203,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Tajuk Fail /\n No. Fail"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="8d330021-92b6-43d5-b53a-76fd27ba664a" key="textField-5" stretchType="RelativeToTallestObject" mode="Opaque" x="160" y="12" width="40" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="8f07aaa7-c8f1-4cac-b60b-0dd35af38cab" key="textField-5" stretchType="RelativeToTallestObject" mode="Opaque" x="160" y="12" width="40" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -164,7 +217,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["No. Lot"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="89810ed3-8412-4b2c-8cd2-7474ec57b4f6" key="textField-6" stretchType="RelativeToTallestObject" mode="Opaque" x="200" y="12" width="40" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="782676e0-3102-4ad2-a443-eca720dd2e88" key="textField-6" stretchType="RelativeToTallestObject" mode="Opaque" x="200" y="12" width="40" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -176,10 +229,10 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 					<font size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["No."+
-"\n Hakmilik/ Warta"]]></textFieldExpression>
+"HakMilik/ Warta"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="317fcea7-33b7-4f4f-a0b3-5034a5e5055f" key="textField-7" stretchType="RelativeToTallestObject" mode="Opaque" x="100" y="12" width="60" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="5c23b346-ab70-46bf-84fb-749d6a237f8b" key="textField-7" stretchType="RelativeToTallestObject" mode="Opaque" x="100" y="12" width="60" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -193,7 +246,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Mukim"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="fe4f582f-7d07-46d2-bd93-72841a8fbe7d" key="textField-8" stretchType="RelativeToTallestObject" mode="Opaque" x="100" y="24" width="60" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="d6aaa2a1-a404-4cec-9b2c-ca3a7d99b0b5" key="textField-8" stretchType="RelativeToTallestObject" mode="Opaque" x="100" y="24" width="60" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -207,7 +260,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Daerah"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="288476b4-6057-41e2-82da-87d8694b5f4e" key="textField-9" stretchType="RelativeToTallestObject" mode="Opaque" x="100" y="36" width="60" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="250a8fe4-f9df-438d-b4f6-6d56d390879a" key="textField-9" stretchType="RelativeToTallestObject" mode="Opaque" x="100" y="36" width="60" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -221,7 +274,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Negeri"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="f2230bbd-968e-4029-8fa7-2c50d8dc30f9" key="textField-12" stretchType="RelativeToTallestObject" mode="Opaque" x="240" y="12" width="45" height="36" isRemoveLineWhenBlank="true" backcolor="#CCCCCC"/>
+				<reportElement uuid="406301ba-27a1-43a1-95d3-3c303b4a6d80" key="textField-12" stretchType="RelativeToTallestObject" mode="Opaque" x="240" y="12" width="45" height="36" isRemoveLineWhenBlank="true" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -235,7 +288,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Luas\n Tanah (Hektar/ Ekar/ M²)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="37039da4-6026-4cd8-b89d-efa0f1144205" key="textField-13" stretchType="RelativeToTallestObject" mode="Opaque" x="285" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="d5b8a718-0900-4105-a3af-3b1d639758da" key="textField-13" stretchType="RelativeToTallestObject" mode="Opaque" x="285" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -249,7 +302,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Luas Pajakan (Hektar/ Ekar/ M²)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="ac08f30c-50aa-40c1-98d3-792a95cde1c1" key="textField-16" stretchType="RelativeToTallestObject" mode="Opaque" x="330" y="12" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="1c3af90f-2c35-446f-965e-05928745f4ab" key="textField-16" stretchType="RelativeToTallestObject" mode="Opaque" x="330" y="12" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -263,7 +316,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Tarikh Terima Permohonan"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="1832db38-4ba2-40de-8ddd-d5bbfb92897a" key="textField-17" stretchType="RelativeToTallestObject" mode="Opaque" x="378" y="12" width="117" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="d1f97ee5-8ae5-46a9-ba96-5cc2dc01c09f" key="textField-17" stretchType="RelativeToTallestObject" mode="Opaque" x="378" y="12" width="117" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -277,7 +330,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Surat"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="fd9c7ad5-1498-4dae-a1b1-62430e55b7e9" key="textField-18" stretchType="RelativeToTallestObject" mode="Opaque" x="495" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="aa3e60bd-6ddf-4186-a3d7-962d0b81eb42" key="textField-18" stretchType="RelativeToTallestObject" mode="Opaque" x="495" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -291,7 +344,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Laporan Tanah JKPTG Negeri"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="4900ce2e-b2ed-4e34-bda1-968167d581e2" key="textField-19" stretchType="RelativeToTallestObject" mode="Opaque" x="378" y="24" width="39" height="24" backcolor="#CCCCCC"/>
+				<reportElement uuid="12df048d-9f02-449b-b3e6-5407b1865faa" key="textField-19" stretchType="RelativeToTallestObject" mode="Opaque" x="378" y="24" width="39" height="24" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -305,7 +358,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Makluman Kepada Pemohon"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="eff3a317-f104-46ab-a68b-d402cdf52d7c" key="textField-20" stretchType="RelativeToTallestObject" mode="Opaque" x="417" y="24" width="39" height="24" backcolor="#CCCCCC"/>
+				<reportElement uuid="cebaab6a-280b-4aa2-9a3d-f69a04840381" key="textField-20" stretchType="RelativeToTallestObject" mode="Opaque" x="417" y="24" width="39" height="24" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -319,7 +372,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Ulasan KJP"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="5e414ef1-416f-486c-ad1b-c4801dd1d9c4" key="textField-21" stretchType="RelativeToTallestObject" mode="Opaque" x="456" y="24" width="39" height="24" backcolor="#CCCCCC"/>
+				<reportElement uuid="828168fa-e7dd-48f5-9ce2-591ec51c571a" key="textField-21" stretchType="RelativeToTallestObject" mode="Opaque" x="456" y="24" width="39" height="24" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -333,7 +386,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Penilaian JPPH"]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="739e3e21-7241-4427-86fa-d2bdb4534abf" key="textField-23" mode="Opaque" x="540" y="0" width="450" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="16ed54f4-eb1e-4e3b-8c42-6b89c22e28a3" key="textField-23" mode="Opaque" x="540" y="0" width="450" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -347,7 +400,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["TARIKH-TARIKH TINDAKAN"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="9abb2330-c820-4a4b-b17c-128153bb258b" key="textField-24" stretchType="RelativeToTallestObject" mode="Opaque" x="540" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="ef3abb1e-b696-43ad-9099-5317bb9186b2" key="textField-24" stretchType="RelativeToTallestObject" mode="Opaque" x="540" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -361,7 +414,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Draf Kertas MJM Hantar ke NRE"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="4862e366-8ebe-4ea6-834c-0499ea0f133d" key="textField-27" stretchType="RelativeToTallestObject" mode="Opaque" x="585" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="f7ee6516-de49-48a8-a140-a12cd4bdd861" key="textField-27" stretchType="RelativeToTallestObject" mode="Opaque" x="585" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -375,7 +428,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Kelulusan OSC,NRE"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="7c19b642-0deb-4d1c-8b76-9195aee51a60" key="textField-29" stretchType="RelativeToTallestObject" mode="Opaque" x="630" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="16aee203-2195-4d68-8906-0a9f63f52cb9" key="textField-29" stretchType="RelativeToTallestObject" mode="Opaque" x="630" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -389,7 +442,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Edaran KPD KJP & Agensi"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="d62c5500-94d5-4759-ae4a-124bb1b0f05a" key="textField-31" stretchType="RelativeToTallestObject" mode="Opaque" x="675" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="3f3729a2-6821-42d4-a79d-c5d2d06cc9b4" key="textField-31" stretchType="RelativeToTallestObject" mode="Opaque" x="675" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -403,7 +456,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Tarikh Keputusan MJM/No. Rujukan"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="f3d38e33-747d-4e9d-88df-1c56d07d8a6a" key="textField-32" stretchType="RelativeToTallestObject" mode="Opaque" x="720" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="e7617e90-fda1-4802-b325-86b63101222a" key="textField-32" stretchType="RelativeToTallestObject" mode="Opaque" x="720" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -417,7 +470,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Surat Tawaran Pajakan (Tindakan JKPTG)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="d7110970-3059-47b8-8b3e-4237bb27c81e" key="textField-33" stretchType="RelativeToTallestObject" mode="Opaque" x="765" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="6b965569-bf30-4946-98e5-27437f7aaf5c" key="textField-33" stretchType="RelativeToTallestObject" mode="Opaque" x="765" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -431,7 +484,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[" Draf Perjanjian"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="be380d93-bbbc-4a76-b271-64e35174576b" key="textField-34" stretchType="RelativeToTallestObject" mode="Opaque" x="855" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="9709f0e4-be1f-4ab7-bb3a-239353e78afb" key="textField-34" stretchType="RelativeToTallestObject" mode="Opaque" x="855" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -445,7 +498,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Tanda Tangan Perjanjian"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="c2094891-b867-4a05-95c7-ac431c23c6ea" key="textField-35" stretchType="RelativeToTallestObject" mode="Opaque" x="900" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="e5da3b68-a8bf-400e-9944-f769f355d039" key="textField-35" stretchType="RelativeToTallestObject" mode="Opaque" x="900" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -459,7 +512,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Borang 15A & Hakmilik"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="dba7638e-4237-4d5d-a9d4-f01d5f6ffb8c" key="textField-57" stretchType="RelativeToTallestObject" mode="Opaque" x="945" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="db5407b1-3ac9-4350-99f4-a2ffc25d6968" key="textField-57" stretchType="RelativeToTallestObject" mode="Opaque" x="945" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -473,7 +526,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Endorsan Pajakan Dalam H/Milik"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="f66eede3-fb42-44a6-aba6-eee97b63a17b" key="textField-58" stretchType="RelativeToTallestObject" mode="Opaque" x="990" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="6ca8d9a5-ad59-4d78-849a-8bdf4c0cc310" key="textField-58" stretchType="RelativeToTallestObject" mode="Opaque" x="990" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -487,7 +540,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Serahan Hakmilik Oleh Pemajak"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="e3f6533e-e71f-4304-beeb-2693d2bc6cef" key="textField-61" stretchType="RelativeToTallestObject" mode="Opaque" x="1035" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="ca0a1da8-e7ff-4347-990f-b5fe031c93c7" key="textField-61" stretchType="RelativeToTallestObject" mode="Opaque" x="1035" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -501,7 +554,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Bayaran Pajakan (RM)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="e7b8dec1-9a7e-4a4d-baa9-a5ca38b499ea" key="textField-63" stretchType="RelativeToTallestObject" mode="Opaque" x="1080" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="2f57ee0b-ae2f-4763-a5be-68103fd629a5" key="textField-63" stretchType="RelativeToTallestObject" mode="Opaque" x="1080" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -515,7 +568,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Tempoh Pajakan (Tahun)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="608a43ac-e459-4e73-94f1-8721f3a1446d" key="textField-64" stretchType="RelativeToTallestObject" mode="Opaque" x="1125" y="12" width="65" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="8e908627-b6fc-4fed-a4aa-6883bcf64e91" key="textField-64" stretchType="RelativeToTallestObject" mode="Opaque" x="1125" y="12" width="65" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -529,7 +582,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Keperluan Semakan Pajakan"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="b4151c90-534b-4ef3-845a-70b27c60df8e" key="textField-67" stretchType="RelativeToTallestObject" mode="Opaque" x="1190" y="12" width="96" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="d7a14619-88cb-496b-88d7-1ad90231753a" key="textField-67" stretchType="RelativeToTallestObject" mode="Opaque" x="1190" y="12" width="96" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -543,7 +596,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Status Semasa"]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="b50331c4-4547-4d94-b32c-4152f49e6a73" key="textField-150" mode="Opaque" x="990" y="0" width="296" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="04fa9ebf-5bcb-4342-8117-e49031c498b7" key="textField-150" mode="Opaque" x="990" y="0" width="296" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -557,7 +610,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="37b5c40e-7963-42a7-9fd8-48e7e8eadd30" key="textField-152" stretchType="RelativeToTallestObject" mode="Opaque" x="810" y="12" width="45" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="34a6b44b-b565-463f-a6be-0cbf9fb9a448" key="textField-152" stretchType="RelativeToTallestObject" mode="Opaque" x="810" y="12" width="45" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -575,7 +628,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 	<detail>
 		<band height="36" splitType="Prevent">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="4621c31a-7d49-4232-aba5-0f13579b5046" key="textField-37" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="0" y="0" width="20" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="84d2d847-081e-41df-a0c2-8938e013b240" key="textField-37" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="0" y="0" width="20" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -589,7 +642,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="72a27a92-dd1a-411f-8ab1-1f83cfbcad40" key="textField-38" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="20" y="0" width="80" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="3e9ccbb8-7cf6-4f36-b916-8f15d30a7bb0" key="textField-38" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="20" y="0" width="80" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box leftPadding="1" rightPadding="1">
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -603,7 +656,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TAJUK_FAIL} != null ? $F{TAJUK_FAIL}:"")+"\n\n"+($F{NO_FAIL} != null ? $F{NO_FAIL} :"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="fa4e25a1-8de0-4815-9a93-fa2f835f3c0f" key="textField-40" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="160" y="0" width="40" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="589b2708-c2c2-4b15-81cd-072df1bb6056" key="textField-40" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="160" y="0" width="40" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -617,7 +670,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="af59d4e6-2264-413f-9dfe-a365a165627a" key="textField-41" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="100" y="0" width="60" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="6740a61d-6866-416a-9144-ff7e64349a55" key="textField-41" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="100" y="0" width="60" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -631,7 +684,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="08f0a17d-7c16-4585-ba85-a74a4028d172" key="textField-42" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="240" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="1091c79c-130e-4a38-a580-9e5eed379249" key="textField-42" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="240" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -645,7 +698,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="6d66be22-c67d-4ed5-9183-1b9117825ca9" key="textField-43" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="285" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="67254b76-0a8f-4802-937b-b83ce4e3c852" key="textField-43" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="285" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -659,7 +712,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="75a40e55-3f7d-48fd-9ebb-5c2c8dddd440" key="textField-44" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="330" y="0" width="48" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="1aac3b58-32e1-42c4-b0b8-e4ae88aaa62d" key="textField-44" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="330" y="0" width="48" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -673,7 +726,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_TERIMA_PERMOHONAN} != null ? $F{TARIKH_TERIMA_PERMOHONAN}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="8a7a15e7-70f7-4bd9-b58a-13ad7ba67cad" key="textField-45" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="378" y="0" width="39" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="c7324d50-e1ba-4ded-9cfd-83d8e5d51ea9" key="textField-45" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="378" y="0" width="39" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -687,7 +740,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_JAWAB_PERMOHONAN} != null ? $F{TARIKH_JAWAB_PERMOHONAN}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="87186961-a9c1-447b-93f2-9e315c026bde" key="textField-46" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="417" y="0" width="39" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="a0baf586-2f18-4575-8ff8-ae8e1640b8bf" key="textField-46" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="417" y="0" width="39" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -701,7 +754,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{STATUS_KJP} != null?  $F{STATUS_KJP}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="03187342-0abb-4a4a-a624-6ac0579dfbdd" key="textField-47" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="456" y="0" width="39" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="97128102-1121-4fe2-afab-380a8a35bcbe" key="textField-47" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="456" y="0" width="39" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -715,7 +768,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{ULASAN_JPPH} != null? $F{ULASAN_JPPH}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="427370a3-8bca-429c-bdfd-6099c4c01c58" key="textField-48" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="495" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="d08fafc6-91b6-4731-9c2b-45cbed7b32b2" key="textField-48" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="495" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -729,7 +782,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_HANTAR_JKPTGN} != null? $F{TARIKH_HANTAR_JKPTGN}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="7af4a783-316d-42a8-88a5-05af3b6f2dad" key="textField-49" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="540" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="959774bc-ed68-475e-8f99-b94c992fdb11" key="textField-49" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="540" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -743,7 +796,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_HANTAR_NRE} != null? $F{TARIKH_HANTAR_NRE}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="71f71108-3d29-4b8f-b7b7-58bc1e05d129" key="textField-50" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="585" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="8724e093-1134-4df9-879a-66000524f330" key="textField-50" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="585" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -757,7 +810,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_TERIMA_NRE} != null? $F{TARIKH_TERIMA_NRE}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="871eb662-7b96-40c3-833e-01a8bcaa5843" key="textField-51" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="630" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="f9c12312-3f00-481c-821f-e7cac5821ad3" key="textField-51" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="630" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -771,7 +824,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="41f879c0-f454-4c58-a1ae-8940f6247cc5" key="textField-52" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="675" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="001dc703-280b-4e94-af91-6be4e773ca68" key="textField-52" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="675" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -785,7 +838,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_KEPUTUSAN_MJM} != null ? $F{TARIKH_KEPUTUSAN_MJM}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="2b039295-d27e-4508-96a0-9ec257469a21" key="textField-53" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="720" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="1f05ee27-154f-4783-8d2c-04d1a9931a8b" key="textField-53" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="720" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -799,7 +852,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_HANTAR_PEMOHON} != null? $F{TARIKH_HANTAR_PEMOHON}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="23d63586-4e93-42f7-89e3-83237d2d6a05" key="textField-54" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="765" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="2f4634d8-4906-4c56-957a-7bb219d60567" key="textField-54" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="765" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -813,7 +866,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{PERTARIKH_HANTAR_PEMOHON} != null ? $F{PERTARIKH_HANTAR_PEMOHON}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="379884a2-8ad6-46ba-8f27-c9ccbfa85ae3" key="textField-55" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="855" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="352e9ff4-391b-4fb7-bb15-2c7e0eaaabe5" key="textField-55" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="855" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -827,7 +880,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{PERTARIKH_TANDATANGAN} != null ? $F{PERTARIKH_TANDATANGAN}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="5e73de57-7605-408c-b1e7-a3b82fdd562b" key="textField-56" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="900" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="85917719-f58e-4496-8c54-8454dfd031e6" key="textField-56" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="900" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -841,7 +894,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_TANDATANGAN15A} != null ? $F{TARIKH_TANDATANGAN15A}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="7ddb9262-0205-4ddc-927c-a7296a6edf43" key="textField-59" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="945" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="10634f56-ac31-47a6-b9d2-4cd2c48c7513" key="textField-59" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="945" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -855,7 +908,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_DAFTAR} != null ? $F{TARIKH_DAFTAR}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="f3c2d281-a7d4-4b8f-9b3e-4ab2f44a021a" key="textField-60" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="990" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="9f0308bf-1eba-4751-ae06-67aef86fa72c" key="textField-60" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="990" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -869,7 +922,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TARIKH_TERIMA_HAKMILIK} != null ? $F{TARIKH_TERIMA_HAKMILIK}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="4b36089b-7c70-44dd-8552-1f6161aa02b5" key="textField-62" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="1035" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="9978bc78-2936-4c40-9515-6ad2a3b24101" key="textField-62" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="1035" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -883,7 +936,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{KADAR_PAJAKAN} != null ? $F{KADAR_PAJAKAN}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="4a702fd9-5762-41ae-8878-8f2533e0ba09" key="textField-65" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="1080" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="ec3f1450-12b7-416a-bc9e-555e80d83966" key="textField-65" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="1080" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -897,7 +950,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{TEMPOH_PAJAKAN} != null ? $F{TEMPOH_PAJAKAN}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="fe67d093-b7e2-45af-9d50-f575500f9893" key="textField-66" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="1125" y="0" width="65" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="e71cb39c-6bdc-4354-9f59-62a2bfa2e91d" key="textField-66" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="1125" y="0" width="65" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -911,7 +964,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{CATATAN_PAJAKAN} != null ? $F{CATATAN_PAJAKAN}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="91ecfa19-1ddd-4f01-bde1-7cd32ee759b1" key="textField-68" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="1190" y="0" width="96" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="c45567b1-2aa8-43e5-b305-687136a4de67" key="textField-68" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="1190" y="0" width="96" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -925,7 +978,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{STATUS_SEMASA} != null ? $F{STATUS_SEMASA}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="e9d29c8f-d873-4e11-a9b7-544460bbfc98" key="textField-153" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="810" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="fad4bbd9-cfd9-4807-b00d-a8ff095ccc17" key="textField-153" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="810" y="0" width="45" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -939,7 +992,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[($F{PERTARIKH_HANTAR_PKP} != null ? $F{PERTARIKH_HANTAR_PKP}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="cd2403fb-89a6-4ee7-a4ef-ce03aa3ac94e" key="textField-154" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="200" y="0" width="40" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
+				<reportElement uuid="3851919e-f87b-45fe-af58-4cdad28001a5" key="textField-154" positionType="Float" stretchType="RelativeToBandHeight" mode="Transparent" x="200" y="0" width="40" height="36" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -953,7 +1006,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
-				<reportElement uuid="a25eeee2-40be-4208-a899-8d396b8c9efe" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="100" y="0" width="40" height="18" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="5649100d-8615-404a-9462-3a7e1a8418da" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="100" y="0" width="40" height="18" isPrintWhenDetailOverflows="true"/>
 				<subreportParameter name="ID_PERMOHONAN">
 					<subreportParameterExpression><![CDATA[""+$F{ID_PERMOHONAN}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -971,28 +1024,28 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 	<pageFooter>
 		<band height="18" splitType="Stretch">
 			<textField evaluationTime="Page" isBlankWhenNull="false">
-				<reportElement uuid="badaebdd-527f-4ef7-988f-6809558b8b11" key="textField-71" x="1183" y="3" width="84" height="14"/>
+				<reportElement uuid="5c1eefaf-be70-417a-adff-3d0373379e15" key="textField-71" x="1183" y="3" width="84" height="14"/>
 				<textElement>
 					<font size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[" Mukasurat " + $V{PAGE_NUMBER} + " dari "]]></textFieldExpression>
 			</textField>
 			<textField evaluationTime="Page" isBlankWhenNull="false">
-				<reportElement uuid="2034585c-d594-41a2-a8d0-85531ef12404" key="textField-72" x="1256" y="3" width="25" height="14"/>
+				<reportElement uuid="432e3827-b82b-43df-a595-3f00a3a98eae" key="textField-72" x="1256" y="3" width="25" height="14"/>
 				<textElement>
 					<font size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[" "+$V{PAGE_NUMBER}+""]]></textFieldExpression>
 			</textField>
 			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
-				<reportElement uuid="a8b40eeb-980d-4285-86e0-df53889fb718" key="textField-73" x="55" y="5" width="100" height="11"/>
+				<reportElement uuid="53b541c8-c788-481b-9c19-abf7d720dcb1" key="textField-73" x="55" y="5" width="100" height="11"/>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="9" isPdfEmbedded="false"/>
 				</textElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement uuid="ebb0d3ee-85d9-449a-98ff-c2e148fa03e2" key="staticText-1" x="2" y="5" width="53" height="11"/>
+				<reportElement uuid="e397adea-216a-497f-8787-37676546c4d2" key="staticText-1" x="2" y="5" width="53" height="11"/>
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="9"/>
 				</textElement>
@@ -1006,14 +1059,14 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 	<noData>
 		<band height="108" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="68f032ab-412d-47ca-af2b-d156fb968a50" key="textField-115" positionType="Float" x="337" y="13" width="501" height="13"/>
+				<reportElement uuid="7ad916aa-64ea-4251-aa6a-9023bc614b25" key="textField-115" positionType="Float" x="337" y="13" width="501" height="13"/>
 				<textElement textAlignment="Center"/>
 				<textFieldExpression><![CDATA["<style pdfFontName='Helvetica-Bold'>LAPORAN PEMANTAUAN KERJA UNIT PAJAKAN DAN PENSWASTAAN (BHTP)</style>"
 +"\n"
 +"Tempoh Laporan : XX "]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement uuid="a8c2f2f2-44bc-4c9d-b9a6-b4658f6c3e08" key="staticText-2" x="0" y="90" width="1239" height="18"/>
+				<reportElement uuid="94d9d49c-f751-4c15-85f6-fdd173852b22" key="staticText-2" x="0" y="90" width="1239" height="18"/>
 				<box>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -1027,7 +1080,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 ]]></text>
 			</staticText>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="5ffcd1dd-e4a7-4a4c-a399-5854ad173e44" key="textField-116" mode="Opaque" x="1" y="39" width="549" height="14" backcolor="#CCCCCC"/>
+				<reportElement uuid="05f140b8-b305-4464-9a56-fa01d635520b" key="textField-116" mode="Opaque" x="1" y="39" width="549" height="14" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1041,7 +1094,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["MAKLUMAT PAJAKAN"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="39c081b9-da96-4ae6-8d4d-59782ebc8bed" key="textField-117" stretchType="RelativeToTallestObject" mode="Opaque" x="1" y="53" width="20" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="3656fe0b-1a49-4f4d-8e3f-a850121a799e" key="textField-117" stretchType="RelativeToTallestObject" mode="Opaque" x="1" y="53" width="20" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1055,7 +1108,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Bil."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="fc09921c-9ee6-494f-809b-0ef7b5731d62" key="textField-118" stretchType="RelativeToTallestObject" mode="Opaque" x="21" y="53" width="79" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="53102c96-7dbf-4a26-99f2-ce516b1f90b9" key="textField-118" stretchType="RelativeToTallestObject" mode="Opaque" x="21" y="53" width="79" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1069,7 +1122,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Tajuk Fail /\n No. Fail"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="9b300167-14bf-4cec-89c3-5d6ac5822880" key="textField-119" stretchType="RelativeToTallestObject" mode="Opaque" x="99" y="53" width="40" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="aacf68c2-9ee6-4e84-ac66-ded7597c6a2b" key="textField-119" stretchType="RelativeToTallestObject" mode="Opaque" x="99" y="53" width="40" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1083,7 +1136,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["No. Lot"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="654faa61-299a-49fd-864a-c78e71244701" key="textField-120" stretchType="RelativeToTallestObject" mode="Opaque" x="139" y="53" width="43" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="602ad2dd-0499-4f27-8c7a-c3eecebcbbee" key="textField-120" stretchType="RelativeToTallestObject" mode="Opaque" x="139" y="53" width="43" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1097,7 +1150,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["No. Hak Milik"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="215a06c1-7407-43e9-8718-21ba42609345" key="textField-121" stretchType="RelativeToTallestObject" mode="Opaque" x="181" y="53" width="61" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="2bafa3e8-c479-4811-92ef-ebd2dab736e2" key="textField-121" stretchType="RelativeToTallestObject" mode="Opaque" x="181" y="53" width="61" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1111,7 +1164,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Mukim"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="b9490ccb-e0aa-4e85-afb0-96fd69b391c6" key="textField-122" stretchType="RelativeToTallestObject" mode="Opaque" x="181" y="65" width="61" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="944d065e-cf84-42cf-b9ad-2736feaafd54" key="textField-122" stretchType="RelativeToTallestObject" mode="Opaque" x="181" y="65" width="61" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1125,7 +1178,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Daerah"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="9d50ee86-193b-491d-826b-601732d814db" key="textField-123" stretchType="RelativeToTallestObject" mode="Opaque" x="181" y="77" width="61" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="e6519416-c3f4-4d31-b079-eca7e1745259" key="textField-123" stretchType="RelativeToTallestObject" mode="Opaque" x="181" y="77" width="61" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1139,7 +1192,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Bandar"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="f3475757-2d12-4395-94be-93af7f2bff06" key="textField-124" stretchType="RelativeToTallestObject" mode="Opaque" x="241" y="53" width="48" height="36" isRemoveLineWhenBlank="true" backcolor="#CCCCCC"/>
+				<reportElement uuid="58394516-0ae7-436e-bada-7f7c1bbf3d1d" key="textField-124" stretchType="RelativeToTallestObject" mode="Opaque" x="241" y="53" width="48" height="36" isRemoveLineWhenBlank="true" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1153,7 +1206,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Keluasan\n Tanah (Hektar/Ekar/M²)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="8e80a1d1-3028-41a7-bdf5-55868510f80a" key="textField-128" stretchType="RelativeToTallestObject" mode="Opaque" x="336" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="be86773f-ecdf-43b6-b59a-0eeda41e52dc" key="textField-128" stretchType="RelativeToTallestObject" mode="Opaque" x="336" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1167,7 +1220,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Tarikh Terima Permohonan"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="68338464-6234-4577-9469-be2da8283c2d" key="textField-129" stretchType="RelativeToTallestObject" mode="Opaque" x="383" y="53" width="120" height="12" backcolor="#CCCCCC"/>
+				<reportElement uuid="a413bafa-b20d-43d0-9527-44dc2587df63" key="textField-129" stretchType="RelativeToTallestObject" mode="Opaque" x="383" y="53" width="120" height="12" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1181,7 +1234,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Surat"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="981809b7-196d-4a84-8a2a-16f01552f81e" key="textField-130" stretchType="RelativeToTallestObject" mode="Opaque" x="503" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="e6d8dde2-38cb-4555-a503-5c0b0029bc47" key="textField-130" stretchType="RelativeToTallestObject" mode="Opaque" x="503" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1195,7 +1248,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Laporan Tanah JKPTG Negeri"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="04af371c-353a-4525-9abe-dc7419d546e9" key="textField-131" stretchType="RelativeToTallestObject" mode="Opaque" x="383" y="65" width="40" height="24" backcolor="#CCCCCC"/>
+				<reportElement uuid="34134ea0-a9dc-44ba-bc51-1caad9080de9" key="textField-131" stretchType="RelativeToTallestObject" mode="Opaque" x="383" y="65" width="40" height="24" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1209,7 +1262,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Makluman Kpd pemohon"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="4e909d91-00d6-4792-922f-53ca0439b3a3" key="textField-132" stretchType="RelativeToTallestObject" mode="Opaque" x="423" y="65" width="40" height="24" backcolor="#CCCCCC"/>
+				<reportElement uuid="ccf1a737-8c8d-4edb-ad37-5e629e826c8c" key="textField-132" stretchType="RelativeToTallestObject" mode="Opaque" x="423" y="65" width="40" height="24" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1223,7 +1276,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Ulasan KJP"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="ab5ecddf-c77d-47be-9b0f-4dfb1a498b6c" key="textField-133" stretchType="RelativeToTallestObject" mode="Opaque" x="463" y="65" width="40" height="24" backcolor="#CCCCCC"/>
+				<reportElement uuid="dbcc096a-3cbc-4e4a-aa50-604588f5f94f" key="textField-133" stretchType="RelativeToTallestObject" mode="Opaque" x="463" y="65" width="40" height="24" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1237,7 +1290,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Penilaian JPPH"]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="b66fff9d-d1ed-49c9-b1e7-ab0a31f04122" key="textField-134" mode="Opaque" x="549" y="39" width="470" height="14" backcolor="#CCCCCC"/>
+				<reportElement uuid="3a560176-11c2-405c-b1a9-6f2766bc69ab" key="textField-134" mode="Opaque" x="549" y="39" width="470" height="14" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1251,7 +1304,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["TARIKH-TARIKH TINDAKAN"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="49a34a9e-8c45-4917-b072-a8f12aaf052a" key="textField-135" stretchType="RelativeToTallestObject" mode="Opaque" x="549" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="83de17f6-51b7-47ba-8048-3d0f9e0fac8e" key="textField-135" stretchType="RelativeToTallestObject" mode="Opaque" x="549" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1265,7 +1318,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Draf Kertas MJM Hantar ke NRE"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="ade24e7d-dad1-4655-bd9f-4f90704ba3fc" key="textField-136" stretchType="RelativeToTallestObject" mode="Opaque" x="596" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="06180a52-531f-4fb2-9924-03213344fba8" key="textField-136" stretchType="RelativeToTallestObject" mode="Opaque" x="596" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1279,7 +1332,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Kelulusan OSC,NRE"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="0bc0b48b-bf4e-4e73-8b95-d523d1a1d5fc" key="textField-137" stretchType="RelativeToTallestObject" mode="Opaque" x="643" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="ffaa01ad-c29f-4722-8247-aeba853fcba5" key="textField-137" stretchType="RelativeToTallestObject" mode="Opaque" x="643" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1293,7 +1346,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Edaran KPD KJP & Agensi"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="22796d5e-a70b-47a4-8de1-b2e000f2f9b1" key="textField-138" stretchType="RelativeToTallestObject" mode="Opaque" x="690" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="1dbf47de-0bda-4db0-aee1-7655b2f011e0" key="textField-138" stretchType="RelativeToTallestObject" mode="Opaque" x="690" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1307,7 +1360,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Tarikh Keputusan MJM/No. Rujukan"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="32eff28e-dc28-4531-8de6-f36002b5febd" key="textField-139" stretchType="RelativeToTallestObject" mode="Opaque" x="737" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="cda65142-7a60-4c1e-bcfe-7581a782e97c" key="textField-139" stretchType="RelativeToTallestObject" mode="Opaque" x="737" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1321,7 +1374,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Surat Tawaran Pajakan (Tindakan JKPTG)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="9a0fdc9f-36ea-4ba9-82c2-fb242db4c81d" key="textField-140" stretchType="RelativeToTallestObject" mode="Opaque" x="784" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="c62a424f-28ca-4663-b782-b721b9814b55" key="textField-140" stretchType="RelativeToTallestObject" mode="Opaque" x="784" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1335,7 +1388,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA[" Draf Perjanjian"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="458cc94d-69a2-42e7-a4ed-ef71a4df8770" key="textField-141" stretchType="RelativeToTallestObject" mode="Opaque" x="831" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="4f7254e6-73e6-4eb7-809b-55ff0ffd853a" key="textField-141" stretchType="RelativeToTallestObject" mode="Opaque" x="831" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1349,7 +1402,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["T/Tangan Perjanjian"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="67b4a67d-c43e-4439-8d85-35c15a6e69d8" key="textField-142" stretchType="RelativeToTallestObject" mode="Opaque" x="878" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="33605d27-6b36-4698-830a-c32e8eb2d948" key="textField-142" stretchType="RelativeToTallestObject" mode="Opaque" x="878" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1363,7 +1416,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Borang 15A & H/Milik"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="dfa279af-64ac-4e0f-8e8f-1b9fae086410" key="textField-143" stretchType="RelativeToTallestObject" mode="Opaque" x="925" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="36b81ad5-538b-4607-a953-f1b127aae1b4" key="textField-143" stretchType="RelativeToTallestObject" mode="Opaque" x="925" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1377,7 +1430,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Endorsan Pajakan Dalam H/Milik"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="5afd326f-65b7-416c-9727-07f1cf4a7151" key="textField-144" stretchType="RelativeToTallestObject" mode="Opaque" x="972" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="9a4053fc-d437-47f3-b7a1-36042489a01d" key="textField-144" stretchType="RelativeToTallestObject" mode="Opaque" x="972" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1391,7 +1444,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Serahan H/Milik Oleh Pemajak"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="3c303797-ec38-4464-8589-21c5ae463259" key="textField-145" stretchType="RelativeToTallestObject" mode="Opaque" x="1019" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="27fc8a91-1f74-472e-ba04-42abdf509d6a" key="textField-145" stretchType="RelativeToTallestObject" mode="Opaque" x="1019" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1405,7 +1458,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Bayaran Pajakan"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="3c9bd218-68c4-4dc5-a03f-6ddbfcc3f949" key="textField-146" stretchType="RelativeToTallestObject" mode="Opaque" x="1067" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="f6477899-b663-4b44-9efa-966561744ab3" key="textField-146" stretchType="RelativeToTallestObject" mode="Opaque" x="1067" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1419,7 +1472,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Tempoh Pajakan"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="21776740-35f2-4b5f-97e3-56ec19eacb6d" key="textField-147" stretchType="RelativeToTallestObject" mode="Opaque" x="1115" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="32b2872d-d7b7-4444-aa71-3eaac4f8eebf" key="textField-147" stretchType="RelativeToTallestObject" mode="Opaque" x="1115" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1433,7 +1486,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Semakan Pajakan"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="d1f938d6-4bbf-4e93-9166-20afbd7fd27e" key="textField-148" stretchType="RelativeToTallestObject" mode="Opaque" x="1163" y="53" width="76" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="28c35062-1b90-4439-8a82-64ca86487ddd" key="textField-148" stretchType="RelativeToTallestObject" mode="Opaque" x="1163" y="53" width="76" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1447,7 +1500,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Status Semasa"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="e6647ddd-858a-4b61-8678-12d2351fd614" key="textField-149" stretchType="RelativeToTallestObject" mode="Opaque" x="289" y="53" width="48" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="cf5824e2-5092-4b14-91e6-914c02b920e7" key="textField-149" stretchType="RelativeToTallestObject" mode="Opaque" x="289" y="53" width="48" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -1461,7 +1514,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textFieldExpression><![CDATA["Luas Pajakan (Hektar/Ekar/M²)"]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="d165263b-f21b-4e8c-8a07-24a9cd70a272" key="textField-151" mode="Opaque" x="1019" y="39" width="220" height="14" backcolor="#CCCCCC"/>
+				<reportElement uuid="d4b5a927-78ab-4de5-ab4d-dedcb8db5eeb" key="textField-151" mode="Opaque" x="1019" y="39" width="220" height="14" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
