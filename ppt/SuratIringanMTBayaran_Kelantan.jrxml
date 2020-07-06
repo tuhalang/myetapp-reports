@@ -18,9 +18,9 @@
 	<parameter name="id_hakmilikpb" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
-	<parameter name="akaunMT" class="java.lang.String"/>
-	<parameter name="bankMT" class="java.lang.String"/>
 	<parameter name="noMT" class="java.lang.String"/>
+	<parameter name="bankMT" class="java.lang.String"/>
+	<parameter name="akaunMT" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT J.ID_NEGERI, TO_CHAR(SYSDATE,'YYYY') AS TAHUN, UPPER(H.TUJUAN) AS TUJUAN,
     CASE
@@ -28,7 +28,7 @@
         WHEN A.NO_LOT IS NULL AND A.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || A.NO_PT
         WHEN A.NO_LOT IS NOT NULL AND A.NO_PT IS NOT NULL THEN JL.KETERANGAN  || A.NO_PT || CHR(32) || CHR(40) || A.NO_LOT  || CHR(41)
         ELSE  ''
-    END AS NO_LOT, B.KOD_JENIS_HAKMILIK, A.NO_HAKMILIK, INITCAP(C.NAMA_MUKIM) AS NAMA_MUKIM, UPPER(E.NAMA_PB) AS NAMA_PB,
+    END AS NO_LOT, B.KOD_JENIS_HAKMILIK, A.NO_HAKMILIK, INITCAP(C.NAMA_MUKIM) AS NAMA_MUKIM, INITCAP(E.NAMA_PB) AS NAMA_PB,
     TO_CHAR(F.SYER_ATAS) AS SYER_ATAS, TO_CHAR(F.SYER_BAWAH) AS SYER_BAWAH, INITCAP(G.NAMA_DAERAH) AS NAMA_DAERAH,
 INITCAP(I.NAMA_PEJABAT) AS NAMA_PEJABAT,
     INITCAP(M.NAMA_NEGERI_PENUH) AS NEGERI_MAHKAMAH ,
@@ -56,7 +56,7 @@ CASE
     WHEN $P!{id_jawatan} = 1 THEN 'Pengarah'
     WHEN $P!{id_jawatan} = 4 THEN 'Pengarah'
 ELSE 'b.p. Pengarah'
-END AS PENGARAH, INITCAP(P.NAMA_NEGERI) AS NAMA_NEGERI1
+END AS PENGARAH, INITCAP(P.NAMA_NEGERI) AS NAMA_NEGERI1, JL.KETERANGAN AS NAMA_LOT
     FROM TBLPPTHAKMILIK A, TBLRUJLOT JL, TBLRUJJENISHAKMILIK B, TBLRUJMUKIM C, TBLPPTHAKMILIKPB D, TBLPPTPIHAKBERKEPENTINGAN E, TBLPPTBAHAGIANPB F,
     TBLRUJDAERAH G, TBLPPTPERMOHONAN H, TBLRUJPEJABAT I, TBLPFDFAIL J, TBLPPTAWARD K, TBLPPTWARTA L, TBLRUJNEGERI M, TBLRUJPEJABATJKPTG N, TBLRUJDAERAH O, TBLRUJNEGERI P,
     TBLRUJPEJABAT Q, TBLRUJBANDAR R, TBLRUJNEGERI S, USERS T, TBLRUJBANDAR U, TBLRUJNEGERI V, USERS_INTERNAL W
@@ -145,11 +145,12 @@ END AS PENGARAH, INITCAP(P.NAMA_NEGERI) AS NAMA_NEGERI1
 	<field name="EKSIBIT" class="java.lang.String"/>
 	<field name="PENGARAH" class="java.lang.String"/>
 	<field name="NAMA_NEGERI1" class="java.lang.String"/>
+	<field name="NAMA_LOT" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="37" splitType="Stretch"/>
+		<band splitType="Stretch"/>
 	</title>
 	<pageHeader>
 		<band splitType="Stretch"/>
@@ -158,9 +159,29 @@ END AS PENGARAH, INITCAP(P.NAMA_NEGERI) AS NAMA_NEGERI1
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="81" splitType="Stretch">
+		<band height="211" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="8a7b922b-7dba-4fd7-b1fb-a727e7666620" key="textField-10" positionType="Float" x="0" y="25" width="451" height="15"/>
+				<reportElement uuid="337c67c0-9a6a-4886-92ad-05075863abd2" key="textField-17" positionType="Float" x="0" y="196" width="451" height="15">
+					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=4)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\n\nSekian, terima kasih"
++"\n"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>\n'BERKHIDMAT UNTUK NEGARA'\n</style>"
++"\nSaya yang menjalankan amanah,"
++"\n"
++"\n"
++"\n"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPengarah}!=null ? $P{namaPengarah}:"")+")</style>"
++"\n"+($F{PENGARAH} != null ? $F{PENGARAH}:"")
++"\nJabatan Ketua Pengarah Tanah dan Galian (Persekutuan)"
++"\nNegeri "+($F{NAMA_NEGERI1} != null ? $F{NAMA_NEGERI1}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="8a7b922b-7dba-4fd7-b1fb-a727e7666620" key="textField-10" positionType="Float" x="0" y="67" width="451" height="15"/>
 				<textElement textAlignment="Justified" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
@@ -175,41 +196,115 @@ END AS PENGARAH, INITCAP(P.NAMA_NEGERI) AS NAMA_NEGERI1
 +"<style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NEGERI_MAHKAMAH}!=null ? $F{NEGERI_MAHKAMAH}:"")+"</style>"
 +"\n\n"
 +"Tuan,"
-+"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>BAYARAN CEK PAMPASAN PENGAMBILAN TANAH UNTUK "+$F{TUJUAN}+".\n"
-+"- LOT "+($F{NO_LOT} != null ? $F{NO_LOT} : "")+($F{KOD_JENIS_HAKMILIK} != null ? "(" + $F{KOD_JENIS_HAKMILIK} + " " + $F{NO_HAKMILIK}+")" : "")
-+" " + $F{NAMA_MUKIM}.toUpperCase()+", "+$F{NAMA_DAERAH}.toUpperCase()
-+"\nPEMILIK : "+($F{NAMA_PB}!=null ? $F{NAMA_PB} : "")
-+ ($F{SYER_ATAS}!=null ? " - ("+$F{SYER_ATAS}+"/"+$F{SYER_BAWAH}+"BHGN)" : "")+"</style>"]]></textFieldExpression>
++"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>PENGELUARAN WANG PAMPASAN KERANA PENGAMBILAN TANAH BAGI "+$F{TUJUAN}+"\n</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="62c605af-6152-45a5-9285-07535aa32fc6" key="textField-16" positionType="Float" x="0" y="0" width="451" height="15"/>
-				<textElement textAlignment="Right">
+				<reportElement uuid="62c605af-6152-45a5-9285-07535aa32fc6" key="textField-16" positionType="Float" x="148" y="0" width="303" height="15"/>
+				<textElement>
 					<font fontName="Bookman Old Style" size="11" pdfFontName="Helvetica"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Ruj. kami: "+($P{no_fail} != null ? $P{no_fail}:"")+" ("+($P{bilRujKami} != null ? $P{bilRujKami}:"    ")+")"
-+"\nTarikh    : "+($P{sysdate} != null && $P{sysdate} != "" ? $P{sysdate}:"")]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\nRujukan Kami: " + ($P{no_fail} != null ? $P{no_fail}:"")+" ("+($P{bilRujKami} != null ? $P{bilRujKami}:"    ")+")"
++"\nTarikh : "+($P{sysdate} != null && $P{sysdate} != "" ? $P{sysdate}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="5e941cda-12ad-4876-91b4-f5ebb701c979" key="textField-18" positionType="Float" x="0" y="51" width="451" height="15"/>
+				<reportElement uuid="5e941cda-12ad-4876-91b4-f5ebb701c979" key="textField-18" positionType="Float" x="0" y="89" width="451" height="15"/>
 				<textElement textAlignment="Justified" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Dengan hormatnya saya merujuk kepada perkara diatas"
-+"\n\n2.     Adalah dimaklumkan bahawa Jabatan ini telah menerima sekeping Cek "+($P{bankMT}!= null ? $P{bankMT} : "bank .................................")+" kepada Akauntan Negara Malaysia sejumlah RM"+$F{BAYAR_PAMPASAN}
-+" bagi bayaran Perintah Mahkamah yang telah dikeluarkan untuk tindakan pihak tuan selanjutnya."
-+"\n\n3.     Bersama-sama dengan ini disertakan sekeping Cek "+($P{bankMT}!= null ? $P{bankMT} : "bank .................................")+" bernombor .................... bertarikh ................... dan salinan Perintah Termeterai bernombor"
-+"................... bagi Saman Pemula. Mohon pihak tuan mengemukakan resit asal ke Jabatan ini untuk tindakan pihak kami selanjutnya."
-+"\n\n4.     Perhatian dan kerjasama pihak tuan berhubung perkara ini amat dihargai."
-+"\n\nSekian, terima Kasih."
-
-+"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>'MELAKA BERWIBAWA'\n'PINTAR, HIJAU, BERSIH\nBERKHIDMAT UNTUK NEGARA</style>"
-+"\n\nSaya yang menjalankan amanah,"
-
-+"\n\n\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+$P{namaPengarah}.toUpperCase()+")</style>\n"
-+($F{PENGARAH} != null ? $F{PENGARAH}:"")
-+"\nJabatan Ketua Pengarah Tanah dan Galian (Persekutuan)\n"
-+($F{NAMA_NEGERI_PEGAWAI}!=null?$F{NAMA_NEGERI_PEGAWAI}:"")]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Adalah dengan segala hormatnya saya diarah merujuk kepada perkara di atas."
++"\n\n2.     Dimaklumkan wang pampasan berjumlah RM"+$F{BAYAR_PAMPASAN}
++" yang telah disimpan di Mahkamah Tinggi perlu dibuat pengeluaran wang pertaruhan kepada nama sebagaimana perintah dalam Mahkamah Tinggi Malaya di "
++$F{NEGERI_MAHKAMAH}+" dalam "+$F{NEGERI_MAHKAMAH}+" No. "
++"\n\n3.     Bersama-sama ini dikembarkan:"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="0" y="37" width="223" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' isUnderline='true'>SEGERA DENGAN TANGAN</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="29" y="106" width="30" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["i."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="59" y="106" width="392" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Surat Tuan Tanah;"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="59" y="122" width="392" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Salinan Akaun;"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="29" y="122" width="30" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ii."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="59" y="139" width="392" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Salinan Kad Pengenalan;"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="29" y="139" width="30" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["iii."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="59" y="156" width="392" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Salinan Perintah; dan"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="29" y="156" width="30" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["iv."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="59" y="173" width="392" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Salinan Resit"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6b1f0bef-a128-4239-a81c-ccc32ca3602d" key="textField-26" positionType="Float" x="29" y="173" width="30" height="15"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["v."]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
