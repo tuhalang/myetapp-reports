@@ -12,9 +12,10 @@
 	<parameter name="namaPengarah" class="java.lang.String"/>
 	<parameter name="bilLot" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT DISTINCT B.ID_NEGERI, B.ID_FAIL, A.NO_RUJUKAN_PTG, REPLACE(INITCAP(C.NAMA_PEJABAT),'&','&#38;') AS NAMA_PEJABAT, REPLACE(INITCAP(NVL(C.ALAMAT1,'')),'&','&#38;') AS ALAMAT1, REPLACE(INITCAP(NVL(C.ALAMAT2,'')),'&','&#38;') AS ALAMAT2, REPLACE(INITCAP(NVL(C.ALAMAT3,'')),'&','&#38;') AS ALAMAT3, NVL(C.POSKOD,'') AS POSKOD, INITCAP(M.NAMA_DAERAH) AS DAERAH, D.NAMA_NEGERI,
-    A.TUJUAN,B.NO_FAIL,
-    TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
+		<![CDATA[SELECT DISTINCT B.ID_NEGERI, B.ID_FAIL, A.NO_RUJUKAN_PTG, REPLACE(INITCAP(C.NAMA_PEJABAT),'&','&#38;') AS NAMA_PEJABAT,
+REPLACE(INITCAP(NVL(C.ALAMAT1,'')),'&','&#38;') AS ALAMAT1, REPLACE(INITCAP(NVL(C.ALAMAT2,'')),'&','&#38;') AS ALAMAT2,
+REPLACE(INITCAP(NVL(C.ALAMAT3,'')),'&','&#38;') AS ALAMAT3, NVL(C.POSKOD,'') AS POSKOD, INITCAP(M.NAMA_DAERAH) AS DAERAH,
+D.NAMA_NEGERI, A.TUJUAN,B.NO_FAIL, TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
     CASE
        WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
        WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'Februari'
@@ -48,7 +49,12 @@
         WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 11 THEN 'Zulkaedah'
         WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 12 THEN 'Zulhijjah'
     END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM
-    FROM TBLPPTPERMOHONAN A,  TBLPFDFAIL B, TBLRUJPEJABAT C, TBLRUJNEGERI D, TBLRUJKEMENTERIAN E, TBLRUJNEGERI F, TBLRUJPEJABAT G, TBLRUJNEGERI H, TBLRUJPEJABATJKPTG I, TBLRUJNEGERI J, TBLRUJDAERAH K, TBLRUJDAERAH L, TBLRUJDAERAH M
+    ,nvl(totalHM.total,0) as totalHM
+    FROM TBLPPTPERMOHONAN A,  TBLPFDFAIL B, TBLRUJPEJABAT C, TBLRUJNEGERI D, TBLRUJKEMENTERIAN E, TBLRUJNEGERI F,
+    TBLRUJPEJABAT G, TBLRUJNEGERI H, TBLRUJPEJABATJKPTG I, TBLRUJNEGERI J, TBLRUJDAERAH K, TBLRUJDAERAH L, TBLRUJDAERAH M,
+    (SELECT COUNT(N.ID_HAKMILIK) as total FROM TBLPPTHAKMILIK N, TBLPPTPERMOHONAN A,  TBLPFDFAIL B
+    WHERE A.ID_FAIL = B.ID_FAIL AND A.ID_PERMOHONAN = N.ID_PERMOHONAN AND B.ID_FAIL = $P{idfail}) totalHM
+
     WHERE B.ID_FAIL = A.ID_FAIL
     AND C.ID_NEGERI = B.ID_NEGERI
     AND D.ID_NEGERI = C.ID_NEGERI
@@ -65,7 +71,7 @@
     AND I.ID_DAERAH = K.ID_DAERAH
     AND I.ID_JENISPEJABAT IN (21,22)
     AND J.ID_NEGERI = I.ID_NEGERI
-    AND A.ID_FAIL = $P!{idfail}]]>
+    AND A.ID_FAIL = $P{idfail}]]>
 	</queryString>
 	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
 	<field name="ID_FAIL" class="java.math.BigDecimal"/>
@@ -108,6 +114,7 @@
 	<field name="HARI_ISLAM" class="java.lang.String"/>
 	<field name="BULAN_ISLAM" class="java.lang.String"/>
 	<field name="TAHUN_ISLAM" class="java.lang.String"/>
+	<field name="TOTALHM" class="java.math.BigDecimal"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -150,7 +157,7 @@
 +"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>PENGAMBILAN TANAH BAGI "+($F{TUJUAN}.toUpperCase())+"</style>"
 +"\n- Pelupusan Dokumen Hakmilik"
 +"\n\nSaya dengan hormatnya merujuk kepada perkara di atas."
-+"\n\n2.\tAdalah dimaklumkan bahawa projek di atas telah selesai dibuat pengambilan tanah, sebanyak ........... lot terlibat dengan pengambilan tanah sepenuhnya."
++"\n\n2.\tAdalah dimaklumkan bahawa projek di atas telah selesai dibuat pengambilan tanah, sebanyak "+($F{TOTALHM}!=null?$F{TOTALHM}:"...........")+" lot terlibat dengan pengambilan tanah sepenuhnya."
 +"\n\n3.\tSehubungan itu, selaras dengan Seksyen 27 APT 1960, bersama-sama ini dikemukakan terlebih dahulu "+ ($P{bilLot}!=null ? $P{bilLot}:"........") +" lot geran asal yang terlibat pengambilan sepenuhnya untuk tindakan pelupusan dokumen selanjutnya."
 +"\n\n\nSekian, terima kasih."
 +"\n\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
