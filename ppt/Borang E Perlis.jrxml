@@ -13,6 +13,9 @@
 	<parameter name="namaPegawai" class="java.lang.String"/>
 	<parameter name="id_borange" class="java.lang.String"/>
 	<parameter name="no_fail" class="java.lang.String"/>
+	<parameter name="masa_siasatan" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
 	<queryString>
 		<![CDATA[SELECT DISTINCT TO_CHAR(H.ID_HAKMILIK)AS ID_HAKMILIK,A.ID_NEGERI, B.NO_RUJUKAN_SURAT, A.NO_FAIL, TO_CHAR(A.ID_FAIL) AS ID_FAIL, TO_CHAR(D.TARIKH_SIASATAN,'DD') AS HARI_SIASATAN,
     CASE
@@ -73,7 +76,18 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
         WHEN TO_CHAR(I.TARIKH_WARTA,'MM')='11' THEN 'November'
         WHEN TO_CHAR(I.TARIKH_WARTA,'MM')='12' THEN 'Disember'
     END AS BULAN_WARTA,
-    TO_CHAR(I.TARIKH_WARTA,'YYYY') AS TAHUN_WARTA
+    TO_CHAR(I.TARIKH_WARTA,'YYYY') AS TAHUN_WARTA,
+    CASE
+        WHEN SUBSTR(BEH.MASA_SIASATAN,1,1) = 0 THEN SUBSTR(BEH.MASA_SIASATAN,2,1) || CHR(46) || SUBSTR(BEH.MASA_SIASATAN,3,2)
+        WHEN SUBSTR(BEH.MASA_SIASATAN,1,1) != 0 THEN SUBSTR(BEH.MASA_SIASATAN,1,2) || CHR(46) || SUBSTR(BEH.MASA_SIASATAN,3,2)
+        ELSE ''
+    END AS MASA_SIASATANBEH,
+    CASE
+        WHEN BEH.JENIS_WAKTU = '1' THEN 'pagi'
+        WHEN BEH.JENIS_WAKTU = '2' THEN 'tengahari'
+        WHEN BEH.JENIS_WAKTU = '3' THEN 'petang'
+        WHEN BEH.JENIS_WAKTU = '4' THEN 'malam'
+    END AS JENIS_WAKTUBEH
     FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B,
     TBLPPTBORANGE D, TBLRUJBANDAR E, TBLRUJNEGERI F, TBLRUJNEGERI G, TBLPPTHAKMILIK H, TBLPPTBORANGEHAKMILIK BEH,
     TBLRUJDAERAH DD,TBLRUJMUKIM MM,TBLPPTWARTA I
@@ -88,7 +102,10 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
     AND D.ID_NEGERI = F.ID_NEGERI(+)
     AND A.ID_NEGERI = G.ID_NEGERI
     AND I.ID_WARTA = (SELECT MAX(ID_WARTA) FROM TBLPPTWARTA WHERE B.ID_PERMOHONAN = TBLPPTWARTA.ID_PERMOHONAN)
-    AND D.ID_BORANGE = $P!{id_borange}]]>
+    AND D.ID_BORANGE = $P!{id_borange}
+    AND ((BEH.MASA_SIASATAN != ' ' AND BEH.MASA_SIASATAN = '$P!{masa_siasatan}')
+          OR (D.MASA_SIASATAN != ' ' AND D.MASA_SIASATAN = '$P!{masa_siasatan}')
+	OR ('$P!{masa_siasatan}' = ' '))]]>
 	</queryString>
 	<field name="ID_HAKMILIK" class="java.lang.String"/>
 	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
@@ -118,6 +135,8 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 	<field name="HARI_WARTA" class="java.lang.String"/>
 	<field name="BULAN_WARTA" class="java.lang.String"/>
 	<field name="TAHUN_WARTA" class="java.lang.String"/>
+	<field name="MASA_SIASATANBEH" class="java.lang.String"/>
+	<field name="JENIS_WAKTUBEH" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -146,7 +165,14 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Mengikut perisytiharan pengambilan yang dicadangkan bagi tanah yang diperihalkan dalam Jadual di bawah ini, maka dengan ini notis diberikan bahawa suatu siasatan untuk mendengar semua tuntutan pampasan mengenai semua kepentingan mengenai tanah itu akan diadakan pada <style isBold='false' isUnderline='false' pdfFontName='Helvetica-Bold'>"+($F{HARI_SIASATAN} != null ? $F{HARI_SIASATAN}+" ":".........")+($F{BULAN_SIASATAN} != null ? $F{BULAN_SIASATAN}+" ":"..................")+($F{TAHUN_SIASATAN} != null ? $F{TAHUN_SIASATAN}:"..................")+"</style> pada jam <style isBold='false' isUnderline='false' pdfFontName='Helvetica-Bold'>"+($F{MASA_SIASATAN} != null ? $F{MASA_SIASATAN}:"..............................")+" "+($F{JENIS_WAKTU} != null ? $F{JENIS_WAKTU}:"...............")+"</style> di <style isBold='false' isUnderline='false' pdfFontName='Helvetica-Bold'> di"
+				<textFieldExpression><![CDATA["Mengikut perisytiharan pengambilan yang dicadangkan bagi tanah yang diperihalkan dalam Jadual di bawah ini, maka dengan ini notis diberikan bahawa suatu siasatan untuk mendengar semua tuntutan pampasan mengenai semua kepentingan mengenai tanah itu akan diadakan pada <style isBold='false' isUnderline='false' pdfFontName='Helvetica-Bold'>"
++($F{HARI_SIASATAN} != null ? $F{HARI_SIASATAN}+" ":".........")
++($F{BULAN_SIASATAN} != null ? $F{BULAN_SIASATAN}+" ":"..................")
++($F{TAHUN_SIASATAN} != null ? $F{TAHUN_SIASATAN}:"..................")
++"</style> pada jam <style isBold='false' isUnderline='false' pdfFontName='Helvetica-Bold'>"
++($F{MASA_SIASATANBEH} != null ? $F{MASA_SIASATANBEH}:($F{MASA_SIASATAN}!=null?$F{MASA_SIASATAN}:".............................."))
++" "+($F{JENIS_WAKTUBEH} != null ? $F{JENIS_WAKTUBEH}:($F{JENIS_WAKTU}!=null?$F{JENIS_WAKTU}:"..............."))
++"</style> di <style isBold='false' isUnderline='false' pdfFontName='Helvetica-Bold'> di"
 +($F{ALAMAT1} != null ? $F{ALAMAT1}+", ":"..........................................................................................")+($F{ALAMAT2} != null ? $F{ALAMAT2}+", ":"")+($F{ALAMAT3} != null ? $F{ALAMAT3}+", ":"")+($F{POSKOD} != null ? $F{POSKOD}+", ":"")+($F{NAMA_BANDAR} != null ? $F{NAMA_BANDAR}+", ":"")+($F{NAMA_NEGERI} != null ? $F{NAMA_NEGERI}+".":"")+"</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
@@ -336,7 +362,7 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Double"/>
 				</textElement>
-				<textFieldExpression><![CDATA["AKTA PENGAMBILAN TANAH, 1960"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Akta Pengambilan Tanah 1960"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="8259f2d8-c831-4ba9-89e3-10ea927de2d8" key="textField-55" positionType="Float" mode="Transparent" x="0" y="29" width="451" height="5"/>

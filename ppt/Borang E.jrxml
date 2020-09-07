@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="249"/>
+	<property name="ireport.y" value="251"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -13,8 +13,12 @@
 	<parameter name="namaPegawai" class="java.lang.String"/>
 	<parameter name="id_borange" class="java.lang.String"/>
 	<parameter name="no_fail" class="java.lang.String"/>
+	<parameter name="masa_siasatan" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
 	<queryString>
-		<![CDATA[SELECT DISTINCT TO_CHAR(H.ID_HAKMILIK)AS ID_HAKMILIK, INITCAP(B.TUJUAN)AS TUJUAN_INIT, A.ID_NEGERI, B.NO_RUJUKAN_SURAT, A.NO_FAIL, TO_CHAR(A.ID_FAIL) AS ID_FAIL, TO_CHAR(D.TARIKH_SIASATAN,'DD') AS HARI_SIASATAN,
+		<![CDATA[SELECT DISTINCT TO_CHAR(H.ID_HAKMILIK)AS ID_HAKMILIK, INITCAP(B.TUJUAN)AS TUJUAN_INIT, A.ID_NEGERI, B.NO_RUJUKAN_SURAT,
+A.NO_FAIL, TO_CHAR(A.ID_FAIL) AS ID_FAIL, TO_CHAR(D.TARIKH_SIASATAN,'DD') AS HARI_SIASATAN,
     CASE
         WHEN TO_CHAR(D.TARIKH_SIASATAN,'MM')='01' THEN 'Januari'
         WHEN TO_CHAR(D.TARIKH_SIASATAN,'MM')='02' THEN 'Februari'
@@ -29,7 +33,6 @@
         WHEN TO_CHAR(D.TARIKH_SIASATAN,'MM')='11' THEN 'November'
         WHEN TO_CHAR(D.TARIKH_SIASATAN,'MM')='12' THEN 'Disember'
     END AS BULAN_SIASATAN, TO_CHAR(D.TARIKH_SIASATAN,'yyyy') AS TAHUN_SIASATAN,
-   -- C.TEMPAT,
     TO_CHAR(D.TARIKH_BORANGE,'DD') AS HARI,
     CASE
         WHEN TO_CHAR(D.TARIKH_BORANGE,'MM')='01' THEN 'Januari'
@@ -72,11 +75,20 @@
         WHEN TO_CHAR(W.TARIKH_WARTA,'MM')='10' THEN 'Oktober'
         WHEN TO_CHAR(W.TARIKH_WARTA,'MM')='11' THEN 'November'
         WHEN TO_CHAR(W.TARIKH_WARTA,'MM')='12' THEN 'Disember'
-    END AS BULAN_WARTA, TO_CHAR(W.TARIKH_WARTA,'yyyy') AS TAHUN_WARTA, W.NO_WARTA, TO_CHAR(W.TARIKH_WARTA,'DD.mm.yyyy') AS TARIKH_WARTA
-    FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B,
-    TBLPPTBORANGE D, TBLRUJBANDAR E, TBLRUJNEGERI F, TBLRUJNEGERI G, TBLPPTHAKMILIK H,
-    TBLPPTBORANGEHAKMILIK BEH,
-    TBLRUJDAERAH DD,TBLRUJMUKIM MM,TBLPPTWARTA W
+    END AS BULAN_WARTA, TO_CHAR(W.TARIKH_WARTA,'YYYY') AS TAHUN_WARTA, W.NO_WARTA, TO_CHAR(W.TARIKH_WARTA,'DD.MM.YYYY') AS TARIKH_WARTA,
+    CASE
+        WHEN SUBSTR(BEH.MASA_SIASATAN,1,1) = 0 THEN SUBSTR(BEH.MASA_SIASATAN,2,1) || CHR(46) || SUBSTR(BEH.MASA_SIASATAN,3,2)
+        WHEN SUBSTR(BEH.MASA_SIASATAN,1,1) != 0 THEN SUBSTR(BEH.MASA_SIASATAN,1,2) || CHR(46) || SUBSTR(BEH.MASA_SIASATAN,3,2)
+        ELSE ''
+    END AS MASA_SIASATANBEH,
+    CASE
+        WHEN BEH.JENIS_WAKTU = '1' THEN 'pagi'
+        WHEN BEH.JENIS_WAKTU = '2' THEN 'tengahari'
+        WHEN BEH.JENIS_WAKTU = '3' THEN 'petang'
+        WHEN BEH.JENIS_WAKTU = '4' THEN 'malam'
+    END AS JENIS_WAKTUBEH
+    FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTBORANGE D, TBLRUJBANDAR E, TBLRUJNEGERI F, TBLRUJNEGERI G, TBLPPTHAKMILIK H,
+    TBLPPTBORANGEHAKMILIK BEH, TBLRUJDAERAH DD,TBLRUJMUKIM MM,TBLPPTWARTA W
     WHERE A.ID_FAIL = B.ID_FAIL
     AND H.ID_DAERAH = DD.ID_DAERAH
     AND H.ID_MUKIM = MM.ID_MUKIM
@@ -119,6 +131,8 @@
 	<field name="TAHUN_WARTA" class="java.lang.String"/>
 	<field name="NO_WARTA" class="java.lang.String"/>
 	<field name="TARIKH_WARTA" class="java.lang.String"/>
+	<field name="MASA_SIASATANBEH" class="java.lang.String"/>
+	<field name="JENIS_WAKTUBEH" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -147,7 +161,14 @@
 					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Mengikut perisytiharan pengambilan yang dicadangkan bagi tanah yang diperihalkan dalam Jadual di bawah ini, maka dengan ini notis diberikan bahawa suatu siasatan untuk mendengar semua tuntutan pampasan mengenai semua kepentingan mengenai tanah itu akan diadakan pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{HARI_SIASATAN} != null ? $F{HARI_SIASATAN}+" ":".........")+($F{BULAN_SIASATAN} != null ? $F{BULAN_SIASATAN}+" ":"..................")+($F{TAHUN_SIASATAN} != null ? $F{TAHUN_SIASATAN}:"..................")+"</style> pada jam <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{MASA_SIASATAN} != null ? $F{MASA_SIASATAN}:"..............................")+" "+($F{JENIS_WAKTU} != null ? $F{JENIS_WAKTU}:"...............")+"</style> di <style isBold='true' pdfFontName='Helvetica-Bold'>"
+				<textFieldExpression><![CDATA["Mengikut perisytiharan pengambilan yang dicadangkan bagi tanah yang diperihalkan dalam Jadual di bawah ini, maka dengan ini notis diberikan bahawa suatu siasatan untuk mendengar semua tuntutan pampasan mengenai semua kepentingan mengenai tanah itu akan diadakan pada <style isBold='true' pdfFontName='Helvetica-Bold'>"
++($F{HARI_SIASATAN} != null ? $F{HARI_SIASATAN}+" ":".........")
++($F{BULAN_SIASATAN} != null ? $F{BULAN_SIASATAN}+" ":"..................")
++($F{TAHUN_SIASATAN} != null ? $F{TAHUN_SIASATAN}:"..................")
++"</style> pada jam <style isBold='true' pdfFontName='Helvetica-Bold'>"
++($F{MASA_SIASATANBEH} != null ? $F{MASA_SIASATANBEH}:($F{MASA_SIASATAN}!=null?$F{MASA_SIASATAN}:".............................."))
++" "+($F{JENIS_WAKTUBEH} != null ? $F{JENIS_WAKTUBEH}:($F{JENIS_WAKTU}!=null?$F{JENIS_WAKTU}:"..............."))
++"</style> di <style isBold='true' pdfFontName='Helvetica-Bold'>"
 +($F{ALAMAT1} != null ? $F{ALAMAT1}+", ":"..........................................................................................")+($F{ALAMAT2} != null ? $F{ALAMAT2}+", ":"")+($F{ALAMAT3} != null ? $F{ALAMAT3}+", ":"")+($F{POSKOD} != null ? $F{POSKOD}+", ":"")+($F{NAMA_BANDAR} != null ? $F{NAMA_BANDAR}+", ":"")+($F{NAMA_NEGERI} != null ? $F{NAMA_NEGERI}+".":"")+"</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
