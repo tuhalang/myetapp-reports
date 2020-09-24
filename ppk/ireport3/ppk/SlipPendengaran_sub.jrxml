@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="SlipPendengaran_sub"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.zoom" value="1.0" />
+	<property name="ireport.x" value="0" />
+	<property name="ireport.y" value="0" />
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="namaPegawai" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idDaerah" isForPrompting="true" class="java.math.BigDecimal"/>
+	<parameter name="tarikhBicara" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="tarikhBicaraTo" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="id_pegawai" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="daerahMohon" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="tarikh_bicara" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT 
+	--A.PEG_PENGENDALI,
+	A.MASA_BICARA AS MASA_BICARA1,DECODE(SUBSTR(A.MASA_BICARA,1,2),1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,
+    13,1,14,2,15,3,16,4,17,5,18,6,19,7,20,8,21,9,22,10,23,11,24,12) 
+    || ':' 
+    || SUBSTR(A.MASA_BICARA,3,4) 
+    || ' ' 
+    || CASE 
+        WHEN A.JENIS_MASA_BICARA = 1 THEN 'Pagi' 
+        WHEN A.JENIS_MASA_BICARA = 2 THEN 'Tengah Hari' 
+        WHEN A.JENIS_MASA_BICARA = 3 THEN 'Petang' 
+        ELSE ''
+       END  AS MASA_BICARA,    
+    B.NO_FAIL,UPPER(C.NAMA_PEMOHON) AS NAMA_PEMOHON,REPLACE(NVL(TO_CHAR(E.JUMLAH_HTA_TARIKHMOHON,'999,999,999.99'),'0.00'),' ') AS JUMLAH_HTA_TARIKHMOHON,
+    REPLACE(NVL(TO_CHAR(E.JUMLAH_HA_TARIKHMOHON,'999,999,999.99'),'0.00'),' ') AS JUMLAH_HA_TARIKHMOHON,
+    REPLACE(NVL(TO_CHAR(NVL(E.JUMLAH_HTA_TARIKHMOHON,'0.00') + NVL(E.JUMLAH_HA_TARIKHMOHON,'0.00'),'999,999,999.99'),'0.00'),' ') AS JUMLAH_HARTA,    
+    CASE WHEN E.JUMLAH_HARTA_TARIKHMOHON <= 1000 THEN 'RM '||replace(TO_CHAR(10,'999,999,999.99'),' ')
+          WHEN E.JUMLAH_HARTA_TARIKHMOHON BETWEEN 1001 AND 50000 THEN 'RM '||replace(TO_CHAR(30,'999,999,999.99'),' ')
+          WHEN E.JUMLAH_HARTA_TARIKHMOHON >= 50001 THEN 'RM '||replace(to_char((0.2/100)*E.JUMLAH_HARTA_TARIKHMOHON,'999,999,999.99'),' ')
+     END AS JUMLAH_BAYARAN_PERINTAH,    
+ TO_CHAR(A.TARIKH_BICARA, 'DD') AS HARI_BICARA,
+       CASE
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '01' THEN 'Januari'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '02' THEN 'Februari'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '03' THEN 'Mac'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '04' THEN 'April'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '05' THEN 'Mei'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '06' THEN 'Jun'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '07' THEN 'Julai'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '08' THEN 'Ogos'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '09' THEN 'September'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '10' THEN 'Oktober'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '11' THEN 'November'
+       WHEN TO_CHAR (A.TARIKH_BICARA, 'MM') = '12' THEN 'Disember'
+       ELSE 'TIADA'
+       END AS BULAN_BICARA,
+       TO_CHAR(A.TARIKH_BICARA, 'YYYY') AS TAHUN_BICARA,
+        TO_CHAR(A.TARIKH_BICARA,'DD/MM/YYYY') AS TARIKH_BICARA,
+TO_DATE (A.TARIKH_BICARA,'DD/MM/YYYY') AS TARIKH_BICARA_DATE,
+--UU.NAMA_PEGAWAI,
+CASE 
+                --- /* untuk kes s8 */ --- 
+                       
+                WHEN E.seksyen=8 and E.JUMLAH_HARTA_TARIKHMOHON <= 1000 THEN 'RM '||replace(TO_CHAR(ROUND(10,1),'999,999,999.99'),' ')
+                WHEN E.seksyen=8 and E.JUMLAH_HARTA_TARIKHMOHON BETWEEN 1001 AND 50000 THEN 'RM '||replace(TO_CHAR(ROUND(30,1),'999,999,999.99'),' ')
+                WHEN E.seksyen=8 and E.JUMLAH_HARTA_TARIKHMOHON >= 50001 THEN 'RM '||replace(to_char(ROUND((0.2/100)*E.JUMLAH_HARTA_TARIKHMOHON,1),'999,999,999.99'),' ')
+
+                --- /* untuk kes s17 bagi harta tertinggal dan [btl_kuasa_pentadbir or btl_P_amanah sahaja] */---  
+                                
+                WHEN (E.batal_kuasa_pentadbir ='Y' or E.batal_p_amanah ='Y') and E.harta_tinggal = 'Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON <= 1000 THEN 'RM '||replace(TO_CHAR(ROUND(40,1),'999,999,999.99'),' ')
+                WHEN (E.batal_kuasa_pentadbir ='Y' or E.batal_p_amanah ='Y') and E.harta_tinggal = 'Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON BETWEEN 1001 AND 50000 THEN 'RM '||replace(TO_CHAR(ROUND(60,1),'999,999,999.99'),' ')
+                WHEN (E.batal_kuasa_pentadbir ='Y' or E.batal_p_amanah ='Y') and E.harta_tinggal = 'Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON >= 50001 THEN 'RM '|| ROUND((((0.2/100) * E.JUM_HARTA_TAMBAHAN_TKHMOHON) + 30),1)       
+            
+                --- /* untuk kes s17 bagi btl_kuasa_pentadbir or btl_P_amanah sahaja */---
+                        
+                WHEN (E.batal_kuasa_pentadbir ='Y' or E.batal_p_amanah ='Y') and E.harta_tinggal = 'T' THEN 'RM '||replace(TO_CHAR(ROUND(30,1),'999,999,999.99'),' ')
+                WHEN (E.batal_kuasa_pentadbir ='Y' or E.batal_p_amanah ='Y') and E.harta_tinggal is null THEN 'RM '||replace(TO_CHAR(ROUND(30,1),'999,999,999.99'),' ')
+
+                --- /* untuk kes s17 bagi harta tertinggal */---
+  
+                WHEN (E.batal_kuasa_pentadbir ='T' or E.batal_kuasa_pentadbir is null) and E.harta_tinggal ='Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON <= 1000 THEN 'RM '||replace(TO_CHAR(ROUND(10,1),'999,999,999.99'),' ')
+                WHEN (E.batal_kuasa_pentadbir ='T' or E.batal_kuasa_pentadbir is null) and E.harta_tinggal ='Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON BETWEEN 1001 AND 50000 THEN 'RM '||replace(TO_CHAR(ROUND(30,1),'999,999,999.99'),' ')
+                WHEN (E.batal_kuasa_pentadbir ='T' or E.batal_kuasa_pentadbir is null) and E.harta_tinggal ='Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON >= 50001 THEN 'RM '||replace(to_char(ROUND((0.2/100)*E.JUM_HARTA_TAMBAHAN_TKHMOHON,1),'999,999,999.99'),' ')
+                WHEN (E.batal_p_amanah ='T' or E.batal_p_amanah is null) and E.harta_tinggal ='Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON <= 1000 THEN 'RM '||replace(TO_CHAR(ROUND(10,1),'999,999,999.99'),' ')
+                WHEN (E.batal_p_amanah ='T' or E.batal_p_amanah is null) and E.harta_tinggal ='Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON BETWEEN 1001 AND 50000 THEN 'RM '||replace(TO_CHAR(ROUND(30,1),'999,999,999.99'),' ')
+                WHEN (E.batal_p_amanah ='T' or E.batal_p_amanah is null) and E.harta_tinggal ='Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON >= 50001 THEN 'RM '||replace(to_char(ROUND((0.2/100)*E.JUM_HARTA_TAMBAHAN_TKHMOHON,1),'999,999,999.99'),' ')
+            END AS BAYARAN_PERINTAH
+FROM TBLPPKPERBICARAAN A,
+TBLPFDFAIL B,
+TBLPPKPEMOHON C,
+TBLPPKKEPUTUSANPERMOHONAN D,
+TBLPPKPERMOHONAN E,TBLPPKRUJUNIT UU
+WHERE B.ID_FAIL = E.ID_FAIL AND UU.ID_UNITPSK = A.ID_UNITPSK 
+AND E.ID_PERMOHONAN = D.ID_PERMOHONAN
+AND D.ID_KEPUTUSANPERMOHONAN = A.ID_KEPUTUSANPERMOHONAN
+AND C.ID_PEMOHON = E.ID_PEMOHON
+AND TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy') = '$P!{tarikh_bicara}'
+--AND TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy') = '03/05/2016'
+--AND TO_DATE(TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy'),'dd/MM/yyyy')  BETWEEN TO_DATE('$P!{tarikhBicara}' , 'dd/MM/yyyy') AND TO_DATE('$P!{tarikhBicaraTo}' , 'dd/MM/yyyy') 
+AND (
+    --('$P!{id_pegawai}' != '000'  AND 
+    UPPER(A.PEG_PENGENDALI) IN (
+        SELECT UPPER(NAMA_PEGAWAI) FROM TBLPPKRUJUNIT WHERE ID_UNITPSK = '$P!{id_pegawai}'
+        --SELECT UPPER(NAMA_PEGAWAI) FROM TBLPPKRUJUNIT WHERE ID_UNITPSK = '1610224'
+        )
+  -- )
+--OR ('$P!{id_pegawai}' = '000')
+)
+AND E.ID_DAERAHMHN = $P!{idDaerah}
+--AND E.ID_DAERAHMHN = 121
+--AND TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy') = '$P!{tarikh_bicara}'
+ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
+
+	<field name="MASA_BICARA1" class="java.lang.String"/>
+	<field name="MASA_BICARA" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="JUMLAH_HTA_TARIKHMOHON" class="java.lang.String"/>
+	<field name="JUMLAH_HA_TARIKHMOHON" class="java.lang.String"/>
+	<field name="JUMLAH_HARTA" class="java.lang.String"/>
+	<field name="JUMLAH_BAYARAN_PERINTAH" class="java.lang.String"/>
+	<field name="HARI_BICARA" class="java.lang.String"/>
+	<field name="BULAN_BICARA" class="java.lang.String"/>
+	<field name="TAHUN_BICARA" class="java.lang.String"/>
+	<field name="TARIKH_BICARA" class="java.lang.String"/>
+	<field name="TARIKH_BICARA_DATE" class="java.sql.Timestamp"/>
+	<field name="BAYARAN_PERINTAH" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="33"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						mode="Transparent"
+						x="1"
+						y="5"
+						width="555"
+						height="28"
+						key="rectangle-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="1"
+						y="5"
+						width="34"
+						height="28"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BIL]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="36"
+						y="5"
+						width="1"
+						height="28"
+						key="line-13"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="35"
+						y="5"
+						width="64"
+						height="28"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[MASA]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="99"
+						y="5"
+						width="1"
+						height="28"
+						key="line-14"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="99"
+						y="5"
+						width="165"
+						height="28"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[NO. FAIL / PEMOHON]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="263"
+						y="5"
+						width="1"
+						height="28"
+						key="line-15"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="264"
+						y="5"
+						width="122"
+						height="28"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[NILAIAN HARTA (RM)]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="386"
+						y="5"
+						width="1"
+						height="28"
+						key="line-16"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="444"
+						y="5"
+						width="46"
+						height="28"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[STATUS]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="490"
+						y="5"
+						width="1"
+						height="28"
+						key="line-17"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="490"
+						y="5"
+						width="66"
+						height="28"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BAYARAN PERINTAH]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="444"
+						y="5"
+						width="1"
+						height="28"
+						key="line-19"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="386"
+						y="5"
+						width="58"
+						height="28"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[DUE DATE KPI]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="52"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						mode="Transparent"
+						x="1"
+						y="0"
+						width="555"
+						height="52"
+						key="rectangle-2"
+						stretchType="RelativeToBandHeight"/>
+					<graphicElement stretchType="RelativeToBandHeight"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="2"
+						width="40"
+						height="26"
+						key="textField-3"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$V{REPORT_COUNT}+"."]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="36"
+						y="0"
+						width="1"
+						height="52"
+						key="line-6"
+						stretchType="RelativeToBandHeight"/>
+					<graphicElement stretchType="RelativeToBandHeight"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="40"
+						y="2"
+						width="54"
+						height="26"
+						key="textField-4"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MASA_BICARA}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="99"
+						y="0"
+						width="1"
+						height="52"
+						key="line-7"
+						stretchType="RelativeToBandHeight"/>
+					<graphicElement stretchType="RelativeToBandHeight"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="101"
+						y="2"
+						width="165"
+						height="26"
+						key="textField-5"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NO_FAIL}
++"\n"+$F{NAMA_PEMOHON}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="263"
+						y="0"
+						width="1"
+						height="52"
+						key="line-8"
+						stretchType="RelativeToBandHeight"/>
+					<graphicElement stretchType="RelativeToBandHeight"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="2"
+						width="28"
+						height="15"
+						key="textField-6"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["HTA"]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="385"
+						y="0"
+						width="1"
+						height="52"
+						key="line-9"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="18"
+						width="28"
+						height="15"
+						key="textField-10"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["HA"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="34"
+						width="46"
+						height="15"
+						key="textField-11"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["JUMLAH"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="3"
+						width="66"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{JUMLAH_HTA_TARIKHMOHON}+" "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="19"
+						width="65"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{JUMLAH_HA_TARIKHMOHON}+" "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="35"
+						width="65"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{JUMLAH_HARTA}+" "]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="490"
+						y="0"
+						width="1"
+						height="52"
+						key="line-12"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="490"
+						y="3"
+						width="64"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{BAYARAN_PERINTAH}!=null?$F{BAYARAN_PERINTAH}:"0.00")+" "]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="444"
+						y="0"
+						width="1"
+						height="52"
+						key="line-18"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="386"
+						y="3"
+						width="57"
+						height="15"
+						key="textField-12"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

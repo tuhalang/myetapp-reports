@@ -35,25 +35,56 @@
 	<parameter name="BULANTAHUN" isForPrompting="false" class="java.lang.String"/>
 	<parameter name="ID" isForPrompting="true" class="java.lang.String"/>
 	<queryString><![CDATA[SELECT DISTINCT R.NO_FAIL,Y.NAMA_SIMATI,Z.NAMA_PEMOHON,TO_CHAR(S.TARIKH_MOHON,'dd/mm/yyyy') TARIKH_MOHON,
---TO_CHAR((S.TARIKH_MOHON + 165),'dd/mm/yyyy') TARIKH_SASARAN165,
---
-TO_CHAR((S.TARIKH_MOHON + 135),'dd/mm/yyyy') TARIKH_SASARAN135,
---TO_CHAR((S.TARIKH_MOHON + 90),'dd/mm/yyyy') TARIKH_SASARAN90,
-S.ID_NEGERIMHN,S.ID_DAERAHMHN
-, NVL(TO_CHAR((SELECT DISTINCT MAX(K.TARIKH_MASUK) FROM TBLRUJSUBURUSANSTATUSFAIL K
+CASE 
+WHEN TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2016' AND (TO_CHAR(S.TARIKH_MOHON,'mm') = '09' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '11' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '12' OR TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2017')
+THEN
+120
+ELSE
+135
+END
+AS JUMLAH_HARI_KPI,
+CASE 
+    WHEN ((TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2016' AND (TO_CHAR(S.TARIKH_MOHON,'mm') = '09' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '11' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '12' OR TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2017')) AND (TO_CHAR((S.TARIKH_MOHON + 120),'mm/dd/yyyy') > TO_CHAR(sysDATE,'mm/dd/yyyy'))) OR ((TO_CHAR(S.TARIKH_MOHON,'yyyy') < '2018' AND (TO_CHAR(S.TARIKH_MOHON,'mm') <> '09' OR TO_CHAR(S.TARIKH_MOHON,'mm') <> '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') <> '11' OR TO_CHAR(S.TARIKH_MOHON,'mm') <> '12' OR TO_CHAR(S.TARIKH_MOHON,'yyyy') < '2017')) AND (TO_CHAR((S.TARIKH_MOHON + 135),'mm/dd/yyyy') > TO_CHAR(sysDATE,'mm/dd/yyyy')))
+    THEN 1
+    ELSE
+    0
+END
+AS COLOR,
+CASE 
+WHEN TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2016' AND (TO_CHAR(S.TARIKH_MOHON,'mm') = '09' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '11' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '12' OR TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2017')
+THEN
+TO_CHAR((S.TARIKH_MOHON + 120),'dd/mm/yyyy') 
+ELSE
+TO_CHAR((S.TARIKH_MOHON + 135),'dd/mm/yyyy') 
+END
+AS TARIKH_SASARAN165,
+CASE 
+WHEN TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2016' AND (TO_CHAR(S.TARIKH_MOHON,'mm') = '09' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '11' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '12' OR TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2017')
+THEN
+TO_CHAR((S.TARIKH_MOHON + 120),'dd/mm/yyyy') 
+ELSE
+TO_CHAR((S.TARIKH_MOHON + 135),'dd/mm/yyyy') 
+END AS TARIKH_SASARAN135,
+CASE 
+WHEN TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2016' AND (TO_CHAR(S.TARIKH_MOHON,'mm') = '09' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '11' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '12' OR TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2017')
+THEN
+TO_CHAR((S.TARIKH_MOHON + 120),'dd/mm/yyyy') 
+ELSE
+TO_CHAR((S.TARIKH_MOHON + 135),'dd/mm/yyyy') 
+END AS TARIKH_SASARAN90,
+(    SELECT COUNT(*) FROM TBLPPKPERMOHONAN A
+     WHERE A.NO_PERMOHONAN_ONLINE IS NOT NULL
+     AND A.ID_PERMOHONAN = S.ID_PERMOHONAN
+     ) AS JUMLAH_PERMOHONAN_ONLINE,
+NO_PERMOHONAN_ONLINE,
+S.ID_NEGERIMHN,S.ID_DAERAHMHN, 
+NVL(TO_CHAR((SELECT DISTINCT MAX(K.TARIKH_MASUK) FROM TBLRUJSUBURUSANSTATUSFAIL K
     WHERE K.ID_PERMOHONAN = S.ID_PERMOHONAN
-    AND K.ID_FAIL =  S.ID_FAIL
     AND K.AKTIF = 1
     AND K.ID_SUBURUSANSTATUS IN (
-        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS 
-        -- 21 SELESAI
-        -- 25 PERMOHONAN SELESAI
-        -- 47 BATAL 
-        -- 50 PINDAH MAHKAMAH TINGGI
-        -- 70 BATAL LAIN-LAIN KES
-        -- 152 PERMOHONAN DIBATALKAN (TELAH ADA PERMOHONAN AWAL)
-        -- 169 BATAL (PINDAH PTG/KPTG)
-        WHERE ID_STATUS IN(21,25,47,50,70,152,169 )
+       --358,398,273,425,429,533,534
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152,50)
     )
 ),'dd/mm/yyyy'),'0') TARIKH_SELESAI,
 NVL(TO_CHAR((
@@ -63,77 +94,143 @@ AND PKP.ID_KEPUTUSANPERMOHONAN=KP.ID_KEPUTUSANPERMOHONAN
 AND K.FLAG_JENIS_KEPUTUSAN IN ('0','2')
 AND KP.ID_PERMOHONAN=S.ID_PERMOHONAN
 ),'dd/mm/yyyy'),'') TARIKH_BICARASELESAI,
+CASE 
+WHEN TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2016' AND (TO_CHAR(S.TARIKH_MOHON,'mm') = '09' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '11' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '12' OR TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2017')
+THEN
 TO_CHAR(CASE 
 WHEN 
     (SELECT DISTINCT MAX(TO_DATE(K.TARIKH_MASUK,'dd/mm/yyyy')) FROM TBLRUJSUBURUSANSTATUSFAIL K
     WHERE K.ID_PERMOHONAN=S.ID_PERMOHONAN
-    AND K.ID_FAIL =  S.ID_FAIL
     AND K.AKTIF = 1
     AND K.ID_SUBURUSANSTATUS IN (
         --358,398,273,425,429,533,534
-            SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS 
-            WHERE ID_STATUS IN(21,25,47,50,70,152,169 )
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152)
         )
     ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy') = 0 
     THEN 0
 WHEN
 (SELECT DISTINCT MAX(TO_DATE(K.TARIKH_MASUK,'dd/mm/yyyy')) FROM TBLRUJSUBURUSANSTATUSFAIL K
     WHERE K.ID_PERMOHONAN=S.ID_PERMOHONAN
-    AND K.ID_FAIL =  S.ID_FAIL
     AND K.AKTIF = 1
     AND K.ID_SUBURUSANSTATUS IN (
         --358,398,273,425,429,533,534
-            SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS 
-            WHERE ID_STATUS IN(21,25,47,50,70,152,169 )
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152)
         )    
-    ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy') > 91 AND
+    ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy') > 0 AND
 (SELECT DISTINCT MAX(TO_DATE(K.TARIKH_MASUK,'dd/mm/yyyy')) FROM TBLRUJSUBURUSANSTATUSFAIL K
     WHERE K.ID_PERMOHONAN=S.ID_PERMOHONAN
-    AND K.ID_FAIL =  S.ID_FAIL
     AND K.AKTIF = 1
     AND K.ID_SUBURUSANSTATUS IN (
         --358,398,273,425,429,533,534
-            SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS 
-            WHERE ID_STATUS IN(21,25,47,50,70,152,169 )
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152)
+        )
+    ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy') <= 120
+THEN
+(SELECT DISTINCT MAX(TO_DATE(K.TARIKH_MASUK,'dd/mm/yyyy')) FROM TBLRUJSUBURUSANSTATUSFAIL K
+    WHERE K.ID_PERMOHONAN=S.ID_PERMOHONAN
+    AND K.AKTIF = 1
+    AND K.ID_SUBURUSANSTATUS IN (
+        --358,398,273,425,429,533,534
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152)
+        )
+    ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy')
+ELSE 0
+ END,'999') 
+ELSE
+    TO_CHAR(CASE 
+WHEN 
+    (SELECT DISTINCT MAX(TO_DATE(K.TARIKH_MASUK,'dd/mm/yyyy')) FROM TBLRUJSUBURUSANSTATUSFAIL K
+    WHERE K.ID_PERMOHONAN=S.ID_PERMOHONAN
+    AND K.AKTIF = 1
+    AND K.ID_SUBURUSANSTATUS IN (
+        --358,398,273,425,429,533,534
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152)
+        )
+    ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy') = 0 
+    THEN 0
+WHEN
+(SELECT DISTINCT MAX(TO_DATE(K.TARIKH_MASUK,'dd/mm/yyyy')) FROM TBLRUJSUBURUSANSTATUSFAIL K
+    WHERE K.ID_PERMOHONAN=S.ID_PERMOHONAN
+    AND K.AKTIF = 1
+    AND K.ID_SUBURUSANSTATUS IN (
+        --358,398,273,425,429,533,534
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152)
+        )    
+    ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy') > 0 AND
+(SELECT DISTINCT MAX(TO_DATE(K.TARIKH_MASUK,'dd/mm/yyyy')) FROM TBLRUJSUBURUSANSTATUSFAIL K
+    WHERE K.ID_PERMOHONAN=S.ID_PERMOHONAN
+    AND K.AKTIF = 1
+    AND K.ID_SUBURUSANSTATUS IN (
+        --358,398,273,425,429,533,534
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152)
         )
     ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy') <= 135
 THEN
 (SELECT DISTINCT MAX(TO_DATE(K.TARIKH_MASUK,'dd/mm/yyyy')) FROM TBLRUJSUBURUSANSTATUSFAIL K
     WHERE K.ID_PERMOHONAN=S.ID_PERMOHONAN
-    AND K.ID_FAIL =  S.ID_FAIL
     AND K.AKTIF = 1
     AND K.ID_SUBURUSANSTATUS IN (
         --358,398,273,425,429,533,534
-                SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS 
-            WHERE ID_STATUS IN(21,25,47,50,70,152,169 )
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152)
         )
     ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy')
 ELSE 0
- END,'999') AS TEMPOH_SELESAI_135,
+ END,'999') 
+END 
+AS TEMPOH_SELESAI_135,
 TO_CHAR((SELECT DISTINCT MAX(TO_DATE(K.TARIKH_MASUK,'dd/mm/yyyy')) FROM TBLRUJSUBURUSANSTATUSFAIL K
     WHERE K.ID_PERMOHONAN=S.ID_PERMOHONAN
-    AND K.ID_FAIL =  S.ID_FAIL
     AND K.AKTIF = 1
     AND K.ID_SUBURUSANSTATUS IN (
-            --358,398,273,425,429,533,534
-            SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS 
-            WHERE ID_STATUS IN(21,25,47,50,70,152,169 )
+        --358,398,273,425,429,533,534
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(
+        21,25,47,70,169,152,50)
         )
     ) - TO_DATE(S.TARIKH_MOHON,'dd/mm/yyyy')
  ,'999') AS TEMPOH_SELESAI
-,(    SELECT COUNT(*) FROM TBLPPKPERMOHONAN A, TBLRUJSUBURUSANSTATUSFAIL B
+,
+CASE 
+WHEN TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2016' AND (TO_CHAR(S.TARIKH_MOHON,'mm') = '09' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '10' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '11' OR TO_CHAR(S.TARIKH_MOHON,'mm') = '12' OR TO_CHAR(S.TARIKH_MOHON,'yyyy') > '2017')
+THEN
+(    SELECT COUNT(*) FROM TBLPPKPERMOHONAN A, TBLRUJSUBURUSANSTATUSFAIL B
      WHERE A.ID_PERMOHONAN = B.ID_PERMOHONAN(+)
-        AND A.ID_FAIL =  B.ID_FAIL
-        AND A.ID_PERMOHONAN = S.ID_PERMOHONAN
-        AND B.ID_SUBURUSANSTATUS IN (
-            --358,398,273,425,429,533,534
-            SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS 
-            WHERE ID_STATUS IN(21,25,47,50,70,152,169 )
+     AND A.ID_PERMOHONAN = S.ID_PERMOHONAN
+     AND B.ID_SUBURUSANSTATUS IN (
+        --358,398,273,425,429,533,534
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(21,47,70,169,152,50 )
         )
     AND B.AKTIF = 1
-     AND (B.TARIKH_MASUK - A.TARIKH_MOHON) BETWEEN 91 AND  135) AS JUMLAH_SELESAI_135HARI
- , RS.CATATAN
---,RPJ.NAMA_PEJABAT
+     AND (B.TARIKH_MASUK - A.TARIKH_MOHON) BETWEEN 0 AND  121) 
+ELSE
+(    SELECT COUNT(*) FROM TBLPPKPERMOHONAN A, TBLRUJSUBURUSANSTATUSFAIL B
+     WHERE A.ID_PERMOHONAN = B.ID_PERMOHONAN(+)
+     AND A.ID_PERMOHONAN = S.ID_PERMOHONAN
+     AND B.ID_SUBURUSANSTATUS IN (
+        --358,398,273,425,429,533,534
+        SELECT ID_SUBURUSANSTATUS FROM TBLRUJSUBURUSANSTATUS WHERE ID_STATUS IN(21,47,70,169,152,50 )
+        )
+    AND B.AKTIF = 1
+     AND (B.TARIKH_MASUK - A.TARIKH_MOHON) BETWEEN 0 AND  136)
+END
+AS JUMLAH_SELESAI_135HARI,
+ UPPER(ST.KETERANGAN) AS CATATAN,
+(SELECT DISTINCT RUW.NAMA_PEGAWAI FROM TBLPPKRUJUNIT RUW, TBLPPKPERINTAH VW WHERE VW.ID_PERINTAH = (
+     (SELECT MAX(VX.ID_PERINTAH) FROM TBLPPKRUJUNIT RUX, TBLPPKPERINTAH VX WHERE VX.ID_PERBICARAAN = 
+(SELECT MAX(CX.ID_PERBICARAAN) FROM  TBLPPKPERMOHONAN AX, TBLPPKKEPUTUSANPERMOHONAN BX, TBLPPKPERBICARAAN CX WHERE
+ AX.ID_PERMOHONAN = BX.ID_PERMOHONAN
+ AND BX.ID_KEPUTUSANPERMOHONAN = CX.ID_KEPUTUSANPERMOHONAN
+ AND AX.ID_PERMOHONAN = S.ID_PERMOHONAN
+ )
+AND VX.ID_UNITPSK = RUX.ID_UNITPSK )) AND VW.ID_UNITPSK = RUW.ID_UNITPSK) AS PEGAWAI,
+RPJ.NAMA_PEJABAT
 FROM
 TBLPFDFAIL R, 
 TBLPPKPERMOHONAN S, 
@@ -145,47 +242,45 @@ TBLPPKPERMOHONANSIMATI X,
 TBLPPKSIMATI Y,
 TBLPPKPEMOHON Z,
 TBLRUJPEJABATURUSAN RPU,
-TBLRUJPEJABATJKPTG RPJ
-,(SELECT RS.KETERANGAN CATATAN,RSUS.ID_SUBURUSANSTATUS 
-    FROM TBLRUJSUBURUSANSTATUS RSUS,TBLRUJSTATUS RS
-    WHERE RS.ID_STATUS=RSUS.ID_STATUS 
-) RS
-WHERE R.ID_FAIL = S.ID_FAIL
+TBLRUJPEJABATJKPTG RPJ,
+TBLRUJSTATUS ST,
+TBLPPKRUJUNIT RU
+WHERE 
+R.ID_FAIL = S.ID_FAIL
 AND S.ID_PERMOHONAN = T.ID_PERMOHONAN(+)
 AND T.ID_KEPUTUSANPERMOHONAN = U.ID_KEPUTUSANPERMOHONAN(+)
 AND U.ID_PERBICARAAN = V.ID_PERBICARAAN(+)
+AND ST.ID_STATUS(+) = S.ID_STATUS
 AND W.ID_PERMOHONAN = S.ID_PERMOHONAN
-AND W.ID_FAIL = S.ID_FAIL
 AND X.ID_PERMOHONAN = S.ID_PERMOHONAN
 AND X.ID_SIMATI = Y.ID_SIMATI
 AND Z.ID_PEMOHON = S.ID_PEMOHON
-AND W.ID_SUBURUSANSTATUS = RS.ID_SUBURUSANSTATUS
---AND R.ID_SUBURUSAN = 59
---
 AND R.ID_SUBURUSAN = $P!{ID_SUBURUSAN}
 AND S.ID_STATUS <> 999
 AND W.AKTIF = 1
 AND RPU.ID_DAERAHURUS=S.ID_DAERAHMHN
 AND RPU.ID_PEJABATJKPTG = RPJ.ID_PEJABATJKPTG
+AND V.ID_UNITPSK = RU.ID_UNITPSK(+)
 AND RPJ.ID_JENISPEJABAT=22
+AND RPJ.ID_JENISPEJABAT=RPU.ID_JENISPEJABAT
 AND RPJ.ID_SEKSYEN=2
---AND S.ID_DAERAHMHN = 1616164
---
 AND S.ID_DAERAHMHN = $P!{ID}
---AND TO_CHAR(S.TARIKH_MOHON,'mm') = '05'
---
 AND TO_CHAR(S.TARIKH_MOHON,'mm') = '$P!{BULAN}'
---AND TO_CHAR(S.TARIKH_MOHON,'yyyy') = '2017'
---
 AND TO_CHAR(S.TARIKH_MOHON,'yyyy') = '$P!{TAHUN}'
---and  R.NO_FAIL = 'JKPTG/PK/08/18/0076/2017'
+AND S.TARIKH_MOHON IS NOT NULL
 ORDER BY R.NO_FAIL]]></queryString>
 
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="NAMA_SIMATI" class="java.lang.String"/>
 	<field name="NAMA_PEMOHON" class="java.lang.String"/>
 	<field name="TARIKH_MOHON" class="java.lang.String"/>
+	<field name="JUMLAH_HARI_KPI" class="java.math.BigDecimal"/>
+	<field name="COLOR" class="java.math.BigDecimal"/>
+	<field name="TARIKH_SASARAN165" class="java.lang.String"/>
 	<field name="TARIKH_SASARAN135" class="java.lang.String"/>
+	<field name="TARIKH_SASARAN90" class="java.lang.String"/>
+	<field name="JUMLAH_PERMOHONAN_ONLINE" class="java.math.BigDecimal"/>
+	<field name="NO_PERMOHONAN_ONLINE" class="java.lang.String"/>
 	<field name="ID_NEGERIMHN" class="java.math.BigDecimal"/>
 	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
 	<field name="TARIKH_SELESAI" class="java.lang.String"/>
@@ -194,9 +289,17 @@ ORDER BY R.NO_FAIL]]></queryString>
 	<field name="TEMPOH_SELESAI" class="java.lang.String"/>
 	<field name="JUMLAH_SELESAI_135HARI" class="java.math.BigDecimal"/>
 	<field name="CATATAN" class="java.lang.String"/>
+	<field name="PEGAWAI" class="java.lang.String"/>
+	<field name="NAMA_PEJABAT" class="java.lang.String"/>
 
 	<variable name="total_135hari" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
 		<variableExpression><![CDATA[$F{JUMLAH_SELESAI_135HARI}]]></variableExpression>
+	</variable>
+	<variable name="total_permohonan_online" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{JUMLAH_PERMOHONAN_ONLINE}]]></variableExpression>
+	</variable>
+	<variable name="hari_kpi" class="java.math.BigDecimal" resetType="Report" calculation="Highest">
+		<variableExpression><![CDATA[$F{JUMLAH_HARI_KPI}]]></variableExpression>
 	</variable>
 		<background>
 			<band height="0"  isSplitAllowed="true" >
@@ -213,7 +316,7 @@ ORDER BY R.NO_FAIL]]></queryString>
 						mode="Opaque"
 						x="0"
 						y="0"
-						width="15"
+						width="20"
 						height="50"
 						backcolor="#CCCCCC"
 						key="staticText-1"/>
@@ -231,9 +334,9 @@ ORDER BY R.NO_FAIL]]></queryString>
 				<staticText>
 					<reportElement
 						mode="Opaque"
-						x="15"
+						x="20"
 						y="0"
-						width="130"
+						width="125"
 						height="50"
 						backcolor="#CCCCCC"
 						key="staticText-2"/>
@@ -458,7 +561,7 @@ SELESAI
 SELESAI
 ]]></text>
 				</staticText>
-				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Auto" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						mode="Opaque"
 						x="584"
@@ -473,7 +576,7 @@ SELESAI
 					<textElement textAlignment="Center" verticalAlignment="Top">
 						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["135 HARI"]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$V{hari_kpi} + " HARI"]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement
@@ -524,11 +627,24 @@ SELESAI
 		</columnHeader>
 		<detail>
 			<band height="24"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="0"
+						y="0"
+						width="782"
+						height="24"
+						backcolor="#FFCCCC"
+						key="rectangle-1"
+						isRemoveLineWhenBlank="true">
+							<printWhenExpression><![CDATA[new Boolean ($F{JUMLAH_SELESAI_135HARI}.intValue() < 1 || $F{COLOR}.intValue() == 0 )]]></printWhenExpression>
+						</reportElement>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
 						y="0"
-						width="15"
+						width="20"
 						height="24"
 						key="textField-4"
 						stretchType="RelativeToBandHeight"/>
@@ -538,17 +654,17 @@ SELESAI
 					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
 					<rightPen lineWidth="0.25" lineStyle="Solid"/>
 </box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
 						<font fontName="Arial" size="8"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA[$V{REPORT_COUNT}+" "]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="15"
+						x="20"
 						y="0"
-						width="130"
-						height="24"
+						width="125"
+						height="13"
 						key="textField-5"
 						stretchType="RelativeToBandHeight"/>
 					<box leftPadding="1" rightPadding="1">					<pen lineWidth="0.25" lineStyle="Solid"/>
@@ -614,10 +730,10 @@ SELESAI
 					<bottomPen lineWidth="0.25"/>
 					<rightPen lineWidth="0.25"/>
 </box>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
+					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="8"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[" "+$F{TARIKH_MOHON}]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{TARIKH_MOHON}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -652,10 +768,10 @@ SELESAI
 					<bottomPen lineWidth="0.25"/>
 					<rightPen lineWidth="0.25"/>
 </box>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
+					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="8"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BICARASELESAI}.equals("0")?"":" "+$F{TARIKH_BICARASELESAI})]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_BICARASELESAI}.equals("0")?"":$F{TARIKH_BICARASELESAI})]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -674,7 +790,7 @@ SELESAI
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="8"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_SELESAI}.equals("0")?"":" "+$F{TARIKH_SELESAI})]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_SELESAI}.equals("0")?"":$F{TARIKH_SELESAI})]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -714,6 +830,43 @@ SELESAI
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CATATAN}]]></textFieldExpression>
 				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="20"
+						y="13"
+						width="125"
+						height="11"
+						backcolor="#FFFFCC"
+						key="textField-20"
+						stretchType="RelativeToBandHeight"/>
+					<box>					<pen lineWidth="0.25" lineStyle="Solid"/>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="5"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PEGAWAI}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="20"
+						height="13"
+						key="textField-23"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean ($F{NO_PERMOHONAN_ONLINE}!=null)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["*"]]></textFieldExpression>
+				</textField>
 			</band>
 		</detail>
 		<columnFooter>
@@ -725,11 +878,11 @@ SELESAI
 			</band>
 		</pageFooter>
 		<summary>
-			<band height="43"  isSplitAllowed="true" >
+			<band height="64"  isSplitAllowed="true" >
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="11"
+						y="5"
 						width="333"
 						height="22"
 						key="textField-18"
@@ -738,16 +891,84 @@ SELESAI
 					<textElement>
 						<font size="12"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["Jumlah Kes Selesai Mengikut KPI (135 hari): "+$V{total_135hari}+" ("+Math.round(($V{total_135hari}.floatValue() * 100)  / $V{REPORT_COUNT}.floatValue())+"%)"]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Jumlah Kes Selesai Mengikut KPI ("+$V{hari_kpi}+" hari): "+$V{total_135hari}+" ("+Math.round(($V{total_135hari}.floatValue() * 100)  / $V{REPORT_COUNT}.floatValue())+"%)"]]></textFieldExpression>
 				</textField>
-				<break>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="37"
-						width="782"
+						y="29"
+						width="333"
+						height="16"
+						key="textField-21"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Petunjuk : "]]></textFieldExpression>
+				</textField>
+				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="69"
+						y="32"
+						width="0"
 						height="0"
-						key="element-1"/>
-				</break>
+						key="image-1"/>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[]]></imageExpression>
+				</image>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="14"
+						y="41"
+						width="333"
+						height="10"
+						key="textField-22"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[" *   - Permohonan Online "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="17"
+						width="333"
+						height="22"
+						key="textField-24"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Jumlah Permohonan Online: "+$V{total_permohonan_online}]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="15"
+						y="54"
+						width="12"
+						height="6"
+						backcolor="#FFCCCC"
+						key="rectangle-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="35"
+						y="50"
+						width="229"
+						height="14"
+						key="staticText-30"/>
+					<box></box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Permohonan tidak selesai dalam tempoh KPI]]></text>
+				</staticText>
 			</band>
 		</summary>
 		<noData>
@@ -1017,7 +1238,7 @@ SELESAI
 					<textElement textAlignment="Center" verticalAlignment="Top">
 						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["135 HARI"]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA["120 HARI"]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement
@@ -1078,14 +1299,6 @@ SELESAI
 					</textElement>
 				<text><![CDATA[Tiada Rekod]]></text>
 				</staticText>
-				<break>
-					<reportElement
-						x="0"
-						y="91"
-						width="782"
-						height="0"
-						key="element-2"/>
-				</break>
 			</band>
 		</noData>
 </jasperReport>
