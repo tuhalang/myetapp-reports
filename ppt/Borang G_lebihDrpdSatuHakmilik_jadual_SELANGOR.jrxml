@@ -29,11 +29,30 @@
 '(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', ' (\2)')),'\((.*?)\)',1,1,null,1))))
 as nama_mukim,
 initcap(D.NAMA_DAERAH) as nama_daerah,
-f.no_fail,b.tujuan
+f.no_fail,b.tujuan,
+TO_CHAR(GG.TARIKH_BORANGG,'DD') AS HARI,
+    CASE
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='01' THEN 'Januari'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='02' THEN 'Februari'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='03' THEN 'Mac'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='04' THEN 'April'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='05' THEN 'Mei'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='06' THEN 'Jun'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='07' THEN 'Julai'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='08' THEN 'Ogos'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='09' THEN 'September'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='10' THEN 'Oktober'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='11' THEN 'November'
+        WHEN TO_CHAR(GG.TARIKH_BORANGG,'MM')='12' THEN 'Disember'
+    END AS BULAN,
+    TO_CHAR(GG.TARIKH_BORANGG,'YYYY') AS TAHUN
 from tblpfdfail f , TBLPPTPERMOHONAN B, TBLPPTHAKMILIK C, TBLRUJMUKIM M,TBLRUJDAERAH D
+, tblpptsiasatan h, tblpptborangg gg
 where C.id_hakmilik = $P!{id_hakmilik}
 AND F.ID_FAIL = B.ID_FAIL
 AND B.ID_PERMOHONAN = C.ID_PERMOHONAN
+AND H.ID_SIASATAN = GG.ID_SIASATAN(+)
+ AND C.ID_HAKMILIK = H.ID_HAKMILIK(+)
 AND C.ID_MUKIM = M.ID_MUKIM
 AND B.ID_DAERAH = D.ID_DAERAH
 AND C.ID_HAKMILIK IN (SELECT DISTINCT HHM.ID_HAKMILIK
@@ -56,6 +75,9 @@ AND C.ID_HAKMILIK IN (SELECT DISTINCT HHM.ID_HAKMILIK
 	<field name="NAMA_DAERAH" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="HARI" class="java.lang.String"/>
+	<field name="BULAN" class="java.lang.String"/>
+	<field name="TAHUN" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -69,7 +91,7 @@ AND C.ID_HAKMILIK IN (SELECT DISTINCT HHM.ID_HAKMILIK
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="107" splitType="Stretch">
+		<band height="128" splitType="Stretch">
 			<rectangle>
 				<reportElement uuid="4bcbacc1-be36-4105-bbc8-1e56c677dce8" key="rectangle-1" positionType="Float" mode="Transparent" x="0" y="0" width="48" height="48" isPrintWhenDetailOverflows="true"/>
 			</rectangle>
@@ -197,7 +219,7 @@ AND C.ID_HAKMILIK IN (SELECT DISTINCT HHM.ID_HAKMILIK
 				<textElement textAlignment="Center" verticalAlignment="Top">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 				</textElement>
-				<textFieldExpression><![CDATA["No. Hakmilik"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["*No. Hakmilik"]]></textFieldExpression>
 			</textField>
 			<rectangle>
 				<reportElement uuid="2939decf-77ad-4a12-a8c3-895ea9df8967" key="rectangle-4" positionType="Float" mode="Transparent" x="48" y="0" width="54" height="48" isPrintWhenDetailOverflows="true"/>
@@ -206,17 +228,27 @@ AND C.ID_HAKMILIK IN (SELECT DISTINCT HHM.ID_HAKMILIK
 				<reportElement uuid="59ba3590-6be5-4764-b7c9-8a3aa7ae262e" key="textField-32" positionType="Float" x="2" y="77" width="451" height="15" isPrintWhenDetailOverflows="true"/>
 				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["*Untuk dilengkapkan jika perlu"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["*Untuk dilengkapkan jika perlu\n\n"
++"Bertarikh pada "
++($F{HARI}!=null ? $F{HARI} : "..........")+" haribulan "
++($F{BULAN}!=null ? $F{BULAN} : "................")+", "
++($F{TAHUN} != null ? $F{TAHUN} : "20......")
++"\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="e2663838-d7e4-44b8-97a7-72a9686433ac" key="textField-30" positionType="Float" x="336" y="92" width="179" height="15" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="e2663838-d7e4-44b8-97a7-72a9686433ac" key="textField-30" positionType="Float" x="336" y="113" width="179" height="15" isPrintWhenDetailOverflows="true"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n\n........................................."
+				<textFieldExpression><![CDATA["........................................."
 +"\n<style isItalic='true'>Pentadbir Tanah</style>"]]></textFieldExpression>
 			</textField>
+			<image scaleImage="FillFrame" vAlign="Middle">
+				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="379" y="93" width="106" height="26"/>
+				<imageExpression><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+			</image>
 		</band>
 	</detail>
 	<summary>
