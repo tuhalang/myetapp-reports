@@ -35,6 +35,7 @@
 	<parameter name="idborang" isForPrompting="true" class="java.lang.String"/>
 	<parameter name="ID_PERINTAHHAOBMST" isForPrompting="true" class="java.lang.String"/>
 	<parameter name="statusFail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="flag_keb_kemaskini" isForPrompting="true" class="java.lang.String"/>
 	<queryString><![CDATA[---Script Borang T3 ---
 
 SELECT DISTINCT 
@@ -106,7 +107,8 @@ SELECT DISTINCT
         END AS BULAN_BICARA,
         TO_CHAR(J.TARIKH_PERINTAH, 'YYYY') AS TAHUN_BICARA,
 TO_CHAR(J.TARIKH_PERINTAH, 'MM') AS NOBULAN_BICARA,
-        J.ID_PERINTAH
+        J.ID_PERINTAH,
+         HIS.NO_PINDAAN, TO_CHAR(HIS.TARIKH_KEMASKINI,'DD/MM/YYYY') AS TARIKH_PINDAAN
 FROM    TBLPPKPERMOHONAN A, 
         TBLPFDFAIL B,
         TBLRUJNEGERI NEGERIMHN,
@@ -119,7 +121,11 @@ FROM    TBLPPKPERMOHONAN A,
         TBLPPKPERINTAH J,
         TBLRUJBANDAR BANDARPEMOHON,
         TBLRUJNEGERI NEGERIPEMOHON,
-        TBLRUJNEGERI NEGERIBICARA
+        TBLRUJNEGERI NEGERIBICARA,
+         (SELECT ID_FAIL, NO_PINDAAN, TARIKH_KEMASKINI FROM (
+        SELECT H.ID_FAIL, H.NO_PINDAAN, H.TARIKH_KEMASKINI FROM TBLPPKBORANG_HISTORY H
+        WHERE H.ID_FAIL = $P!{idfail}
+        ORDER BY H.TARIKH_KEMASKINI DESC) WHERE ROWNUM = 1)  HIS   
 WHERE   B.ID_FAIL = A.ID_FAIL
     AND A.ID_NEGERIMHN = NEGERIMHN.ID_NEGERI
     AND A.ID_DAERAHMHN = DAERAHMHN.ID_DAERAH
@@ -133,34 +139,37 @@ WHERE   B.ID_FAIL = A.ID_FAIL
     AND J.ID_PERBICARAAN = H.ID_PERBICARAAN
     AND A.ID_PERMOHONAN = E.ID_PERMOHONAN 
     AND J.FLAG_JENIS_KEPUTUSAN = 0
-    AND A.ID_FAIL = $P!{idfail}]]></queryString>
+        and a.ID_FAIL = HIS.ID_FAIL(+)
+    AND B.ID_FAIL = $P!{idfail}]]></queryString>
 
 	<field name="BUKTI_MATI" class="java.lang.String"/>
 	<field name="NAMA_SIMATI" class="java.lang.String"/>
 	<field name="KP_SIMATI" class="java.lang.String"/>
 	<field name="TARIKH_MATI" class="java.lang.String"/>
 	<field name="NO_SIJIL_MATI" class="java.lang.String"/>
-	<field name="ID_SIMATI" class="java.math.BigDecimal"/>
+	<field name="ID_SIMATI" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
 	<field name="NAMA_DAERAH" class="java.lang.String"/>
-	<field name="ID_PERINTAHHTAOBMST" class="java.math.BigDecimal"/>
-	<field name="ID_PERINTAHHAOBMST" class="java.math.BigDecimal"/>
+	<field name="ID_PERINTAHHTAOBMST" class="java.lang.String"/>
+	<field name="ID_PERINTAHHAOBMST" class="java.lang.String"/>
 	<field name="CATATAN" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="TAHUN_NO_FAIL" class="java.lang.String"/>
 	<field name="TAHUN" class="java.lang.String"/>
-	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
-	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="ID_PERMOHONAN" class="java.lang.String"/>
+	<field name="ID_FAIL" class="java.lang.String"/>
 	<field name="NAMA_PEMOHON" class="java.lang.String"/>
 	<field name="KP_PEMOHON" class="java.lang.String"/>
 	<field name="ALAMAT_PENUH_PEMOHON" class="java.lang.String"/>
-	<field name="ID_KEPUTUSANPERMOHONAN" class="java.math.BigDecimal"/>
-	<field name="ID_PERBICARAAN" class="java.math.BigDecimal"/>
+	<field name="ID_KEPUTUSANPERMOHONAN" class="java.lang.String"/>
+	<field name="ID_PERBICARAAN" class="java.lang.String"/>
 	<field name="HARI_BICARA" class="java.lang.String"/>
 	<field name="BULAN_BICARA" class="java.lang.String"/>
 	<field name="TAHUN_BICARA" class="java.lang.String"/>
 	<field name="NOBULAN_BICARA" class="java.lang.String"/>
-	<field name="ID_PERINTAH" class="java.math.BigDecimal"/>
+	<field name="ID_PERINTAH" class="java.lang.String"/>
+	<field name="NO_PINDAAN" class="java.lang.String"/>
+	<field name="TARIKH_PINDAAN" class="java.lang.String"/>
 
 		<background>
 			<band height="400"  isSplitAllowed="true" >
@@ -199,6 +208,25 @@ WHERE   B.ID_FAIL = A.ID_FAIL
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NO_FAIL}]]></textFieldExpression>
 				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="165"
+						height="20"
+						key="textField-11"
+						positionType="Float"
+						isRemoveLineWhenBlank="true"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean($P{flag_keb_kemaskini}.equals("Y")?true:false)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top" rotation="None">
+						<font fontName="Times New Roman" pdfFontName="Courier-Bold" size="7" isBold="true" isPdfEmbedded ="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Pembetulan/pindaan ke atas perintah ini telah dibuat bagi Daerah " +$F{NAMA_DAERAH}+
+".\nNo Daftar "+$F{NO_PINDAAN}+" bertarikh "+$F{TARIKH_PINDAAN}]]></textFieldExpression>
+				</textField>
 			</band>
 		</pageHeader>
 		<columnHeader>
@@ -206,11 +234,11 @@ WHERE   B.ID_FAIL = A.ID_FAIL
 			</band>
 		</columnHeader>
 		<detail>
-			<band height="272"  isSplitAllowed="true" >
+			<band height="247"  isSplitAllowed="true" >
 				<subreport  isUsingCache="true">
 					<reportElement
 						x="42"
-						y="156"
+						y="139"
 						width="450"
 						height="10"
 						key="subreport-1"
@@ -414,9 +442,9 @@ WHERE   B.ID_FAIL = A.ID_FAIL
 				<staticText>
 					<reportElement
 						x="0"
-						y="175"
-						width="535"
-						height="18"
+						y="152"
+						width="437"
+						height="20"
 						key="staticText-1"
 						positionType="Float"
 						isPrintRepeatedValues="false">
@@ -426,13 +454,13 @@ WHERE   B.ID_FAIL = A.ID_FAIL
 					<textElement textAlignment="Justified" verticalAlignment="Top">
 						<font fontName="Verdana" size="8"/>
 					</textElement>
-				<text><![CDATA[*    Masukkan Pentadbir Tanah Daerah / Pemungut / Pegawai Daerah / Pegawai Pentadbir Sarawak, mengikut kehendak keadaan.]]></text>
+				<text><![CDATA[* Masukkan Pentadbir Tanah Daerah / Pemungut / Pegawai Daerah / Pegawai Pentadbir Sarawak, mengikut kehendak keadaan.]]></text>
 				</staticText>
 				<staticText>
 					<reportElement
 						x="0"
-						y="171"
-						width="535"
+						y="153"
+						width="492"
 						height="2"
 						key="staticText-6"
 						positionType="Float">
@@ -445,6 +473,18 @@ WHERE   B.ID_FAIL = A.ID_FAIL
 					</textElement>
 				<text><![CDATA[]]></text>
 				</staticText>
+				<break>
+					<reportElement
+						x="0"
+						y="228"
+						width="535"
+						height="0"
+						key="element-2"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true">
+							<printWhenExpression><![CDATA[new Boolean ((!$F{ID_PERINTAHHTAOBMST}.equals("0")))]]></printWhenExpression>
+						</reportElement>
+				</break>
 			</band>
 		</detail>
 		<columnFooter>
@@ -480,6 +520,55 @@ WHERE   B.ID_FAIL = A.ID_FAIL
 						<font/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA[" "+$V{PAGE_NUMBER}+""]]></textFieldExpression>
+				</textField>
+				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="438"
+						y="-58"
+						width="86"
+						height="86"
+						key="image-2">
+							<printWhenExpression><![CDATA[new Boolean ((Integer.parseInt($F{NOBULAN_BICARA})> 7 && Integer.parseInt($F{TAHUN_BICARA})> 2017)
+|| (Integer.parseInt($F{NOBULAN_BICARA})> 0 && Integer.parseInt($F{TAHUN_BICARA})> 2018))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[$P{ReportDir} +"//ppk//qrcode//"+$P{noFailremoveslash}+".png"]]></imageExpression>
+				</image>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="440"
+						y="21"
+						width="80"
+						height="16"
+						key="textField-9"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean ((Integer.parseInt($F{NOBULAN_BICARA})> 7 && Integer.parseInt($F{TAHUN_BICARA})> 2017)
+|| (Integer.parseInt($F{NOBULAN_BICARA})> 0 && Integer.parseInt($F{TAHUN_BICARA})> 2018))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="6" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["di Playstore/GAMMA"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="441"
+						y="10"
+						width="80"
+						height="31"
+						key="textField-10"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean ((Integer.parseInt($F{NOBULAN_BICARA})> 7 && Integer.parseInt($F{TAHUN_BICARA})> 2017)
+|| (Integer.parseInt($F{NOBULAN_BICARA})> 0 && Integer.parseInt($F{TAHUN_BICARA})> 2018))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="6" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Muat turun Aplikasi MyeTaPP"]]></textFieldExpression>
 				</textField>
 			</band>
 		</pageFooter>

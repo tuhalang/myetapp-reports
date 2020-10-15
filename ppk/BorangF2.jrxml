@@ -39,25 +39,11 @@
 	<parameter name="flag_keb_kemaskini" isForPrompting="true" class="java.lang.String"/>
 	<parameter name="NILAI_BERSIH_1" isForPrompting="true" class="java.lang.String"/>
 	<parameter name="NILAI_BERSIH_2" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="namaPemohon" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="kpPemohon" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="alamatPemohon" isForPrompting="false" class="java.lang.String"/>
 	<parameter name="noFailremoveslash" isForPrompting="true" class="java.lang.String"/>
 	<queryString><![CDATA[SELECT UTAMA.*,
---CASE
---    WHEN LENGTH(UTAMA.NBARU_MATI) != 12 THEN  ''||RTRIM(UTAMA.NBARU_MATI)||''
---    WHEN LENGTH(RTRIM(UTAMA.NBARU_MATI))=12 THEN SUBSTR(UTAMA.NBARU_MATI,1,6) || '-' || SUBSTR(UTAMA.NBARU_MATI,7,2) || '-' || SUBSTR(UTAMA.NBARU_MATI,9,4)
---    ELSE ''
---END
---||
---CASE WHEN UTAMA.NBARU_MATI IS NOT NULL THEN
---CASE WHEN UTAMA.NLAMA_MATI IS NOT NULL AND UTAMA.NLAIN_MATI IS NOT NULL THEN ' (' || UTAMA.NLAMA_MATI || '/' || UTAMA.NLAIN_MATI || ')'
---WHEN UTAMA.NLAMA_MATI IS NOT NULL AND UTAMA.NLAIN_MATI IS NULL THEN ' (' || UTAMA.NLAMA_MATI || ')'
---WHEN UTAMA.NLAMA_MATI IS NULL AND UTAMA.NLAIN_MATI IS NOT NULL THEN ' (' || UTAMA.NLAIN_MATI || ')'
---ELSE '' END
---ELSE CASE WHEN UTAMA.NLAMA_MATI IS NOT NULL AND UTAMA.NLAIN_MATI IS NOT NULL THEN UTAMA.NLAMA_MATI || '/' || UTAMA.NLAIN_MATI
---WHEN UTAMA.NLAMA_MATI IS NOT NULL AND UTAMA.NLAIN_MATI IS NULL THEN UTAMA.NLAMA_MATI
---WHEN UTAMA.NLAMA_MATI IS NULL AND UTAMA.NLAIN_MATI IS NOT NULL THEN UTAMA.NLAIN_MATI
---ELSE '' END
--- END
---AS KP_SIMATI,
 CASE
                 WHEN (UTAMA.NBARU_MATI IS NOT NULL OR UTAMA.NLAMA_MATI  IS NOT NULL) THEN ', No. KP : '
                 WHEN (UTAMA.NBARU_MATI IS NULL AND UTAMA.NLAMA_MATI  IS NULL AND UTAMA.NLAIN_MATI IS NOT NULL AND UTAMA.JENIS_KP <> 4) THEN ', No. KP : '
@@ -98,11 +84,26 @@ AS KP_PEMOHON
 FROM (
 SELECT B.ID_FAIL,F.ID_PERMOHONAN,K.ID_PERBICARAAN,K.ID_KEPUTUSANPERMOHONAN,N.ID_PERINTAH, 
 CASE
-        WHEN LENGTH(B.NO_FAIL)>=30 THEN ''||substr(B.NO_FAIL,1,24)||''
-        WHEN LENGTH(B.NO_FAIL)=29 THEN ''||substr(B.NO_FAIL,1,23)||''
-        WHEN LENGTH(B.NO_FAIL)=28 THEN ''||substr(B.NO_FAIL,1,22)||''
+               WHEN LENGTH(B.NO_FAIL)>=30 THEN ''||substr(B.NO_FAIL,1,24)||''
+         WHEN LENGTH(B.NO_FAIL)=29 THEN ''||substr(B.NO_FAIL,1,23)||''
+         WHEN LENGTH(B.NO_FAIL)=28 THEN ''||substr(B.NO_FAIL,1,22)||''
+         WHEN LENGTH(B.NO_FAIL)=17 THEN ''||substr(B.NO_FAIL,1,11)||''
         WHEN LENGTH(B.NO_FAIL)<=27 THEN ''||rtrim(B.NO_FAIL)||''
-END AS NO_FAIL, 
+END AS NO_FAIL,
+
+                        CASE
+                WHEN h.jenis_kp in (0) and h.id_tarafkptg in (1) and H.NAMA_PEMOHON like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (6,10) and H.NAMA_PEMOHON like ('%AMANAH%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (8) and H.NAMA_PEMOHON like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (6,8) THEN ', No. DAFTAR: '
+                WHEN h.jenis_kp in (0) and h.id_tarafkptg=1 THEN ', No. KP: '
+                WHEN h.jenis_kp in (0,5,6) THEN ', No. KP: '
+                WHEN h.jenis_kp in (7) and h.id_tarafkptg in (1) THEN ', No. KP: '
+                WHEN h.jenis_kp=4 THEN ', No. PASPORT: '
+                WHEN h.id_tarafkptg=1 THEN ', No. KP: '
+            -- null,6,0,5,7,4,
+                Else ''
+            END AS Jenis_kp_pemohon, 
 REPLACE(C.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHON,
        TO_CHAR(A.TARIKH_MOHON,'yyyy') AS TAHUN, E.NAMA_SIMATI,E.NAMA_LAIN,
        E.NO_KP_BARU AS NBARU_MATI, E.JENIS_KP AS JENIS_KP, E.NO_KP_LAMA AS NLAMA_MATI, E.NO_KP_LAIN AS NLAIN_MATI, H.NO_KP_BARU AS NBARU_MOHON, H.NO_KP_LAMA AS NLAMA_MOHON, H.NO_KP_LAIN AS NLAIN_MOHON,
@@ -238,11 +239,26 @@ UNION
 
 SELECT B.ID_FAIL,F.ID_PERMOHONAN,K.ID_PERBICARAAN,K.ID_KEPUTUSANPERMOHONAN,N.ID_PERINTAH, 
 CASE
-        WHEN LENGTH(B.NO_FAIL)>=30 THEN ''||substr(B.NO_FAIL,1,24)||''
+               WHEN LENGTH(B.NO_FAIL)>=30 THEN ''||substr(B.NO_FAIL,1,24)||''
          WHEN LENGTH(B.NO_FAIL)=29 THEN ''||substr(B.NO_FAIL,1,23)||''
          WHEN LENGTH(B.NO_FAIL)=28 THEN ''||substr(B.NO_FAIL,1,22)||''
+         WHEN LENGTH(B.NO_FAIL)=17 THEN ''||substr(B.NO_FAIL,1,11)||''
         WHEN LENGTH(B.NO_FAIL)<=27 THEN ''||rtrim(B.NO_FAIL)||''
        END AS NO_FAIL,
+       
+                        CASE
+                WHEN h.jenis_kp in (0) and h.id_tarafkptg in (1) and H.NAMA_PEMOHON like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (6,10) and H.NAMA_PEMOHON like ('%AMANAH%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (8) and H.NAMA_PEMOHON like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (6,8) THEN ', No. DAFTAR: '
+                WHEN h.jenis_kp in (0) and h.id_tarafkptg=1 THEN ', No. KP: '
+                WHEN h.jenis_kp in (0,5,6) THEN ', No. KP: '
+                WHEN h.jenis_kp in (7) and h.id_tarafkptg in (1) THEN ', No. KP: '
+                WHEN h.jenis_kp=4 THEN ', No. PASPORT: '
+                WHEN h.id_tarafkptg=1 THEN ', No. KP: '
+            -- null,6,0,5,7,4,
+                Else ''
+            END AS Jenis_kp_pemohon, 
 REPLACE(C.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHON,
        TO_CHAR(A.TARIKH_MOHON,'yyyy') AS TAHUN, E.NAMA_SIMATI,E.NAMA_LAIN,
         E.NO_KP_BARU AS NBARU_MATI, E.JENIS_KP AS JENIS_KP, E.NO_KP_LAMA AS NLAMA_MATI, E.NO_KP_LAIN AS NLAIN_MATI, H.NO_KP_BARU AS NBARU_MOHON, H.NO_KP_LAMA AS NLAMA_MOHON, H.NO_KP_LAIN AS NLAIN_MOHON,
@@ -379,11 +395,26 @@ UNION
 
 SELECT B.ID_FAIL,F.ID_PERMOHONAN,K.ID_PERBICARAAN,K.ID_KEPUTUSANPERMOHONAN,N.ID_PERINTAH, 
 CASE
-        WHEN LENGTH(B.NO_FAIL)>=30 THEN ''||substr(B.NO_FAIL,1,24)||''
+              WHEN LENGTH(B.NO_FAIL)>=30 THEN ''||substr(B.NO_FAIL,1,24)||''
          WHEN LENGTH(B.NO_FAIL)=29 THEN ''||substr(B.NO_FAIL,1,23)||''
          WHEN LENGTH(B.NO_FAIL)=28 THEN ''||substr(B.NO_FAIL,1,22)||''
+         WHEN LENGTH(B.NO_FAIL)=17 THEN ''||substr(B.NO_FAIL,1,11)||''
         WHEN LENGTH(B.NO_FAIL)<=27 THEN ''||rtrim(B.NO_FAIL)||''
        END AS NO_FAIL, 
+       
+                        CASE
+                WHEN h.jenis_kp in (0) and h.id_tarafkptg in (1) and H.NAMA_PEMOHON like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (6,10) and H.NAMA_PEMOHON like ('%AMANAH%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (8) and H.NAMA_PEMOHON like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (6,8) THEN ', No. DAFTAR: '
+                WHEN h.jenis_kp in (0) and h.id_tarafkptg=1 THEN ', No. KP: '
+                WHEN h.jenis_kp in (0,5,6) THEN ', No. KP: '
+                WHEN h.jenis_kp in (7) and h.id_tarafkptg in (1) THEN ', No. KP: '
+                WHEN h.jenis_kp=4 THEN ', No. PASPORT: '
+                WHEN h.id_tarafkptg=1 THEN ', No. KP: '
+            -- null,6,0,5,7,4,
+                Else ''
+            END AS Jenis_kp_pemohon, 
 REPLACE(C.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHON,
        TO_CHAR(A.TARIKH_MOHON,'yyyy') AS TAHUN, E.NAMA_SIMATI,E.NAMA_LAIN,
         E.NO_KP_BARU AS NBARU_MATI, E.JENIS_KP AS JENIS_KP, E.NO_KP_LAMA AS NLAMA_MATI, E.NO_KP_LAIN AS NLAIN_MATI, H.NO_KP_BARU AS NBARU_MOHON, H.NO_KP_LAMA AS NLAMA_MOHON, H.NO_KP_LAIN AS NLAIN_MOHON,
@@ -515,11 +546,26 @@ REPLACE(C.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHO
 
   SELECT B.ID_FAIL,F.ID_PERMOHONAN,K.ID_PERBICARAAN,K.ID_KEPUTUSANPERMOHONAN,N.ID_PERINTAH,
   CASE
-        WHEN LENGTH(B.NO_FAIL)>=30 THEN ''||substr(B.NO_FAIL,1,24)||''
+               WHEN LENGTH(B.NO_FAIL)>=30 THEN ''||substr(B.NO_FAIL,1,24)||''
          WHEN LENGTH(B.NO_FAIL)=29 THEN ''||substr(B.NO_FAIL,1,23)||''
          WHEN LENGTH(B.NO_FAIL)=28 THEN ''||substr(B.NO_FAIL,1,22)||''
+         WHEN LENGTH(B.NO_FAIL)=17 THEN ''||substr(B.NO_FAIL,1,11)||''
         WHEN LENGTH(B.NO_FAIL)<=27 THEN ''||rtrim(B.NO_FAIL)||''
        END AS NO_FAIL,
+       
+                        CASE
+                WHEN h.jenis_kp in (0) and h.id_tarafkptg in (1) and H.NAMA_PEMOHON like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (6,10) and H.NAMA_PEMOHON like ('%AMANAH%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (8) and H.NAMA_PEMOHON like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN h.id_tarafkptg in (6,8) THEN ', No. DAFTAR: '
+                WHEN h.jenis_kp in (0) and h.id_tarafkptg=1 THEN ', No. KP: '
+                WHEN h.jenis_kp in (0,5,6) THEN ', No. KP: '
+                WHEN h.jenis_kp in (7) and h.id_tarafkptg in (1) THEN ', No. KP: '
+                WHEN h.jenis_kp=4 THEN ', No. PASPORT: '
+                WHEN h.id_tarafkptg=1 THEN ', No. KP: '
+            -- null,6,0,5,7,4,
+                Else ''
+            END AS Jenis_kp_pemohon, 
    C.NAMA_DAERAH AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHON,
        TO_CHAR(A.TARIKH_MOHON,'yyyy') AS TAHUN, E.NAMA_SIMATI,E.NAMA_LAIN,
         E.NO_KP_BARU AS NBARU_MATI, E.JENIS_KP AS JENIS_KP, E.NO_KP_LAMA AS NLAMA_MATI, E.NO_KP_LAIN AS NLAIN_MATI, H.NO_KP_BARU AS NBARU_MOHON, H.NO_KP_LAMA AS NLAMA_MOHON, H.NO_KP_LAIN AS NLAIN_MOHON,
@@ -657,6 +703,7 @@ REPLACE(C.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHO
 	<field name="ID_KEPUTUSANPERMOHONAN" class="java.math.BigDecimal"/>
 	<field name="ID_PERINTAH" class="java.math.BigDecimal"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="JENIS_KP_PEMOHON" class="java.lang.String"/>
 	<field name="DAERAH_MOHON" class="java.lang.String"/>
 	<field name="NEGERI_MOHON" class="java.lang.String"/>
 	<field name="TAHUN" class="java.lang.String"/>
@@ -757,7 +804,7 @@ REPLACE(C.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHO
 						<font fontName="Verdana" size="9"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["Dalam hal Harta pusaka  <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_LAIN}!= null ? $F{NAMA_SIMATI}+" @ "+$F{NAMA_LAIN}:$F{NAMA_SIMATI}) +  ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"") +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
-+"\n\nPetisyen daripada  <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null ? $F{NAMA_PEMOHON}:"TIADA")+($F{NO_KP_BARU}!= null ?  ", No. KP: "+ $F{KP_PEMOHON}:" ")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"-")+".</style>"
++"\n\nPetisyen daripada  <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($P{namaPemohon}!= null ? $P{namaPemohon}:"TIADA")+($P{kpPemohon}!= "" ? ", No. KP : "+ $P{kpPemohon}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($P{alamatPemohon}!= null ? $P{alamatPemohon}:"-")+".</style>"
 +"\n\n                                  <style isBold='true' pdfFontName='Helvetica-Bold'>PEMBERIAN SURAT KUASA MENTADBIR DI BAWAH SEKSYEN 13</style>"
 +"\n\nSAYA <style isBold='true' pdfFontName='Helvetica-Bold'>"+($P{namaPegawai}!= null ? $P{namaPegawai}:"TIADA")+ " - " +($P{jawatan}!= null ? $P{jawatan}:"TIADA")+"</style> <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{DAERAH_MOHON}!= null ? $F{DAERAH_MOHON}:"TIADA")+"</style> dengan ini memaklumkan bahawa pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{HARI_BICARA}!= null ? $F{HARI_BICARA}:"TIADA")+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{BULAN_BICARA}!= null ? $F{BULAN_BICARA}:"TIADA")+" "+($F{TAHUN_BICARA}!= null ? $F{TAHUN_BICARA}:"")+"</style>, Surat Kuasa Mentadbir harta pusaka dan barang kepunyaan <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NAMA_SIMATI}!= null ?$F{NAMA_SIMATI}:"TIADA")+"</style> si mati yang dahulunya beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_SIMATI}!= null ?$F{ALAMAT_PENUH_SIMATI}:"-")+"</style> telah diberikan kepada "
 +"\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPentadbir} + "</style> setelah dia mengaku janji untuk mentadbirkan harta pusaka dan barang itu, dan membuat suatu inventori lengkap dan benar tentang harta pusaka dan barang tersebut dan mempamerkan inventori itu kepada <style isBold='true' pdfFontName='Helvetica-Bold'>* PENTADBIR TANAH </style> bagi Daerah itu dalam tempoh enam bulan daripada tarikh pemberian ini atau dalam tempoh lanjutan sebagaimana yang <style isBold='true' pdfFontName='Helvetica-Bold'>* PENTADBIR TANAH </style> boleh ditetapkan dari semasa ke semasa dan juga memberikan kepada <style isBold='true' pdfFontName='Helvetica-Bold'>* PENTADBIR TANAH </style> suatu akaun sebenar mengenai harta pusaka dan barang tersebut dalam tempoh satu tahun daripada tarikh yang sama atau dalam tempoh lanjutan sebagaimana yang <style isBold='true' pdfFontName='Helvetica-Bold'>* PENTADBIR TANAH </style> boleh ditetapkan dari semasa ke semasa."
@@ -1069,25 +1116,10 @@ REPLACE(C.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHO
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA[" "+$V{PAGE_NUMBER}+""]]></textFieldExpression>
 				</textField>
-				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						mode="Transparent"
-						x="449"
-						y="-4"
-						width="86"
-						height="86"
-						key="image-2">
-							<printWhenExpression><![CDATA[new Boolean ((Integer.parseInt($F{NOBULAN_BICARA})> 7 && Integer.parseInt($F{TAHUN_BICARA})> 2017)
-|| (Integer.parseInt($F{NOBULAN_BICARA})> 0 && Integer.parseInt($F{TAHUN_BICARA})> 2018))]]></printWhenExpression>
-						</reportElement>
-					<box></box>
-					<graphicElement stretchType="NoStretch"/>
-					<imageExpression class="java.lang.String"><![CDATA[$P{ReportDir} +"//ppk//qrcode//"+$P{noFailremoveslash}+".png"]]></imageExpression>
-				</image>
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="453"
-						y="73"
+						y="70"
 						width="80"
 						height="15"
 						key="textField-22">
@@ -1103,7 +1135,7 @@ REPLACE(C.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHO
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="453"
-						y="77"
+						y="74"
 						width="80"
 						height="16"
 						key="textField-23">
@@ -1115,6 +1147,37 @@ REPLACE(C.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON, D.NAMA_NEGERI AS NEGERI_MOHO
 						<font fontName="Verdana" pdfFontName="Helvetica" size="6" isBold="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["di Playstore/GAMMA"]]></textFieldExpression>
+				</textField>
+				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="448"
+						y="-16"
+						width="86"
+						height="86"
+						key="image-2">
+							<printWhenExpression><![CDATA[new Boolean ((Integer.parseInt($F{NOBULAN_BICARA})> 7 && Integer.parseInt($F{TAHUN_BICARA})> 2017)
+|| (Integer.parseInt($F{NOBULAN_BICARA})> 0 && Integer.parseInt($F{TAHUN_BICARA})> 2018))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[$P{ReportDir} +"//ppk//qrcode//"+$P{noFailremoveslash}+".png"]]></imageExpression>
+				</image>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="451"
+						y="83"
+						width="80"
+						height="10"
+						key="textField-24">
+							<printWhenExpression><![CDATA[new Boolean ((Integer.parseInt($F{NOBULAN_BICARA})> 7 && Integer.parseInt($F{TAHUN_BICARA})> 2017)
+|| (Integer.parseInt($F{NOBULAN_BICARA})> 0 && Integer.parseInt($F{TAHUN_BICARA})> 2018))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="6" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["dan Apple Store"]]></textFieldExpression>
 				</textField>
 			</band>
 		</pageFooter>

@@ -35,6 +35,7 @@
 	<parameter name="tarikh_bicara" isForPrompting="true" class="java.lang.String"/>
 	<queryString><![CDATA[SELECT DISTINCT 
 	--A.PEG_PENGENDALI,
+	A.JENIS_MASA_BICARA AS JENIS_MASA_BICARA,
 	A.MASA_BICARA AS MASA_BICARA1,DECODE(SUBSTR(A.MASA_BICARA,1,2),1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,
     13,1,14,2,15,3,16,4,17,5,18,6,19,7,20,8,21,9,22,10,23,11,24,12) 
     || ':' 
@@ -99,7 +100,19 @@ CASE
                 WHEN (E.batal_p_amanah ='T' or E.batal_p_amanah is null) and E.harta_tinggal ='Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON <= 1000 THEN 'RM '||replace(TO_CHAR(ROUND(10,1),'999,999,999.99'),' ')
                 WHEN (E.batal_p_amanah ='T' or E.batal_p_amanah is null) and E.harta_tinggal ='Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON BETWEEN 1001 AND 50000 THEN 'RM '||replace(TO_CHAR(ROUND(30,1),'999,999,999.99'),' ')
                 WHEN (E.batal_p_amanah ='T' or E.batal_p_amanah is null) and E.harta_tinggal ='Y' and E.JUM_HARTA_TAMBAHAN_TKHMOHON >= 50001 THEN 'RM '||replace(to_char(ROUND((0.2/100)*E.JUM_HARTA_TAMBAHAN_TKHMOHON,1),'999,999,999.99'),' ')
-            END AS BAYARAN_PERINTAH
+            END AS BAYARAN_PERINTAH,
+CASE 
+                --- /* untuk kes s8 */ --- 
+                       
+                WHEN E.seksyen=8 AND E.TARIKH_MOHON + 120 > SYSDATE THEN TO_CHAR(E.TARIKH_MOHON + 120, 'dd/MM/yyyy')
+		WHEN E.seksyen=8 AND E.TARIKH_MOHON + 120 < SYSDATE THEN ' '
+
+                --- /* untuk kes s17 */---  
+                                
+                WHEN E.seksyen=17 AND E.TARIKH_MOHON + 120 > SYSDATE THEN TO_CHAR(E.TARIKH_MOHON + 120, 'dd/MM/yyyy')
+ 		WHEN E.seksyen=17 AND E.TARIKH_MOHON + 120 < SYSDATE THEN ' '
+               
+            END AS DUE_DATE_KPI
 FROM TBLPPKPERBICARAAN A,
 TBLPFDFAIL B,
 TBLPPKPEMOHON C,
@@ -110,6 +123,7 @@ AND E.ID_PERMOHONAN = D.ID_PERMOHONAN
 AND D.ID_KEPUTUSANPERMOHONAN = A.ID_KEPUTUSANPERMOHONAN
 AND C.ID_PEMOHON = E.ID_PEMOHON
 AND TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy') = '$P!{tarikh_bicara}'
+--AND TO_CHAR(E.TARIKH_MOHON + 90, 'dd/MM/yyyy') > SYSDATE
 --AND TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy') = '03/05/2016'
 --AND TO_DATE(TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy'),'dd/MM/yyyy')  BETWEEN TO_DATE('$P!{tarikhBicara}' , 'dd/MM/yyyy') AND TO_DATE('$P!{tarikhBicaraTo}' , 'dd/MM/yyyy') 
 AND (
@@ -124,8 +138,11 @@ AND (
 AND E.ID_DAERAHMHN = $P!{idDaerah}
 --AND E.ID_DAERAHMHN = 121
 --AND TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy') = '$P!{tarikh_bicara}'
-ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 
+
+ORDER BY TARIKH_BICARA_DATE,JENIS_MASA_BICARA,MASA_BICARA1 ASC]]></queryString>
+
+	<field name="JENIS_MASA_BICARA" class="java.lang.String"/>
 	<field name="MASA_BICARA1" class="java.lang.String"/>
 	<field name="MASA_BICARA" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
@@ -140,6 +157,7 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 	<field name="TARIKH_BICARA" class="java.lang.String"/>
 	<field name="TARIKH_BICARA_DATE" class="java.sql.Timestamp"/>
 	<field name="BAYARAN_PERINTAH" class="java.lang.String"/>
+	<field name="DUE_DATE_KPI" class="java.lang.String"/>
 
 		<background>
 			<band height="0"  isSplitAllowed="true" >
@@ -160,7 +178,7 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 						mode="Transparent"
 						x="1"
 						y="5"
-						width="555"
+						width="544"
 						height="28"
 						key="rectangle-3"/>
 					<graphicElement stretchType="NoStretch"/>
@@ -253,33 +271,20 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 						key="line-16"/>
 					<graphicElement stretchType="NoStretch"/>
 				</line>
-				<staticText>
-					<reportElement
-						x="444"
-						y="5"
-						width="46"
-						height="28"
-						key="staticText-5"/>
-					<box></box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
-					</textElement>
-				<text><![CDATA[STATUS]]></text>
-				</staticText>
 				<line direction="TopDown">
 					<reportElement
-						x="490"
+						x="478"
 						y="5"
-						width="1"
+						width="0"
 						height="28"
 						key="line-17"/>
 					<graphicElement stretchType="NoStretch"/>
 				</line>
 				<staticText>
 					<reportElement
-						x="490"
+						x="485"
 						y="5"
-						width="66"
+						width="56"
 						height="28"
 						key="staticText-6"/>
 					<box></box>
@@ -288,27 +293,18 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 					</textElement>
 				<text><![CDATA[BAYARAN PERINTAH]]></text>
 				</staticText>
-				<line direction="TopDown">
-					<reportElement
-						x="444"
-						y="5"
-						width="1"
-						height="28"
-						key="line-19"/>
-					<graphicElement stretchType="NoStretch"/>
-				</line>
 				<staticText>
 					<reportElement
 						x="386"
 						y="5"
-						width="58"
+						width="92"
 						height="28"
 						key="staticText-7"/>
 					<box></box>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
 					</textElement>
-				<text><![CDATA[DUE DATE KPI]]></text>
+				<text><![CDATA[KPI/STATUS]]></text>
 				</staticText>
 			</band>
 		</columnHeader>
@@ -319,7 +315,7 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 						mode="Transparent"
 						x="1"
 						y="0"
-						width="555"
+						width="544"
 						height="52"
 						key="rectangle-2"
 						stretchType="RelativeToBandHeight"/>
@@ -399,7 +395,7 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 				</line>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="265"
+						x="266"
 						y="2"
 						width="28"
 						height="15"
@@ -412,7 +408,7 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 				</textField>
 				<line direction="TopDown">
 					<reportElement
-						x="385"
+						x="386"
 						y="0"
 						width="1"
 						height="52"
@@ -422,7 +418,7 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 				</line>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="265"
+						x="266"
 						y="18"
 						width="28"
 						height="15"
@@ -435,7 +431,7 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="265"
+						x="266"
 						y="34"
 						width="46"
 						height="15"
@@ -487,7 +483,7 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 				</textField>
 				<line direction="TopDown">
 					<reportElement
-						x="490"
+						x="478"
 						y="0"
 						width="1"
 						height="52"
@@ -497,7 +493,7 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 				</line>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="490"
+						x="478"
 						y="3"
 						width="64"
 						height="18"
@@ -508,28 +504,18 @@ ORDER BY TARIKH_BICARA_DATE,MASA_BICARA1 ASC]]></queryString>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA[($F{BAYARAN_PERINTAH}!=null?$F{BAYARAN_PERINTAH}:"0.00")+" "]]></textFieldExpression>
 				</textField>
-				<line direction="TopDown">
-					<reportElement
-						x="444"
-						y="0"
-						width="1"
-						height="52"
-						key="line-18"
-						stretchType="RelativeToTallestObject"/>
-					<graphicElement stretchType="RelativeToTallestObject"/>
-				</line>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="386"
+						x="387"
 						y="3"
-						width="57"
+						width="91"
 						height="15"
 						key="textField-12"/>
 					<box></box>
-					<textElement textAlignment="Right">
+					<textElement textAlignment="Center">
 						<font fontName="Verdana" size="9"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{DUE_DATE_KPI}+""]]></textFieldExpression>
 				</textField>
 			</band>
 		</detail>

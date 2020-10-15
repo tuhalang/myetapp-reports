@@ -1,26 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Borang H_SELANGOR" pageWidth="595" pageHeight="842" columnWidth="551" leftMargin="22" rightMargin="22" topMargin="36" bottomMargin="0" uuid="2220ed0b-08ac-4017-95e5-5da5416730e5">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Borang H_SELANGOR" pageWidth="595" pageHeight="842" columnWidth="551" leftMargin="22" rightMargin="22" topMargin="65" bottomMargin="0" uuid="2220ed0b-08ac-4017-95e5-5da5416730e5">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.y" value="50"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="id_Fail" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="id_Fail" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="id_hakmilik" class="java.lang.String"/>
-	<parameter name="no_fail" class="java.lang.String"/>
-	<parameter name="userIdNegeri" class="java.lang.String"/>
-	<parameter name="noMT" class="java.lang.String"/>
-	<parameter name="noARB" class="java.lang.String"/>
-	<parameter name="akaunMT" class="java.lang.String"/>
-	<parameter name="akaunARB" class="java.lang.String"/>
-	<parameter name="bankMT" class="java.lang.String"/>
-	<parameter name="bankARB" class="java.lang.String"/>
-	<parameter name="valMT" class="java.lang.String"/>
-	<parameter name="send_conditon" class="java.lang.String"/>
+	<parameter name="no_fail" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="send_conditon" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="id_siasatan" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT DISTINCT A.NO_FAIL, A.ID_NEGERI, TO_CHAR(A.ID_FAIL) AS ID_FAIL, B.NO_RUJUKAN_PTG,
@@ -51,11 +43,12 @@ INITCAP (H.NAMA_NEGERI) AS NAMA_NEGERI,
 INITCAP (HH.NAMA_NEGERI) AS NP, K.KETERANGAN AS JENIS_PB,
 E.NO_SUBJAKET,
 TO_CHAR (CASE
-    WHEN L.id_jenisnopb = 1 THEN    SUBSTR (G.no_pb, 1, 6)|| '-'
-        || SUBSTR (G.no_pb, 7, 2) || '-' || SUBSTR (G.no_pb, 9, 4)
-    ELSE G.no_pb
-    END) AS no_pb,
-L.KETERANGAN
+    WHEN (L.id_jenisnopb = 1 AND G.no_pb IS NOT NULL) THEN    SUBSTR (G.no_pb, 1, 6)|| '-'
+       || SUBSTR (G.no_pb, 7, 2) || '-' || SUBSTR (G.no_pb, 9, 4)
+
+   ELSE G.no_pb
+   END) AS no_pb,
+CASE WHEN G.no_pb IS NULL THEN '' ELSE L.KETERANGAN END AS KETERANGAN
 
 FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTSIASATAN C, TBLPPTAWARD D,
 TBLPPTHAKMILIK E, TBLPPTHAKMILIKPB F, TBLPPTPIHAKBERKEPENTINGAN G,
@@ -67,12 +60,14 @@ AND B.ID_PERMOHONAN = C.ID_PERMOHONAN
 AND C.ID_SIASATAN = D.ID_SIASATAN
 AND D.ID_HAKMILIKPB = F.ID_HAKMILIKPB
 AND E.ID_HAKMILIK = F.ID_HAKMILIK
-AND F.ID_NEGERI = H.ID_NEGERI
-AND F.ID_BANDAR = J.ID_BANDAR
-AND HH.ID_NEGERI = A.ID_NEGERI
-AND F.ID_PIHAKBERKEPENTINGAN = G.ID_PIHAKBERKEPENTINGAN
-AND F.ID_JENISPB = K.ID_JENISPB
-AND G.ID_JENISNOPB = L.ID_JENISNOPB
+AND F.ID_NEGERI = H.ID_NEGERI(+)
+AND F.ID_BANDAR = J.ID_BANDAR(+)
+AND A.ID_NEGERI = HH.ID_NEGERI(+)
+AND F.ID_PIHAKBERKEPENTINGAN = G.ID_PIHAKBERKEPENTINGAN(+)
+AND (F.ID_JENISPB = K.ID_JENISPB
+OR F.ID_JENISPB IS NULL)
+AND (L.ID_JENISNOPB = G.ID_JENISNOPB
+OR G.ID_JENISNOPB IS NULL)
 AND C.ID_SIASATAN = $P{id_siasatan}
 AND E.ID_HAKMILIK = $P{id_hakmilik}]]>
 	</queryString>
@@ -109,14 +104,14 @@ AND E.ID_HAKMILIK = $P{id_hakmilik}]]>
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="438" splitType="Stretch">
+		<band height="272" splitType="Stretch">
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="c5f4eec8-a35b-4107-9a6e-1ed5e4358197" key="textField-75" positionType="Float" x="95" y="55" width="354" height="15">
+				<reportElement uuid="c5f4eec8-a35b-4107-9a6e-1ed5e4358197" key="textField-75" positionType="Float" x="95" y="8" width="354" height="15">
 					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=11)]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{NAMA_PB}!=null ? $F{NAMA_PB}+"\n":"")
 +($F{ALAMAT1}!=null ? $F{ALAMAT1}+"\n":"")
@@ -127,40 +122,38 @@ AND E.ID_HAKMILIK = $P{id_hakmilik}]]>
 +($F{NAMA_NEGERI}!=null ? $F{NAMA_NEGERI}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="ad9c9bc1-308b-40ae-bb7f-dec9bd625a3b" key="textField-50" positionType="Float" x="108" y="263" width="31" height="15"/>
+				<reportElement uuid="ad9c9bc1-308b-40ae-bb7f-dec9bd625a3b" key="textField-50" positionType="Float" x="108" y="187" width="31" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["*(ii)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="7f8ef64b-baef-463b-9004-36fef066f70b" key="textField-49" positionType="Float" x="108" y="240" width="31" height="15"/>
+				<reportElement uuid="7f8ef64b-baef-463b-9004-36fef066f70b" key="textField-49" positionType="Float" x="108" y="164" width="31" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["*(i)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="f7b52977-ac05-48e3-8d32-244eafc87240" key="textField-1" positionType="Float" mode="Transparent" x="66" y="18" width="451" height="8"/>
+				<reportElement uuid="f7b52977-ac05-48e3-8d32-244eafc87240" key="textField-1" positionType="Float" mode="Transparent" x="66" y="0" width="451" height="8"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>BORANG R</style>"
-+"\n\nAKTA PENGAMBILAN TANAH, 1960"
-+"\n<style isItalic='true' pdfFontName='Helvetica-Oblique'>[Seksyen 58/59]</style>"
-+"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+"NOTIS TAWARAN PAMPASAN DAN PEMBERITAHUAN UNTUK MENGOSONGKAN TANAH/ NOTIS TAWARAN PAMPASAN UNTUK PEMULIHAN"+"</style>"
-+"\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["BORANG R"
++"\n<style isItalic='true'>Akta Pengambilan Tanah 1960\n[Seksyen 58/59]</style>"
++"\n\n*NOTIS TAWARAN PAMPASAN DAN PEMBERITAHUAN UNTUK MENGOSONGKAN TANAH/ NOTIS TAWARAN PAMPASAN UNTUK PEMULIHAN\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="46647203-0d35-4944-8ca3-6dc05a26f2fb" key="textField-5" positionType="Float" x="95" y="55" width="363" height="15">
+				<reportElement uuid="46647203-0d35-4944-8ca3-6dc05a26f2fb" key="textField-5" positionType="Float" x="95" y="8" width="363" height="15">
 					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==11)]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{NAMA_PB}!=null ? $F{NAMA_PB}+" "+($F{KETERANGAN}!=null? "- "+$F{KETERANGAN}+" "+($F{NO_PB} != null ? $F{NO_PB}:""):"")+"\n":"")
 +($F{ALAMAT1}!=null ? $F{ALAMAT1}+"\n":"")
@@ -171,230 +164,172 @@ AND E.ID_HAKMILIK = $P{id_hakmilik}]]>
 +($F{NAMA_NEGERI}!=null ? $F{NAMA_NEGERI}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="2a81e267-5560-4197-856b-6512d6012960" key="textField-6" positionType="Float" x="32" y="80" width="494" height="15"/>
+				<reportElement uuid="2a81e267-5560-4197-856b-6512d6012960" key="textField-6" positionType="Float" x="32" y="28" width="494" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2" tabStopWidth="20"/>
 				</textElement>
-				<textFieldExpression><![CDATA["        Tuan dimaklumkan bahawa semasa pendengaran oleh yang bertandatangan di bawah pada <style isBold='true' pdfFontName='Helvetica-Bold' >"+$F{HARI_SIASAT}+" "+$F{BULAN_SIASAT}+" "+$F{TAHUN_SIASAT}+"</style> suatu award seperti dalam Jadual di bawah telah dibuat berkenaan dengan tanah yang dinyatakan dalamnya yang tuan mempunyai kepentingan."
-+"\n\n2.      Mengikut award ini saya dengan ini menawarkan sejumlah <style isBold='true' pdfFontName='Helvetica-Bold'>RM"+($F{BAYAR_PAMPASAN}!=null ? $F{BAYAR_PAMPASAN}:"")+"</style>  iaitu amaun yang dinyatakan di bawah sebagai pampasan penuh untuk *pendudukan sementara/ penggunaan tanah sementara/ pemulihan tanah. "
-+"\n\n3.      Saya dengan ini menghendaki tuan untuk mengosongkan tanah yang dirujuk di dalam Jadual yang dinyatakan dalam Borang Q "
-+"\n\n4.      Ambil perhatian bahawa seksyen 29A Akta Pengambilan Tanah 1960 menghendaki saya untuk menahan dua puluh lima peratus daripada amaun award dalam keadaan tertentu, tertakluk kepada peruntukan seksyen itu."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Tuan dimaklumkan bahawa semasa pendengaran oleh yang bertandatangan di bawah pada <style isBold='false'>"+$F{HARI_SIASAT}+" haribulan "+$F{BULAN_SIASAT}+" "+$F{TAHUN_SIASAT}+"</style> suatu award seperti i dalam Jadual bersama-sama ini telah dibuat berkenaan dengan tanah yang dinyatakan dalamnya yang mana tuan mempunyai kepentingan."
++"\n\n2.\tMengikut award ini saya dengan ini menawarkan sejumlah <style isBold='false' pdfFontName='Helvetica-Bold'>RM"+($F{BAYAR_PAMPASAN}!=null ? $F{BAYAR_PAMPASAN}:"")+"</style> iaitu amaun yang dinyatakan di bawah sebagai pampasan penuh untuk *pendudukan sementara/penggunaan tanah sementara/pemulihan tanah."
++"\n\n3.\tSaya dengan ini menghendaki tuan untuk mengosongkan tanah yang dirujuk di dalam Jadual yang dinyatakan dalam Borang Q."
++"\n\n4.\tAmbil perhatian bahawa seksyen 29A Akta Pengambilan Tanah 1960 menghendaki saya untuk menahan dua puluh lima peratus daripada amaun award dalam keadaan tertentu, tertakluk kepada peruntukan seksyen itu."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="90b612a6-e92c-48e4-a5ec-b04b5df55b01" key="textField-24" positionType="Float" x="368" y="122" width="158" height="19"/>
+				<reportElement uuid="90b612a6-e92c-48e4-a5ec-b04b5df55b01" key="textField-24" positionType="Float" x="368" y="78" width="158" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["........................................."
-+"\n<style pdfFontName='Helvetica-Oblique'>Pentadbir Tanah</style>"]]></textFieldExpression>
++"\n<style isItalic='true'>Pentadbir Tanah</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="78618eeb-6a10-4b7a-ae04-0eec0f09851c" key="textField-28" positionType="Float" x="33" y="44" width="57" height="15"/>
+				<reportElement uuid="78618eeb-6a10-4b7a-ae04-0eec0f09851c" key="textField-28" positionType="Float" x="33" y="8" width="57" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Kepada,"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Kepada"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="f6b7956f-6b0b-4ae8-baaa-e920fbd81293" key="textField-31" positionType="Float" x="66" y="75" width="451" height="3"/>
+				<reportElement uuid="f6b7956f-6b0b-4ae8-baaa-e920fbd81293" key="textField-31" positionType="Float" x="66" y="24" width="451" height="3"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Bookman Old Style" size="10" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="5eadaf4e-c36b-48ef-b6c2-e6738846f845" key="textField-34" positionType="Float" x="38" y="196" width="488" height="15"/>
+				<reportElement uuid="5eadaf4e-c36b-48ef-b6c2-e6738846f845" key="textField-34" positionType="Float" x="38" y="131" width="488" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Saya, yang bertandatangan di bawah, ……………………………………………………………… dengan ini mengakui menerima tawaran di atas."]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="8b2b35ae-eb18-4c34-8447-cdff321f4818" key="textField-37" positionType="Float" x="40" y="223" width="39" height="15"/>
-				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
-				</textElement>
-				<textFieldExpression><![CDATA["2."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\nSaya, yang bertandatangan di bawah, ……………………………………………………………… dengan ini mengakui menerima tawaran di atas."]]></textFieldExpression>
 			</textField>
 			<textField pattern="" isBlankWhenNull="true">
-				<reportElement uuid="14499cfd-6aa0-49a4-ac21-55763397cb5f" key="textField-42" positionType="Float" x="57" y="305" width="451" height="3"/>
+				<reportElement uuid="14499cfd-6aa0-49a4-ac21-55763397cb5f" key="textField-42" positionType="Float" x="57" y="229" width="451" height="3"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="fca78746-b5eb-410c-acd1-0a3742fc7494" key="textField-45" positionType="Float" x="71" y="307" width="446" height="15"/>
+				<reportElement uuid="b50cac59-24f8-4da4-b5c6-f30d3581da02" key="textField-48" positionType="Float" x="38" y="147" width="488" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2" tabStopWidth="20"/>
 				</textElement>
-				<textFieldExpression><![CDATA["*(b)  Saya menerima tawaran itu dengan bantahan; atau"
-+"\n\n*(c)  Saya tidak menerima tawaran di atas ini."]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="b50cac59-24f8-4da4-b5c6-f30d3581da02" key="textField-48" positionType="Float" x="79" y="223" width="447" height="15"/>
-				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
-				</textElement>
-				<textFieldExpression><![CDATA["*(a)   Saya menerima tawaran itu; dan"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["2.\t*<style isItalic='true'>(a)</style>   Saya menerima tawaran itu; dan"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="72bb4f01-fcc1-4d1e-a7a5-1be64751c655" key="textField-51" positionType="Float" x="64" y="257" width="453" height="3"/>
+				<reportElement uuid="72bb4f01-fcc1-4d1e-a7a5-1be64751c655" key="textField-51" positionType="Float" x="64" y="181" width="453" height="3"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="684ca551-e8df-48da-917b-f19d3d779632" key="textField-52" positionType="Float" x="139" y="263" width="387" height="15"/>
+				<reportElement uuid="684ca551-e8df-48da-917b-f19d3d779632" key="textField-52" positionType="Float" x="139" y="187" width="387" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["saya meminta supaya amaun yang kena dibayar itu dihantar kepada saya melalui cek/kiriman wang di alamat di atas; atau"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="d39e95ce-c841-4021-a2d8-b6b5792993f8" key="textField-53" positionType="Float" x="139" y="240" width="387" height="15"/>
+				<reportElement uuid="d39e95ce-c841-4021-a2d8-b6b5792993f8" key="textField-53" positionType="Float" x="139" y="164" width="387" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["saya bersedia untuk hadir ke Pejabat Tanah pada bila-bila masa yang ditetapkan untuk menerima bayaran secara *wang tunai/cek/ kiriman wang; "]]></textFieldExpression>
 			</textField>
-			<break>
-				<reportElement uuid="7c2439d3-2f18-4419-9b1c-9e6658fdad5d" key="element-5" positionType="Float" x="0" y="437" width="551" height="1" isPrintInFirstWholeBand="true"/>
-			</break>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="6234c375-ea5a-45b6-af48-bf6df57b3559" key="textField-65" positionType="Float" x="64" y="145" width="451" height="5"/>
+				<reportElement uuid="6234c375-ea5a-45b6-af48-bf6df57b3559" key="textField-65" positionType="Float" x="64" y="98" width="451" height="5"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
-					<font fontName="Bookman Old Style" size="10" isBold="true" isItalic="false" pdfFontName="Helvetica-Bold"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Bookman Old Style" size="10" isBold="false" isItalic="false" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["JADUAL"]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
-				<reportElement uuid="baf30443-9862-452f-b7da-4466934f47cc" key="subreport-3" positionType="Float" isPrintRepeatedValues="false" mode="Opaque" x="14" y="162" width="524" height="21"/>
+				<reportElement uuid="baf30443-9862-452f-b7da-4466934f47cc" key="subreport-3" positionType="Float" isPrintRepeatedValues="false" mode="Opaque" x="14" y="104" width="524" height="21"/>
+				<subreportParameter name="id_hakmilik">
+					<subreportParameterExpression><![CDATA[$P{id_hakmilik}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="ReportDir">
 					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="id_Fail">
 					<subreportParameterExpression><![CDATA[$P{id_Fail}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="id_hakmilik">
-					<subreportParameterExpression><![CDATA[$P{id_hakmilik}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="no_fail">
-					<subreportParameterExpression><![CDATA[$P{no_fail}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="userIdNegeri">
-					<subreportParameterExpression><![CDATA[$P{userIdNegeri}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="noMT">
-					<subreportParameterExpression><![CDATA[$P{noMT}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="noARB">
-					<subreportParameterExpression><![CDATA[$P{noARB}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="akaunMT">
-					<subreportParameterExpression><![CDATA[$P{akaunMT}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="akaunARB">
-					<subreportParameterExpression><![CDATA[$P{akaunARB}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="bankMT">
-					<subreportParameterExpression><![CDATA[$P{bankMT}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="bankARB">
-					<subreportParameterExpression><![CDATA[$P{bankARB}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="valMT">
-					<subreportParameterExpression><![CDATA[$P{valMT}]]></subreportParameterExpression>
-				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{ReportDir} + "//ppt//BorangR_lebihDrpdSatuHakmilik_jadual.jasper"]]></subreportExpression>
 			</subreport>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="195070d0-6aaa-4347-bbb9-7bbc00e47f40" key="textField-72" positionType="Float" x="33" y="122" width="214" height="19">
-					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=5)]]></printWhenExpression>
-				</reportElement>
+				<reportElement uuid="146433dd-c2c3-4c3d-a870-cdc58d56bebb" key="textField-73" positionType="Float" x="32" y="44" width="492" height="15"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Bertarikh pada : "]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="146433dd-c2c3-4c3d-a870-cdc58d56bebb" key="textField-73" positionType="Float" x="33" y="122" width="214" height="19">
-					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==5)]]></printWhenExpression>
-				</reportElement>
-				<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="1_1_2"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Bertarikh pada.........haribulan.............. 20....."]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="65a41e62-8987-4ac4-8bdb-0a27f45d8e73" key="textField-77" positionType="Float" x="373" y="369" width="158" height="11"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="1_1_2"/>
-				</textElement>
-				<textFieldExpression><![CDATA["........................................."]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="ce20b616-b791-471e-a21f-d1b1737f3720" key="textField-78" positionType="Float" x="40" y="369" width="214" height="11">
-					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=5)]]></printWhenExpression>
-				</reportElement>
-				<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="1_1_2"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Bertarikh pada : "]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="8daf2a01-622b-4486-a5fc-f2584a632c55" key="textField-79" positionType="Float" x="38" y="369" width="214" height="11">
-					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==5)]]></printWhenExpression>
-				</reportElement>
-				<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="1_1_2"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Bertarikh pada........ haribulan ..........., 20...."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n\nBertarikh pada.........haribulan.............. 20....."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="ad9c9bc1-308b-40ae-bb7f-dec9bd625a3b" key="textField-50" positionType="Float" x="108" y="288" width="31" height="15"/>
+				<reportElement uuid="ad9c9bc1-308b-40ae-bb7f-dec9bd625a3b" key="textField-50" positionType="Float" x="108" y="212" width="31" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["(iii)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="72bb4f01-fcc1-4d1e-a7a5-1be64751c655" key="textField-51" positionType="Float" x="64" y="282" width="453" height="3"/>
+				<reportElement uuid="72bb4f01-fcc1-4d1e-a7a5-1be64751c655" key="textField-51" positionType="Float" x="64" y="206" width="453" height="3"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="684ca551-e8df-48da-917b-f19d3d779632" key="textField-52" positionType="Float" x="139" y="288" width="387" height="15"/>
+				<reportElement uuid="684ca551-e8df-48da-917b-f19d3d779632" key="textField-52" positionType="Float" x="139" y="212" width="387" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="12" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["saya meminta supaya amaun yang kena dibayar itu dipindahkan secara elektronik ke dalam akaun saya."]]></textFieldExpression>
 			</textField>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+					<reportElement uuid="8daf2a01-622b-4486-a5fc-f2584a632c55" key="textField-79" positionType="Float" x="38" y="247" width="486" height="11"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
+						<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+						<paragraph lineSpacing="1_1_2"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n\nBertarikh pada ........ haribulan ..........., 20...."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+					<reportElement uuid="65a41e62-8987-4ac4-8bdb-0a27f45d8e73" key="textField-77" positionType="Float" x="368" y="258" width="158" height="11"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+						<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+						<paragraph lineSpacing="1_1_2"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n\n........................................."]]></textFieldExpression>
+				</textField>
+				<elementGroup>
+					<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+						<reportElement uuid="fca78746-b5eb-410c-acd1-0a3742fc7494" key="textField-45" positionType="Float" x="79" y="232" width="446" height="15"/>
+						<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
+							<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+							<paragraph lineSpacing="1_1_2"/>
+						</textElement>
+						<textFieldExpression><![CDATA["*(b)  Saya menerima tawaran itu dengan bantahan; atau"
++"\n\n*(c)  Saya tidak menerima tawaran di atas ini."]]></textFieldExpression>
+					</textField>
+				</elementGroup>
+			</elementGroup>
 		</band>
 	</detail>
 	<columnFooter>
@@ -403,7 +338,7 @@ AND E.ID_HAKMILIK = $P{id_hakmilik}]]>
 	<pageFooter>
 		<band height="33" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="a9776484-008c-4c84-ab16-8d426a5430bf" key="textField-26" positionType="Float" mode="Transparent" x="32" y="0" width="494" height="11"/>
+				<reportElement uuid="a9776484-008c-4c84-ab16-8d426a5430bf" key="textField-26" positionType="Float" isPrintRepeatedValues="false" mode="Transparent" x="32" y="0" width="494" height="11"/>
 				<box>
 					<topPen lineWidth="1.0" lineStyle="Solid"/>
 				</box>
@@ -412,6 +347,9 @@ AND E.ID_HAKMILIK = $P{id_hakmilik}]]>
 				</textElement>
 				<textFieldExpression><![CDATA["*Potong sebagaimana yang sesuai"]]></textFieldExpression>
 			</textField>
+			<break>
+				<reportElement uuid="7c2439d3-2f18-4419-9b1c-9e6658fdad5d" key="element-5" positionType="Float" x="0" y="1" width="551" height="1" isPrintInFirstWholeBand="true"/>
+			</break>
 		</band>
 	</pageFooter>
 	<summary>
