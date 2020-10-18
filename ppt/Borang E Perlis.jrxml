@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Borang E Perlis" pageWidth="595" pageHeight="842" columnWidth="451" leftMargin="72" rightMargin="72" topMargin="42" bottomMargin="0" uuid="6930f817-51ee-43c6-b220-22025efa0a0d">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Borang E Perlis" pageWidth="595" pageHeight="842" columnWidth="451" leftMargin="72" rightMargin="72" topMargin="65" bottomMargin="0" uuid="6930f817-51ee-43c6-b220-22025efa0a0d">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.y" value="238"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -13,9 +13,10 @@
 	<parameter name="namaPegawai" class="java.lang.String"/>
 	<parameter name="id_borange" class="java.lang.String"/>
 	<parameter name="no_fail" class="java.lang.String"/>
-	<parameter name="masa_siasatan" class="java.lang.String">
+	<parameter name="masa_siasatan_awal" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
+	<parameter name="masa_siasatan_akhir" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT DISTINCT TO_CHAR(H.ID_HAKMILIK)AS ID_HAKMILIK,A.ID_NEGERI, B.NO_RUJUKAN_SURAT, A.NO_FAIL, TO_CHAR(A.ID_FAIL) AS ID_FAIL, TO_CHAR(D.TARIKH_SIASATAN,'DD') AS HARI_SIASATAN,
     CASE
@@ -87,7 +88,17 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
         WHEN BEH.JENIS_WAKTU = '2' THEN 'tengahari'
         WHEN BEH.JENIS_WAKTU = '3' THEN 'petang'
         WHEN BEH.JENIS_WAKTU = '4' THEN 'malam'
-    END AS JENIS_WAKTUBEH
+    END AS JENIS_WAKTUBEH,
+CASE
+    WHEN MM.NAMA_MUKIM LIKE '%MUKIM%' THEN INITCAP(REPLACE(MM.NAMA_MUKIM,'MUKIM',''))
+    WHEN MM.NAMA_MUKIM LIKE '%PEKAN%' THEN INITCAP(REPLACE(MM.NAMA_MUKIM,'PEKAN',''))
+    WHEN MM.NAMA_MUKIM LIKE '%BANDAR%' THEN INITCAP(REPLACE(MM.NAMA_MUKIM,'BANDAR',''))
+END AS MUKIM,
+CASE
+    WHEN MM.NAMA_MUKIM LIKE '%MUKIM%' THEN '1'
+    WHEN MM.NAMA_MUKIM LIKE '%PEKAN%' THEN '2'
+    WHEN MM.NAMA_MUKIM LIKE '%BANDAR%' THEN '3'
+END AS SET_MUKIM
     FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B,
     TBLPPTBORANGE D, TBLRUJBANDAR E, TBLRUJNEGERI F, TBLRUJNEGERI G, TBLPPTHAKMILIK H, TBLPPTBORANGEHAKMILIK BEH,
     TBLRUJDAERAH DD,TBLRUJMUKIM MM,TBLPPTWARTA I
@@ -103,9 +114,9 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
     AND A.ID_NEGERI = G.ID_NEGERI
     AND I.ID_WARTA = (SELECT MAX(ID_WARTA) FROM TBLPPTWARTA WHERE B.ID_PERMOHONAN = TBLPPTWARTA.ID_PERMOHONAN)
     AND D.ID_BORANGE = $P!{id_borange}
-    AND ((BEH.MASA_SIASATAN != ' ' AND BEH.MASA_SIASATAN = '$P!{masa_siasatan}')
-          OR (D.MASA_SIASATAN != ' ' AND D.MASA_SIASATAN = '$P!{masa_siasatan}')
-	OR ('$P!{masa_siasatan}' = ' '))]]>
+    AND (BEH.MASA_SIASATAN != ' ' AND BEH.MASA_SIASATAN IN ('$P!{masa_siasatan_awal}','$P!{masa_siasatan_akhir}')
+            OR (D.MASA_SIASATAN != ' ' AND D.MASA_SIASATAN IN ('$P!{masa_siasatan_awal}','$P!{masa_siasatan_akhir}'))
+            OR ('$P!{masa_siasatan_awal}' = ' ' AND '$P!{masa_siasatan_akhir}' = ' '))]]>
 	</queryString>
 	<field name="ID_HAKMILIK" class="java.lang.String"/>
 	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
@@ -137,6 +148,8 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 	<field name="TAHUN_WARTA" class="java.lang.String"/>
 	<field name="MASA_SIASATANBEH" class="java.lang.String"/>
 	<field name="JENIS_WAKTUBEH" class="java.lang.String"/>
+	<field name="MUKIM" class="java.lang.String"/>
+	<field name="SET_MUKIM" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -150,9 +163,9 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="442" splitType="Stretch">
+		<band height="423" splitType="Stretch">
 			<subreport isUsingCache="true">
-				<reportElement uuid="91b3ab46-731f-4e92-b113-44b18204c055" key="subreport-1" positionType="Float" isPrintRepeatedValues="false" mode="Opaque" x="-24" y="412" width="451" height="15"/>
+				<reportElement uuid="91b3ab46-731f-4e92-b113-44b18204c055" key="subreport-1" positionType="Float" isPrintRepeatedValues="false" mode="Opaque" x="-26" y="366" width="451" height="15"/>
 				<subreportParameter name="id_Fail">
 					<subreportParameterExpression><![CDATA[$F{ID_FAIL}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -166,10 +179,10 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 					<subreportParameterExpression><![CDATA[$F{ID_HAKMILIK}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "//ppt//Borang E_Jadual_lotLebihDrpdSatuMukaSurat Perlis.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppt//Borang E_Jadual_lotLebihDrpdSatuMukaSurat.jasper"]]></subreportExpression>
 			</subreport>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="237d8a02-f3c5-4867-a887-ad3d8fcb5373" key="textField-25" positionType="Float" x="2" y="330" width="450" height="15"/>
+				<reportElement uuid="237d8a02-f3c5-4867-a887-ad3d8fcb5373" key="textField-25" positionType="Float" x="2" y="313" width="450" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="Single"/>
@@ -177,18 +190,11 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 				<textFieldExpression><![CDATA["\n\nJADUAL\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="d33fc14d-6596-40db-8aa0-fc340b2425e2" key="textField-46" positionType="Float" x="32" y="362" width="374" height="17"/>
+				<reportElement uuid="d33fc14d-6596-40db-8aa0-fc340b2425e2" key="textField-46" positionType="Float" x="32" y="330" width="374" height="17"/>
 				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Daerah "+$F{NAMA_DAERAH}]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="d33fc14d-6596-40db-8aa0-fc340b2425e2" key="textField-46" positionType="Float" x="32" y="380" width="374" height="18"/>
-				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Bandar/Pekan/Mukim "+$F{NAMA_MUKIM}+"\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="9d070292-7b46-4f73-a0ff-ab01e6dad5b6" key="textField-5" positionType="Float" x="0" y="18" width="451" height="17"/>
@@ -196,8 +202,8 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Mengikut perisytiharan pengambilan yang dicadangkan bagi tanah yang diperihalkan dalam Jadual di bawah ini, maka dengan ini notis diberikan bahawa suatu siasatan untuk mendengar semua tuntutan pampasan mengenai semua kepentingan mengenai tanah itu akan diadakan pada <style isBold='true' pdfFontName='Helvetica-Bold'>"
-+($F{HARI_SIASATAN} != null ? $F{HARI_SIASATAN}:".........")+" haribulan "
+				<textFieldExpression><![CDATA["Mengikut perisytiharan pengambilan yang dicadangkan bagi tanah yang diperihalkan dalam Jadual di bawah ini, maka dengan ini notis diberikan bahawa suatu siasatan untuk mendengar semua tuntutan pampasan mengenai semua kepentingan mengenai tanah itu akan diadakan pada <style isBold='true'>"
++($F{HARI_SIASATAN} != null ? $F{HARI_SIASATAN}:".........")+" </style>haribulan<style isBold='true'> "
 +($F{BULAN_SIASATAN} != null ? $F{BULAN_SIASATAN}:"..................") +" "
 +($F{TAHUN_SIASATAN} != null ? $F{TAHUN_SIASATAN}:"..................")
 +"</style> pada <style isBold='true'>"
@@ -212,7 +218,7 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n\n........................................."
+				<textFieldExpression><![CDATA["........................................."
 +"\n<style isItalic='true'>Pentadbir Tanah</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
@@ -221,17 +227,18 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["2.      Semua orang yang mempunyai kepentingan mengenai tanah tersebut, sama ada sebagai tuan punya, penduduk, penerima pajak, pemegang gadaian, penyewa atau selainnya, adalah dengan ini dikehendaki untuk hadir di hadapan yang bertandatangan di bawah ini pada masa yang tersebut di atas sama ada sendiri atau melalui ejen dan di sana untuk menyatakan :"+"\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["2.    Semua orang yang mempunyai kepentingan mengenai tanah tersebut, sama ada sebagai tuan punya, penduduk, penerima pajak, pemegang gadaian, penyewa atau selainnya, adalah dengan ini dikehendaki untuk hadir di hadapan yang bertandatangan di bawah ini pada masa yang tersebut di atas sama ada sendiri atau melalui ejen dan di sana untuk menyatakan—\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="699d4e06-9f3c-487a-beed-a8d122a72441" key="textField-23" positionType="Float" x="1" y="281" width="451" height="15"/>
+				<reportElement uuid="699d4e06-9f3c-487a-beed-a8d122a72441" key="textField-23" positionType="Float" x="1" y="259" width="451" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["\nBertarikh pada "+($F{HARI} != null ? $F{HARI}:"…………")+" haribulan "
 +($F{BULAN} != null ? $F{BULAN}:"…………………")+", "
-+($F{TAHUN} != null ? $F{TAHUN}:"20………")]]></textFieldExpression>
++($F{TAHUN} != null ? $F{TAHUN}:"20………")
++"\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="15dcb6a0-386a-4d1c-81e9-f13a692d4edc" key="textField-1" positionType="Float" mode="Transparent" x="0" y="0" width="451" height="17"/>
@@ -255,7 +262,7 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="539172e1-5d64-4e46-a6fa-fc12e266d732" key="textField-15" positionType="Float" x="19" y="131" width="43" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["(d)  "]]></textFieldExpression>
@@ -271,7 +278,7 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="10ab5616-f1e7-4a84-97a9-25308ced7e5d" key="textField-7" positionType="Float" x="19" y="55" width="43" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["(a)  "]]></textFieldExpression>
@@ -295,7 +302,7 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="3a568866-7dcb-4da2-b1a7-fc3c28c03385" key="textField-20" positionType="Float" x="19" y="216" width="43" height="43"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["(b)  "]]></textFieldExpression>
@@ -311,7 +318,7 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="bfee99da-8460-4f68-9ba7-ed297337361b" key="textField-12" positionType="Float" x="19" y="105" width="43" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["(c)  "]]></textFieldExpression>
@@ -335,7 +342,7 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="051763bc-5eea-4e05-9ebc-6a94f76f0961" key="textField-9" positionType="Float" x="19" y="80" width="43" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["(b)  "]]></textFieldExpression>
@@ -346,12 +353,12 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n3.\tNotis selanjutnya diberikan bahawa pihak yang bertandatangan di bawah boleh menghendaki:"+"\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n3.    Notis selanjutnya diberikan bahawa pihak yang bertandatangan di bawah boleh menghendaki—\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="606d5cc8-66fd-463a-b468-1ef5ec49c963" key="textField-18" positionType="Float" x="19" y="167" width="43" height="40"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["(a)  "]]></textFieldExpression>
@@ -384,8 +391,51 @@ TO_CHAR(I.TARIKH_WARTA,'DD') AS HARI_WARTA,
 				<textFieldExpression><![CDATA["supaya mana-mana orang yang memiliki dokumen hakmilik keluaran mengenai mana-mana tanah yang dijadualkan di bawah menyerahkan dokumen itu pada masa siasatan."+"\n"]]></textFieldExpression>
 			</textField>
 			<break>
-				<reportElement uuid="4d72136b-ff75-44c8-a375-380736a1a3b5" positionType="Float" x="0" y="439" width="452" height="1"/>
+				<reportElement uuid="4d72136b-ff75-44c8-a375-380736a1a3b5" positionType="Float" x="0" y="422" width="452" height="1"/>
 			</break>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="32" y="347" width="107" height="15">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" isStrikeThrough="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Bandar<style isStrikeThrough='true'>/Pekan/Mukim</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="32" y="347" width="107" height="15">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "2" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" isStrikeThrough="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/</style>Pekan<style isStrikeThrough='true'>/Mukim</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="32" y="347" width="107" height="15">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "1" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" isStrikeThrough="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/Pekan/</style>Mukim"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="139" y="347" width="262" height="15"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{MUKIM} != null ? $F{MUKIM}:"-")
++"\n"]]></textFieldExpression>
+			</textField>
+			<image scaleImage="FillFrame" vAlign="Middle">
+				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="320" y="276" width="106" height="26"/>
+				<imageExpression><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+			</image>
 		</band>
 	</detail>
 	<columnFooter>

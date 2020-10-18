@@ -23,7 +23,14 @@ CASE
     WHEN C.NO_LOT IS NULL AND C.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || C.NO_PT
     WHEN C.NO_LOT IS NOT NULL AND C.NO_PT IS NOT NULL THEN JL.KETERANGAN  || C.NO_PT || CHR(32) || CHR(40) || C.NO_LOT  || CHR(41)
     ELSE  ''
-END AS NO_LOT, INITCAP(F.NAMA_MUKIM) AS NAMA_MUKIM, INITCAP(F.NAMA_MUKIM) AS NAMA_MUKIM_INIT, TO_CHAR(G.TEMPOH) AS TEMPOH,
+END AS NO_LOT,
+CASE
+    WHEN C.NO_LOT IS NOT NULL AND C.NO_PT IS NULL THEN C.NO_LOT
+    WHEN C.NO_LOT IS NULL AND C.NO_PT IS NOT NULL THEN C.NO_PT
+    WHEN C.NO_LOT IS NOT NULL AND C.NO_PT IS NOT NULL THEN C.NO_PT || CHR(32) || CHR(40) || C.NO_LOT  || CHR(41)
+    ELSE  ''
+END AS LOT,
+INITCAP(F.NAMA_MUKIM) AS NAMA_MUKIM, INITCAP(F.NAMA_MUKIM) AS NAMA_MUKIM_INIT, TO_CHAR(G.TEMPOH) AS TEMPOH,
     TO_CHAR(SYSDATE,'DD')AS HARI,
          CASE
         WHEN TO_CHAR(SYSDATE,'MM')='01' THEN 'Januari'
@@ -42,7 +49,7 @@ END AS NO_LOT, INITCAP(F.NAMA_MUKIM) AS NAMA_MUKIM, INITCAP(F.NAMA_MUKIM) AS NAM
     TO_CHAR(SYSDATE,'YYYY')AS TAHUN, INITCAP(H.NAMA_DAERAH) AS NAMA_DAERAH,to_char(PB.ID_HAKMILIKPB) as id_hakmilikpb,
     INITCAP(PBER.NAMA_PB) AS NAMA_PB, REPLACE(INITCAP(NVL(PB.ALAMAT1,'')),'&','&#38;') AS ALAMAT1,
     REPLACE(INITCAP(NVL(PB.ALAMAT2,'')),'&','&#38;') AS ALAMAT2, REPLACE(INITCAP(NVL(PB.ALAMAT3,'')),'&','&#38;') AS ALAMAT3,
-    NVL(PB.POSKOD,'') AS POSKOD, INITCAP(BN.KETERANGAN) AS NAMA_BANDAR_PB, INITCAP(NG.NAMA_NEGERI) AS NAMA_NEGERI_PB,
+    NVL(PB.POSKOD,'') AS POSKOD, INITCAP(BN.KETERANGAN) AS NAMA_BANDAR_PB, UPPER(NG.NAMA_NEGERI) AS NAMA_NEGERI_PB,
     TO_CHAR(E.TARIKH_WARTA,'DD') AS HARI_WARTA,
     CASE
         WHEN TO_CHAR(E.TARIKH_WARTA,'MM')='01' THEN 'Januari'
@@ -74,7 +81,17 @@ TO_CHAR(G.TARIKH_BORANGL,'DD') AS HARI_BORANGL,
         WHEN TO_CHAR(G.TARIKH_BORANGL,'MM')='11' THEN 'November'
         WHEN TO_CHAR(G.TARIKH_BORANGL,'MM')='12' THEN 'Disember'
     END AS BULAN_BORANGL,
-    TO_CHAR(G.TARIKH_BORANGL,'YYYY') AS TAHUN_BORANGL
+    TO_CHAR(G.TARIKH_BORANGL,'YYYY') AS TAHUN_BORANGL,
+CASE
+    WHEN F.NAMA_MUKIM LIKE '%MUKIM%' THEN INITCAP(REPLACE(F.NAMA_MUKIM,'MUKIM',''))
+    WHEN F.NAMA_MUKIM LIKE '%PEKAN%' THEN INITCAP(REPLACE(F.NAMA_MUKIM,'PEKAN',''))
+    WHEN F.NAMA_MUKIM LIKE '%BANDAR%' THEN INITCAP(REPLACE(F.NAMA_MUKIM,'BANDAR',''))
+END AS MUKIM,
+CASE
+    WHEN F.NAMA_MUKIM LIKE '%MUKIM%' THEN '1'
+    WHEN F.NAMA_MUKIM LIKE '%PEKAN%' THEN '2'
+    WHEN F.NAMA_MUKIM LIKE '%BANDAR%' THEN '3'
+END AS SET_MUKIM
     FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTHAKMILIK C, TBLPPTSIASATAN D, TBLPPTWARTA E, TBLRUJMUKIM F, TBLPPTBORANGL G,
     TBLRUJDAERAH H, TBLRUJLOT JL,TBLRUJNEGERI NG,TBLRUJBANDAR BN,TBLRUJJENISHAKMILIK I,TBLPPTHAKMILIKPB PB,TBLPPTPIHAKBERKEPENTINGAN PBER
     WHERE A.ID_FAIL = B.ID_FAIL
@@ -100,7 +117,7 @@ TO_CHAR(G.TARIKH_BORANGL,'DD') AS HARI_BORANGL,
     AND NVL(C.FLAG_PENARIKAN_KESELURUHAN,'0') <> 'Y'
     --AND NVL(C.FLAG_PEMBATALAN_KESELURUHAN,'0') <> 'Y'
     AND E.ID_WARTA = (SELECT MAX(ID_WARTA) FROM TBLPPTWARTA WHERE B.ID_PERMOHONAN = TBLPPTWARTA.ID_PERMOHONAN)
-    AND C.ID_HAKMILIK = $P!{id_hakmilik}]]>
+    AND C.ID_HAKMILIK = $P{id_hakmilik}]]>
 	</queryString>
 	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
@@ -112,6 +129,7 @@ TO_CHAR(G.TARIKH_BORANGL,'DD') AS HARI_BORANGL,
 	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
 	<field name="NO_HAKMILIK" class="java.lang.String"/>
 	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="LOT" class="java.lang.String"/>
 	<field name="NAMA_MUKIM" class="java.lang.String"/>
 	<field name="NAMA_MUKIM_INIT" class="java.lang.String"/>
 	<field name="TEMPOH" class="java.lang.String"/>
@@ -134,6 +152,8 @@ TO_CHAR(G.TARIKH_BORANGL,'DD') AS HARI_BORANGL,
 	<field name="HARI_BORANGL" class="java.lang.String"/>
 	<field name="BULAN_BORANGL" class="java.lang.String"/>
 	<field name="TAHUN_BORANGL" class="java.lang.String"/>
+	<field name="MUKIM" class="java.lang.String"/>
+	<field name="SET_MUKIM" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -147,9 +167,9 @@ TO_CHAR(G.TARIKH_BORANGL,'DD') AS HARI_BORANGL,
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="302" splitType="Stretch">
+		<band height="207" splitType="Stretch">
 			<subreport isUsingCache="true">
-				<reportElement uuid="e8303af1-b6ab-401b-807b-f58b03e9515a" key="subreport-1" positionType="Float" mode="Opaque" x="0" y="254" width="451" height="15"/>
+				<reportElement uuid="e8303af1-b6ab-401b-807b-f58b03e9515a" key="subreport-1" positionType="Float" mode="Opaque" x="-26" y="174" width="451" height="15"/>
 				<subreportParameter name="ReportDir">
 					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -176,79 +196,46 @@ TO_CHAR(G.TARIKH_BORANGL,'DD') AS HARI_BORANGL,
 +"\n\n[NOTIS UNTUK MENYERAHKAN DOKUMEN/DOKUMEN-DOKUMEN]\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="e0297087-4424-4a7d-830c-18717e070522" key="textField-5" positionType="Float" x="0" y="28" width="451" height="34"/>
+				<reportElement uuid="e0297087-4424-4a7d-830c-18717e070522" key="textField-5" positionType="Float" x="0" y="15" width="451" height="16"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Prosiding Pengambilan No. <style isBold='true'>"+($F{NO_SIASATAN}!=null ? $F{NO_SIASATAN}:"-")+"</style> "
-+"Pemberitahu Warta No. <style isBold='true'> "+($F{NO_WARTA}!=null ? $F{NO_WARTA}+($F{TARIKH_WARTA}!=null ? "/"+$F{TARIKH_WARTA}:""):"-")+"</style>"]]></textFieldExpression>
++"Pemberitahu <style isItalic='true'>Warta</style> No. <style isBold='true'> "+($F{NO_WARTA}!=null ? $F{NO_WARTA}+($F{TARIKH_WARTA}!=null ? "/"+$F{TARIKH_WARTA}:""):"-")+"</style>\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="f0603348-81cf-443a-b86e-eb6e122e806b" key="textField-6" positionType="Float" x="0" y="117" width="451" height="15"/>
-				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
-				</textElement>
-				<textFieldExpression><![CDATA["    Bahawasanya kesemua/sebahagian tanah yang tercatat dalam Hakmilik"
-+"<style isBold='false' pdfFontName='Helvetica-Bold'> "+($F{NO_HAKMILIK}!=null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":"")+$F{NO_HAKMILIK}:"-")
-+"</style> Lot <style isBold='false' pdfFontName='Helvetica-Bold'>"+($F{NO_LOT}!=null ? $F{NO_LOT}:"")+"</style>"
-+"<style isBold='false' pdfFontName='Helvetica-Bold'> "+($F{NAMA_MUKIM}!=null ? $F{NAMA_MUKIM}:"")+"</style> telah diambil secara rasmi oleh Pihak Berkuasa Negeri:"
-+"\n\n   Dan bahawasanya saya mempunyai alasan untuk mempercayai bahawa dokumen hakmilik yang disebut kemudian daripada ini ada dalam milikan tuan:"
-+"\n\n    Maka oleh yang demikian pada menjalankan kuasa yang diberi oleh seksyen 24 Akta Pengambilan Tanah 1960, saya dengan ini menghendaki supaya tuan menyerahkan kepada saya dokumen/ dokumen-dokumen hakmilik yang dinyatakan dalam Jadual di bawah dalam masa "
-+"<style isBold='true' pdfFontName='Helvetica-Bold'>"+(($P{bilHariBorangL}!=null && $P{bilHariBorangL}!="") ? $P{bilHariBorangL}+" hari":"      hari")+"</style> dari tarikh Notis ini disampaikan kepada tuan."]]></textFieldExpression>
-			</textField>
-			<break>
-				<reportElement uuid="fd68e633-5127-4c99-946a-91af15c5a188" key="element-1" positionType="Float" x="0" y="301" width="595" height="1"/>
-			</break>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="e5f6c10f-b18a-4df6-a72d-871d3d4bc8a4" key="textField-44" positionType="Float" x="263" y="172" width="188" height="19"/>
+				<reportElement uuid="e5f6c10f-b18a-4df6-a72d-871d3d4bc8a4" key="textField-44" positionType="Float" x="263" y="110" width="188" height="19"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n\n........................................."
+				<textFieldExpression><![CDATA["........................................."
 +"\n<style isItalic='true'>Pentadbir Tanah</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="034d481b-33e1-41aa-ad85-bc44d9369c75" key="textField-45" positionType="Float" x="0" y="219" width="451" height="15"/>
-				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Daerah " +($F{NAMA_DAERAH} != null ? $F{NAMA_DAERAH}:"")]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="c6b359ff-1343-4874-867f-a201dd4caf3a" key="textField-46" positionType="Float" x="0" y="235" width="451" height="15"/>
-				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
-					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
-				</textElement>
-				<textFieldExpression><![CDATA["[Bandar/Pekan/Mukim]  "+($F{NAMA_MUKIM_INIT} != null ? $F{NAMA_MUKIM_INIT}:"")]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="e7785460-52f8-47ce-8afc-c5482c913ef9" key="textField-53" positionType="Float" x="0" y="198" width="451" height="15"/>
+				<reportElement uuid="e7785460-52f8-47ce-8afc-c5482c913ef9" key="textField-53" positionType="Float" x="0" y="129" width="451" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["JADUAL"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="d08afe6f-f172-4f37-9b22-8e9d99fecc31" key="textField-54" positionType="Float" x="0" y="150" width="263" height="19"/>
+				<reportElement uuid="d08afe6f-f172-4f37-9b22-8e9d99fecc31" key="textField-54" positionType="Float" x="0" y="63" width="451" height="19"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Bertarikh pada "+($F{HARI_BORANGL}!=null?$F{HARI_BORANGL}:".........")+" haribulan "
+				<textFieldExpression><![CDATA["\n\nBertarikh pada "+($F{HARI_BORANGL}!=null?$F{HARI_BORANGL}:".........")+" haribulan "
 +($F{BULAN_BORANGL}!=null?$F{BULAN_BORANGL}:".........")+", "
 +($F{TAHUN_BORANGL}!=null?$F{TAHUN_BORANGL}:"20.......")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="10e9b2b6-15e4-409c-afac-da2fbabbf9a7" key="textField-56" positionType="Float" x="69" y="88" width="360" height="15"/>
+				<reportElement uuid="10e9b2b6-15e4-409c-afac-da2fbabbf9a7" key="textField-56" positionType="Float" x="69" y="32" width="382" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica-Bold"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{NAMA_PB}!=null ? $F{NAMA_PB}+"\n":"")
 +($F{ALAMAT1}!=null ? $F{ALAMAT1}+"\n":"")
@@ -259,28 +246,130 @@ TO_CHAR(G.TARIKH_BORANGL,'DD') AS HARI_BORANGL,
 +($F{NAMA_NEGERI_PB}!=null ? $F{NAMA_NEGERI_PB}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="cb25310f-9280-4dd4-b496-c452d1d3c5df" key="textField-57" positionType="Float" x="0" y="73" width="451" height="15"/>
+				<reportElement uuid="cb25310f-9280-4dd4-b496-c452d1d3c5df" key="textField-57" positionType="Float" x="0" y="32" width="69" height="15"/>
 				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Kepada :"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Kepada "]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="b00c68d7-a8dd-4025-897b-c118770e5391" key="textField-59" positionType="Float" x="0" y="88" width="69" height="15"/>
-				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="32" y="144" width="38" height="15"/>
+				<textElement verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isItalic='true'>Daerah</style> "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="70" y="144" width="331" height="15"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_DAERAH} != null ? $F{NAMA_DAERAH}:"-")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="139" y="159" width="262" height="15"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{MUKIM} != null ? $F{MUKIM}:"-")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="Mukim" positionType="Float" x="32" y="159" width="107" height="15">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "1" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" isStrikeThrough="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/Pekan/</style>Mukim"]]></textFieldExpression>
 			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="Bandar" positionType="Float" x="32" y="159" width="107" height="15">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" isStrikeThrough="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Bandar<style isStrikeThrough='true'>/Pekan/Mukim</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="Pekan" positionType="Float" x="32" y="159" width="107" height="15">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "2" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" isStrikeThrough="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/</style>Pekan<style isStrikeThrough='true'>/Mukim</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="f0603348-81cf-443a-b86e-eb6e122e806b" key="textField-6" positionType="Float" x="0" y="48" width="451" height="15">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "2" )]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\n    Bahawasanya kesemua/sebahagian tanah yang tercatat dalam Hakmilik"
++"<style isBold='false'> "+($F{NO_HAKMILIK}!=null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":"")+$F{NO_HAKMILIK}:"-")
++"</style> Lot <style isBold='false'>"+($F{LOT}!=null ? $F{LOT}:"")+"</style>"
++" [<style isStrikeThrough='true'>Bandar/</style>Pekan<style isStrikeThrough='true'>/Mukim</style>] "+($F{MUKIM}!=null ? $F{MUKIM}:"")+" telah diambil secara rasmi oleh Pihak Berkuasa Negeri:"
++"\n\n    Dan bahawasanya saya mempunyai alasan untuk mempercayai bahawa dokumen hakmilik yang disebut kemudian daripada ini ada dalam milikan tuan:"
++"\n\n    Maka oleh yang demikian pada menjalankan kuasa yang diberi oleh seksyen 24 Akta Pengambilan Tanah 1960, saya dengan ini menghendaki supaya tuan menyerahkan kepada saya dokumen/ dokumen-dokumen hakmilik yang dinyatakan dalam Jadual di bawah dalam masa "
++"<style isBold='true'>"+(($P{bilHariBorangL}!=null && $P{bilHariBorangL}!="") ? $P{bilHariBorangL}:"..........")+"</style> hari dari tarikh Notis ini disampaikan kepada tuan."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="f0603348-81cf-443a-b86e-eb6e122e806b" key="textField-6" positionType="Float" x="0" y="48" width="451" height="15">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "1" )]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\n    Bahawasanya kesemua/sebahagian tanah yang tercatat dalam Hakmilik"
++"<style isBold='false'> "+($F{NO_HAKMILIK}!=null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":"")+$F{NO_HAKMILIK}:"-")
++"</style> Lot <style isBold='false'>"+($F{LOT}!=null ? $F{LOT}:"")+"</style>"
++" [<style isStrikeThrough='true'>Bandar/Pekan/</style>Mukim] "+($F{MUKIM}!=null ? $F{MUKIM}:"")+" telah diambil secara rasmi oleh Pihak Berkuasa Negeri:"
++"\n\n    Dan bahawasanya saya mempunyai alasan untuk mempercayai bahawa dokumen hakmilik yang disebut kemudian daripada ini ada dalam milikan tuan:"
++"\n\n    Maka oleh yang demikian pada menjalankan kuasa yang diberi oleh seksyen 24 Akta Pengambilan Tanah 1960, saya dengan ini menghendaki supaya tuan menyerahkan kepada saya dokumen/ dokumen-dokumen hakmilik yang dinyatakan dalam Jadual di bawah dalam masa "
++"<style isBold='true'>"+(($P{bilHariBorangL}!=null && $P{bilHariBorangL}!="") ? $P{bilHariBorangL}:"..........")+"</style> hari dari tarikh Notis ini disampaikan kepada tuan."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="f0603348-81cf-443a-b86e-eb6e122e806b" key="textField-6" positionType="Float" x="0" y="48" width="451" height="15">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\n    Bahawasanya kesemua/sebahagian tanah yang tercatat dalam Hakmilik"
++"<style isBold='false'> "+($F{NO_HAKMILIK}!=null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":"")+$F{NO_HAKMILIK}:"-")
++"</style> Lot <style isBold='false'>"+($F{LOT}!=null ? $F{LOT}:"")+"</style>"
++" [Bandar<style isStrikeThrough='true'>/Pekan/Mukim</style>] "+($F{MUKIM}!=null ? $F{MUKIM}:"")+" telah diambil secara rasmi oleh Pihak Berkuasa Negeri:"
++"\n\n    Dan bahawasanya saya mempunyai alasan untuk mempercayai bahawa dokumen hakmilik yang disebut kemudian daripada ini ada dalam milikan tuan:"
++"\n\n    Maka oleh yang demikian pada menjalankan kuasa yang diberi oleh seksyen 24 Akta Pengambilan Tanah 1960, saya dengan ini menghendaki supaya tuan menyerahkan kepada saya dokumen/ dokumen-dokumen hakmilik yang dinyatakan dalam Jadual di bawah dalam masa "
++"<style isBold='true'>"+(($P{bilHariBorangL}!=null && $P{bilHariBorangL}!="") ? $P{bilHariBorangL}:"..........")+"</style> hari dari tarikh Notis ini disampaikan kepada tuan."]]></textFieldExpression>
+			</textField>
+			<image scaleImage="FillFrame" vAlign="Middle">
+				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="300" y="89" width="106" height="26"/>
+				<imageExpression><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+			</image>
 		</band>
 	</detail>
 	<columnFooter>
 		<band splitType="Stretch"/>
 	</columnFooter>
 	<pageFooter>
-		<band height="36" splitType="Stretch"/>
+		<band height="36" splitType="Stretch">
+			<break>
+				<reportElement uuid="fd68e633-5127-4c99-946a-91af15c5a188" key="element-1" positionType="Float" x="0" y="0" width="451" height="1"/>
+			</break>
+		</band>
 	</pageFooter>
 	<summary>
 		<band splitType="Stretch"/>

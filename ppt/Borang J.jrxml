@@ -36,7 +36,17 @@ TO_CHAR(J.TEMPOH) AS TEMPOH, REPLACE(TO_CHAR(D.BAYAR_PAMPASAN,'999,999,990.99'),
     END AS BULAN,
     TO_CHAR(SYSDATE,'YYYY') AS TAHUN,
     TO_CHAR(NVL(E.NILAI_BANGUNAN,'0')) AS NILAI_BANGUNAN, TO_CHAR(NVL(E.KOS_PINDAH,'0')) AS KOS_PINDAH,
-REPLACE(TO_CHAR((TO_CHAR((NVL(E.NILAI_BANGUNAN,'0')))+(TO_CHAR(NVL(E.KOS_PINDAH,'0')))),'999,999,999.99'),' ') AS JUMLAH
+REPLACE(TO_CHAR((TO_CHAR((NVL(E.NILAI_BANGUNAN,'0')))+(TO_CHAR(NVL(E.KOS_PINDAH,'0')))),'999,999,999.99'),' ') AS JUMLAH,
+CASE
+    WHEN G.NAMA_MUKIM LIKE '%MUKIM%' THEN '1'
+    WHEN G.NAMA_MUKIM LIKE '%PEKAN%' THEN '2'
+    WHEN G.NAMA_MUKIM LIKE '%BANDAR%' THEN '3'
+END AS SET_MUKIM,
+CASE
+    WHEN G.NAMA_MUKIM LIKE '%MUKIM%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'MUKIM',''))
+    WHEN G.NAMA_MUKIM LIKE '%PEKAN%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'PEKAN',''))
+    WHEN G.NAMA_MUKIM LIKE '%BANDAR%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'BANDAR',''))
+END AS MUKIM
 FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTHAKMILIK C, TBLPPTAWARD D,
 TBLPPTBANGUNAN E, TBLPPTHAKMILIKPB F, TBLRUJMUKIM G, TBLPPTBORANGJ J, TBLRUJLOT JL,
 TBLRUJJENISHAKMILIK K
@@ -66,6 +76,8 @@ AND A.ID_FAIL = $P{id_Fail}]]>
 	<field name="NILAI_BANGUNAN" class="java.lang.String"/>
 	<field name="KOS_PINDAH" class="java.lang.String"/>
 	<field name="JUMLAH" class="java.lang.String"/>
+	<field name="SET_MUKIM" class="java.lang.String"/>
+	<field name="MUKIM" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -79,105 +91,131 @@ AND A.ID_FAIL = $P{id_Fail}]]>
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="225" splitType="Stretch">
+		<band height="150" splitType="Stretch">
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="ab2fff52-ed72-45c2-9df2-70a077829010" key="textField-34" positionType="Float" x="51" y="92" width="400" height="15" isPrintWhenDetailOverflows="true">
+				<reportElement uuid="ab2fff52-ed72-45c2-9df2-70a077829010" key="textField-34" positionType="Float" x="51" y="62" width="400" height="15" isPrintWhenDetailOverflows="true">
 					<printWhenExpression><![CDATA[new Boolean(!$F{NILAI_BANGUNAN}.equals("0"))]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["(a)   nilai bangunan itu*"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["*<style isItalic='true'>(a)</style>   nilai bangunan itu*\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="07062ae8-8e37-47d6-83b8-4bf1f1e11d99" key="textField-1" positionType="Float" mode="Transparent" x="0" y="0" width="451" height="15" isPrintWhenDetailOverflows="true"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["BORANG J"
 +"\n<style isItalic='true'>Akta Pengambilan Tanah 1960\n[Seksyen 20]</style>"
-+"\n\n\nNOTIS MENGOSONGKAN BANGUNAN DAN PAMPASAN"]]></textFieldExpression>
++"\n\nNOTIS MENGOSONGKAN BANGUNAN DAN PAMPASAN\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="8e123dc1-3565-42e2-a77b-24a5bfe1c7b3" key="textField-5" positionType="Float" x="32" y="42" width="419" height="15" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8e123dc1-3565-42e2-a77b-24a5bfe1c7b3" key="textField-5" positionType="Float" x="13" y="30" width="419" height="15" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "1" )]]></printWhenExpression>
+				</reportElement>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Penduduk/ Tuan Punya bangunan di atas Lot No. "+($F{NO_LOT} != null ? $F{NO_LOT}:"")+"\nHakmilik No. "+($F{NO_HAKMILIK} != null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":".................................")+$F{NO_HAKMILIK}:".................................")+" [Bandar/Pekan/Mukim] "+($F{NAMA_MUKIM} != null ? $F{NAMA_MUKIM}:".................................")]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Penduduk/ Tuan Punya bangunan di atas Lot No. "+($F{NO_LOT} != null ? $F{NO_LOT}:"")+"\nHakmilik No. "+($F{NO_HAKMILIK} != null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":".................................")+$F{NO_HAKMILIK}:".................................")+" [<style isStrikeThrough='true'>Bandar/Pekan/</style>Mukim] "+($F{MUKIM} != null ? $F{MUKIM}:".................................")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="5ad5c9b0-ec07-4874-bef7-75b58e3d67cf" key="textField-6" positionType="Float" x="0" y="67" width="451" height="15" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="5ad5c9b0-ec07-4874-bef7-75b58e3d67cf" key="textField-6" positionType="Float" x="0" y="45" width="451" height="15" isPrintWhenDetailOverflows="true"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\tBahawasanya tanah tersebut di atas telah diambil pada tarikh ini menurut Perakuan Segera yang ditandatangani oleh Pengarah Negeri:"
-+"\n\n\tMaka saya dengan ini menghendaki supaya tuan mengosongkan bangunan yang disebut di atas dan yang terletak di atas tanah itu dalam masa "+($F{TEMPOH} != null ? $F{TEMPOH}:"......")+" hari dari tarikh ini."
-+"\n\n2.\tAmbil perhatian bahawa saya dengan ini menawarkan kepada tuan punya permis itu pampasan sebanyak RM"+($F{JUMLAH} != null ?$F{JUMLAH}:"")+" yang pampasan itu adalah bagi—"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n    Bahawasanya tanah tersebut di atas telah diambil pada tarikh ini menurut Perakuan Segera yang ditandatangani oleh Pengarah Negeri:"
++"\n\n    Maka saya dengan ini menghendaki supaya tuan mengosongkan bangunan yang disebut di atas dan yang terletak di atas tanah itu dalam masa "+($F{TEMPOH} != null ? $F{TEMPOH}:"......")+" hari dari tarikh ini."
++"\n\n2.    Ambil perhatian bahawa saya dengan ini menawarkan kepada tuan punya premis itu pampasan sebanyak RM"+($F{BAYAR_PAMPASAN} != null ? $F{BAYAR_PAMPASAN}:"...............")+" yang pampasan itu adalah bagi—\n"]]></textFieldExpression>
 			</textField>
 			<break>
-				<reportElement uuid="cc599514-dbd1-4b5a-b3c1-229ca2a66d0f" key="element-1" x="0" y="176" width="451" height="1" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="cc599514-dbd1-4b5a-b3c1-229ca2a66d0f" key="element-1" x="0" y="149" width="451" height="1" isPrintWhenDetailOverflows="true"/>
 			</break>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="98eef8d7-3210-4d69-8eef-58a31c1d1d8c" key="textField-29" positionType="Float" x="0" y="142" width="451" height="15" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="98eef8d7-3210-4d69-8eef-58a31c1d1d8c" key="textField-29" positionType="Float" x="0" y="93" width="451" height="15" isPrintWhenDetailOverflows="true"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["\nBertarikh pada "+($F{HARI} != null ? $F{HARI}:".........")+" haribulan "
 +($F{BULAN} != null ? $F{BULAN}:"..................")+", "
-+($F{TAHUN} != null ? $F{TAHUN}:"20......")]]></textFieldExpression>
++($F{TAHUN} != null ? $F{TAHUN}:"20......")+"\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="f321159c-ec80-4a1a-9c78-4f0ca66b51c9" key="textField-30" positionType="Float" x="263" y="157" width="188" height="19" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="f321159c-ec80-4a1a-9c78-4f0ca66b51c9" key="textField-30" positionType="Float" x="263" y="130" width="188" height="19" isPrintWhenDetailOverflows="true"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n\n........................................."
+				<textFieldExpression><![CDATA["........................................."
 +"\n<style isItalic='true' pdfFontName='Helvetica-Oblique'>Pentadbir Tanah</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="f916bc45-0f16-4d8b-9c67-c9549122be7f" key="textField-32" positionType="Float" x="51" y="92" width="400" height="15" isPrintWhenDetailOverflows="true">
+				<reportElement uuid="f916bc45-0f16-4d8b-9c67-c9549122be7f" key="textField-32" positionType="Float" x="51" y="62" width="400" height="15" isPrintWhenDetailOverflows="true">
 					<printWhenExpression><![CDATA[new Boolean($F{NILAI_BANGUNAN}.equals("") || $F{NILAI_BANGUNAN}.equals(null) || $F{NILAI_BANGUNAN}.equals("0"))]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["(a)   <style isStrikeThrough='true'>nilai bangunan itu</style>*"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["*<style isItalic='true'>(a)</style>   <style isStrikeThrough='true'>nilai bangunan itu</style>*\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="44d55119-9af0-4688-8c95-cdc4e68f6b49" key="textField-33" positionType="Float" x="51" y="117" width="400" height="15" isPrintWhenDetailOverflows="true">
+				<reportElement uuid="44d55119-9af0-4688-8c95-cdc4e68f6b49" key="textField-33" positionType="Float" x="51" y="78" width="400" height="15" isPrintWhenDetailOverflows="true">
 					<printWhenExpression><![CDATA[new Boolean($F{KOS_PINDAH}.equals("") || $F{KOS_PINDAH}.equals(null) || $F{KOS_PINDAH}.equals("0"))]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["(b)   <style isStrikeThrough='true'>kos memindah dan membina semula bangunan itu di tempat lain.</style>*"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["*<style isItalic='true'>(b)</style>   <style isStrikeThrough='true'>kos memindah dan membina semula bangunan itu di tempat lain.</style>*\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="387dbcd9-747a-4467-b602-2e0f33d5effe" key="textField-35" positionType="Float" x="51" y="117" width="400" height="15" isPrintWhenDetailOverflows="true">
+				<reportElement uuid="387dbcd9-747a-4467-b602-2e0f33d5effe" key="textField-35" positionType="Float" x="51" y="78" width="400" height="15" isPrintWhenDetailOverflows="true">
 					<printWhenExpression><![CDATA[new Boolean(!$F{KOS_PINDAH}.equals("0"))]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["(b)   kos memindah dan membina semula bangunan itu di tempat lain.*"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["*<style isItalic='true'>(b)</style>    kos memindah dan membina semula bangunan itu di tempat lain.*\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="8e123dc1-3565-42e2-a77b-24a5bfe1c7b3" key="textField-5" positionType="Float" x="0" y="27" width="51" height="15" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8e123dc1-3565-42e2-a77b-24a5bfe1c7b3" key="textField-5" positionType="Float" x="0" y="15" width="51" height="15" isPrintWhenDetailOverflows="true"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
+					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Kepada:"]]></textFieldExpression>
 			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="8e123dc1-3565-42e2-a77b-24a5bfe1c7b3" key="textField-5" positionType="Float" x="13" y="30" width="419" height="15" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "2" )]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Penduduk/ Tuan Punya bangunan di atas Lot No. "+($F{NO_LOT} != null ? $F{NO_LOT}:"")+"\nHakmilik No. "+($F{NO_HAKMILIK} != null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":".................................")+$F{NO_HAKMILIK}:".................................")+" [<style isStrikeThrough='true'>Bandar/</style>Pekan<style isStrikeThrough='true'>/Mukim</style>] "+($F{MUKIM} != null ? $F{MUKIM}:".................................")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="8e123dc1-3565-42e2-a77b-24a5bfe1c7b3" key="textField-5" positionType="Float" x="13" y="30" width="419" height="15" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Penduduk/ Tuan Punya bangunan di atas Lot No. "+($F{NO_LOT} != null ? $F{NO_LOT}:"")+"\nHakmilik No. "+($F{NO_HAKMILIK} != null ? ($F{KOD_JENIS_HAKMILIK} != null ? $F{KOD_JENIS_HAKMILIK}+" ":".................................")+$F{NO_HAKMILIK}:".................................")+" [Bandar<style isStrikeThrough='true'>/Pekan/Mukim</style>] "+($F{MUKIM} != null ? $F{MUKIM}:".................................")]]></textFieldExpression>
+			</textField>
+			<image scaleImage="FillFrame" vAlign="Middle">
+				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="305" y="110" width="106" height="26"/>
+				<imageExpression><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+			</image>
 		</band>
 	</detail>
 	<columnFooter>

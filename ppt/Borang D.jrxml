@@ -36,7 +36,17 @@ A.ID_NEGERI,
 '\([[:alnum:]]+\)',upper(regexp_substr(INITCAP(REGEXP_REPLACE(UPPER(E.NAMA_MUKIM),
 '(^| )(M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?))($| )', ' (\2)')),'\((.*?)\)',1,1,null,1))))
 as NAMA_MUKIM,
-INITCAP(F.NAMA_DAERAH) AS NAMA_DAERAH
+INITCAP(F.NAMA_DAERAH) AS NAMA_DAERAH,
+CASE
+    WHEN E.NAMA_MUKIM LIKE '%MUKIM%' THEN '1'
+    WHEN E.NAMA_MUKIM LIKE '%PEKAN%' THEN '2'
+    WHEN E.NAMA_MUKIM LIKE '%BANDAR%' THEN '3'
+END AS SET_MUKIM,
+CASE
+    WHEN E.NAMA_MUKIM LIKE '%MUKIM%' THEN INITCAP(REPLACE(E.NAMA_MUKIM,'MUKIM',''))
+    WHEN E.NAMA_MUKIM LIKE '%PEKAN%' THEN INITCAP(REPLACE(E.NAMA_MUKIM,'PEKAN',''))
+    WHEN E.NAMA_MUKIM LIKE '%BANDAR%' THEN INITCAP(REPLACE(E.NAMA_MUKIM,'BANDAR',''))
+END AS MUKIM
     FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTHAKMILIK C, TBLRUJNEGERI D, TBLRUJMUKIM E, TBLRUJDAERAH F
     WHERE A.ID_FAIL = B.ID_FAIL
     AND B.ID_PERMOHONAN = C.ID_PERMOHONAN
@@ -56,6 +66,8 @@ INITCAP(F.NAMA_DAERAH) AS NAMA_DAERAH
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
 	<field name="NAMA_MUKIM" class="java.lang.String"/>
 	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="SET_MUKIM" class="java.lang.String"/>
+	<field name="MUKIM" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -103,7 +115,7 @@ INITCAP(F.NAMA_DAERAH) AS NAMA_DAERAH
 				<textFieldExpression><![CDATA["\n\n\nJADUAL\n"]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
-				<reportElement uuid="2cf1d182-e955-4274-911f-23366b135eeb" key="subreport-1" positionType="Float" isPrintRepeatedValues="false" mode="Transparent" x="-16" y="109" width="451" height="15"/>
+				<reportElement uuid="2cf1d182-e955-4274-911f-23366b135eeb" key="subreport-1" positionType="Float" isPrintRepeatedValues="false" mode="Transparent" x="-16" y="111" width="451" height="15"/>
 				<subreportParameter name="ReportDir">
 					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -122,12 +134,42 @@ INITCAP(F.NAMA_DAERAH) AS NAMA_DAERAH
 				<textFieldExpression><![CDATA["Daerah  " + ($F{NAMA_DAERAH} != null ? $F{NAMA_DAERAH}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="f9069f24-25ef-4025-816d-59fbb306208b" key="textField-29" positionType="Float" isPrintRepeatedValues="false" x="36" y="94" width="386" height="15"/>
-				<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="144" y="94" width="278" height="15" isPrintWhenDetailOverflows="true"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{MUKIM} != null ? $F{MUKIM}:"-")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="94" width="107" height="15" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Bandar<style isStrikeThrough='true'>/Pekan/Mukim</style> "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="94" width="107" height="15" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "1" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" isStrikeThrough="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/Pekan/</style>Mukim"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="94" width="107" height="15" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "2" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Bandar/Pekan/Mukim " + ($F{NAMA_MUKIM} != null ? $F{NAMA_MUKIM}:"")+"\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/</style>Pekan<style isStrikeThrough='true'>/Mukim</style> "]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
