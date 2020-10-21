@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.y" value="119"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -246,10 +246,10 @@ CASE
     WHEN G.NAMA_MUKIM LIKE '%MUKIM%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'MUKIM',''))
     WHEN G.NAMA_MUKIM LIKE '%PEKAN%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'PEKAN',''))
     WHEN G.NAMA_MUKIM LIKE '%BANDAR%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'BANDAR',''))
-END AS MUKIM
+END AS MUKIM, aw.bayar_pampasan
 FROM TBLPPTPERMOHONAN A, TBLPPTHAKMILIK B, TBLPPTHAKMILIKPB C, TBLPPTPIHAKBERKEPENTINGAN D,
 TBLRUJNEGERI E, TBLRUJBANDAR F,TBLRUJMUKIM G,TBLPPTBORANGQ H,TBLPFDFAIL I,
-TBLRUJNEGERI K, TBLRUJBANDAR L,TBLRUJJENISHAKMILIK M, TBLRUJLOT JL, TBLPPTSIASATAN SS, TBLRUJNEGERI SSN, TBLRUJBANDAR SSB
+TBLRUJNEGERI K, TBLRUJBANDAR L,TBLRUJJENISHAKMILIK M, TBLRUJLOT JL, TBLPPTSIASATAN SS, TBLRUJNEGERI SSN, TBLRUJBANDAR SSB,TBLPPTAWARD aw
 WHERE A.ID_PERMOHONAN = B.ID_PERMOHONAN
 AND B.ID_HAKMILIK = C.ID_HAKMILIK
 AND SS.ID_NEGERI = SSN.ID_NEGERI(+)
@@ -263,6 +263,7 @@ AND B.ID_HAKMILIK = H.ID_HAKMILIK(+)
 AND I.ID_FAIL = A.ID_FAIL
 AND M.ID_JENISHAKMILIK(+) = B.ID_JENISHAKMILIK
 AND B.ID_HAKMILIK = SS.ID_HAKMILIK(+)
+and c.ID_HAKMILIKPB = aw.ID_HAKMILIKPB
 AND ((SS.ID_SIASATAN IN (SELECT MAX(SS1.ID_SIASATAN) FROM TBLPPTSIASATAN SS1 WHERE B.ID_HAKMILIK = SS1.ID_HAKMILIK)
     AND (SELECT COUNT(*) FROM TBLPPTSIASATAN WHERE B.ID_HAKMILIK = TBLPPTSIASATAN.ID_HAKMILIK) > 0 )
     OR
@@ -307,6 +308,7 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 	<field name="TEMPOH_BULAN" class="java.math.BigDecimal"/>
 	<field name="SET_MUKIM" class="java.lang.String"/>
 	<field name="MUKIM" class="java.lang.String"/>
+	<field name="BAYAR_PAMPASAN" class="java.math.BigDecimal"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -384,7 +386,7 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Semua orang yang mempunyai kepentingan mengenai tanah di atas dengan ini diberitahu bahawa tanah itu diperlukan untuk pendudukan sementara/penggunaan sementara bagi tempoh "
-+($F{TEMPOH_BULAN} != null ? $F{TEMPOH_BULAN}+" ":".................... ")+" bulan "
++($F{TEMPOH_PENDUDUKAN} != null ? $F{TEMPOH_PENDUDUKAN}+" ":".................... ")+" hari "
 +" dari tarikh "+($F{HARI_MULA} != null ? $F{HARI_MULA}+" ":"..............")+($F{BULAN_MULA} != null ? $F{BULAN_MULA}+" ":".......................")+($F{TAHUN_MULA} != null ? $F{TAHUN_MULA}:"....................")
 +" hingga "+($F{HARI_AKHIR} != null ? $F{HARI_AKHIR}+" ":"..............")+($F{BULAN_AKHIR} != null ? $F{BULAN_AKHIR}+" ":".......................")+($F{TAHUN_AKHIR} != null ? $F{TAHUN_AKHIR}:"....................")+" bagi maksud yang berikut: "]]></textFieldExpression>
 			</textField>
@@ -459,17 +461,17 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 					<paragraph lineSpacing="1_1_2" tabStopWidth="20"/>
 				</textElement>
 				<textFieldExpression><![CDATA["2.\tPada menjalankan kuasa yang diberi oleh seksyen 58 Akta Pengambilan Tanah 1960, saya dengan ini memberi notis bahawa saya bersedia untuk *membuat tawaran pampasan  sebanyak "
-+".................................................................. "
-+"/*merunding bayaran pampasan sebanyak ............................................................ "
-+"bagi pendudukan/penggunaan tanah di atas/*atau sebahagian daripadanya dianggarkan ........................................................... "
-+"**seperti yang ditunjukkan dalam pelan yang dilampirkan dan bahawa saya menghendaki tiap-tiap orang yang mempunyai kepentingan mengenai tanah itu supaya hadir di hadapan saya pada "+($F{TARIKH_SIASATAN} != null ? $F{HARI_SIASATAN}+" haribulan "+$F{BULAN_SIASATAN}+", "+$F{TAHUN_SIASATAN} :"...................................")
-+" di "+($F{TEMPAT_SIASATAN} != null ? $F{TEMPAT_SIASATAN}+" ":"................... ")
-+($F{ALAMAT_SIASATAN1} != null ? $F{ALAMAT_SIASATAN1}+" ":"................... ")
-+($F{ALAMAT_SIASATAN2} != null ? $F{ALAMAT_SIASATAN2}+" ":"")
-+($F{ALAMAT_SIASATAN3} != null ? $F{ALAMAT_SIASATAN3}+" ":"")
++($F{BAYAR_PAMPASAN}!=null?"RM"+$F{BAYAR_PAMPASAN}:"....................................... ")
++" /*merunding bayaran pampasan sebanyak "+($F{BAYAR_PAMPASAN}!=null?"RM"+$F{BAYAR_PAMPASAN}:"....................................... ")
++" bagi pendudukan/penggunaan tanah di atas /*atau sebahagian daripadanya dianggarkan "+($F{BAYAR_PAMPASAN}!=null?"RM"+$F{BAYAR_PAMPASAN}:"....................................... ")
++" **seperti yang ditunjukkan dalam pelan yang dilampirkan dan bahawa saya menghendaki tiap-tiap orang yang mempunyai kepentingan mengenai tanah itu supaya hadir di hadapan saya pada "+($F{TARIKH_SIASATAN} != null ? $F{HARI_SIASATAN}+" haribulan "+$F{BULAN_SIASATAN}+", "+$F{TAHUN_SIASATAN} :"...................................")
++" di <style isBold='true'>"+($F{TEMPAT_SIASATAN} != null ? $F{TEMPAT_SIASATAN}.toUpperCase()+", ":"................... ")
++($F{ALAMAT_SIASATAN1} != null ? $F{ALAMAT_SIASATAN1}.toUpperCase()+", ":"................... ")
++($F{ALAMAT_SIASATAN2} != null ? $F{ALAMAT_SIASATAN2}.toUpperCase()+", ":"")
++($F{ALAMAT_SIASATAN3} != null ? $F{ALAMAT_SIASATAN3}.toUpperCase()+", ":"")
 +($F{POSKOD} != null ? $F{POSKOD}+" ":"................... ")
-+($F{BANDAR_SIASATAN} != null ? $F{BANDAR_SIASATAN}+" ":"................... ")
-+($F{NEGERI_SIASATAN} != null ? $F{NEGERI_SIASATAN}:"................... ")
++($F{BANDAR_SIASATAN} != null ? $F{BANDAR_SIASATAN}.toUpperCase()+" ":"................... ")
++($F{NEGERI_SIASATAN} != null ? $F{NEGERI_SIASATAN}.toUpperCase():"................... ") +"</style>"
 +" pada jam "+($F{MASA_SIASATAN} != null ? $F{MASA_SIASATAN}:".........")
 + ($F{JENIS_WAKTU} == "pagi" ? " <style isStrikeThrough='true'>pagi</style>/petang ": $F{JENIS_WAKTU} == "petang" ? "pagi/<style isStrikeThrough='true'>petang</style>" : " pagi/petang ")]]></textFieldExpression>
 			</textField>
