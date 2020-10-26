@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="111"/>
+	<property name="ireport.y" value="211"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -12,6 +12,7 @@
 	<parameter name="nama_pegawai" class="java.lang.String"/>
 	<parameter name="id_hakmilik" class="java.lang.String"/>
 	<parameter name="id_jawatan" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT DISTINCT A.ID_FAIL, A.NO_FAIL, A.ID_NEGERI, B.NO_RUJUKAN_SURAT, B.NO_RUJUKAN_PTG, UPPER(B.TUJUAN) AS TUJUAN,
 C.NO_HAKMILIK, C.NO_LOT, C.NO_PT, G.KETERANGAN AS JENIS_LOT, H.KOD_JENIS_HAKMILIK, C.NO_SUBJAKET,
@@ -73,7 +74,7 @@ TO_CHAR(SYSDATE,'DD','NLS_CALENDAR=''ENGLISH HIJRAH''') AS HARI_ISLAM,
         WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 12 THEN 'Zulhijjah'
     END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM,
     N.JAWATAN, N.NAMA_PEJABAT, INITCAP(N.ALAMAT1) AS ALAMAT_PEJABAT1, INITCAP(N.ALAMAT2) AS ALAMAT_PEJABAT2, INITCAP(N.ALAMAT3) AS ALAMAT_PEJABAT3,
-    N.POSKOD AS POSKOD_PEJABAT, JJ.NAMA_NEGERI AS NEGERI_PEJABAT, MM.NAMA_DAERAH AS DAERAH_PEJABAT
+    N.POSKOD AS POSKOD_PEJABAT, JJ.NAMA_NEGERI AS NEGERI_PEJABAT, MM.NAMA_DAERAH AS DAERAH_PEJABAT, B.ID_DAERAH AS ID_DAERAHMHN
 
 FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTHAKMILIK C, TBLPPTHAKMILIKPB D, TBLPPTPIHAKBERKEPENTINGAN E,
 TBLPPTAWARD F, TBLRUJLOT G, TBLRUJJENISHAKMILIK H, TBLPPTTERIMABAYARAN I, TBLRUJNEGERI J, TBLRUJBANDAR K,
@@ -138,6 +139,7 @@ AND C.ID_HAKMILIK = $P{id_hakmilik}]]>
 	<field name="POSKOD_PEJABAT" class="java.lang.String"/>
 	<field name="NEGERI_PEJABAT" class="java.lang.String"/>
 	<field name="DAERAH_PEJABAT" class="java.lang.String"/>
+	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -151,25 +153,18 @@ AND C.ID_HAKMILIK = $P{id_hakmilik}]]>
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="309" splitType="Stretch">
+		<band height="338" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="42028f47-c855-44a3-b893-73a198190416" key="textField-18" positionType="Float" x="2" y="225" width="451" height="47">
-					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==05)]]></printWhenExpression>
+				<reportElement uuid="42028f47-c855-44a3-b893-73a198190416" key="textField-18" positionType="Float" x="2" y="295" width="451" height="15">
+					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==5) || new Boolean($F{ID_NEGERI}.intValue()==14)]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Bookman Old Style" size="11"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Sekian, terima kasih."
-+"\n"
-+"\n<style isbold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
-+"\n\nSaya yang menurut perintah"
-+"\n"
-+"\n"
-+"\n"
-+"\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{nama_pegawai} != null ? $P{nama_pegawai}:"")+")</style>"
+				<textFieldExpression><![CDATA["<style isBold='true'>("+($P{nama_pegawai} != null ? $P{nama_pegawai}:"")+")</style>"
 +"\n"+($F{PENGARAH} != null ? $F{PENGARAH}:"")
-+"\nJabatan Ketua Pengarah Tanah dan Galian (Persekutuan)"
++"\nJabatan Ketua Pengarah Tanah dan Galian Persekutuan"
 +"\n"+($F{NAMA_NEGERI} != null ? $F{NAMA_NEGERI}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
@@ -243,23 +238,16 @@ AND C.ID_HAKMILIK = $P{id_hakmilik}]]>
 				<textFieldExpression><![CDATA[":"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="76dd29a8-4146-42d8-8365-b02d4d09450a" key="textField-48" positionType="Float" x="1" y="225" width="451" height="47">
-					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=05)]]></printWhenExpression>
+				<reportElement uuid="76dd29a8-4146-42d8-8365-b02d4d09450a" key="textField-48" positionType="Float" x="2" y="295" width="451" height="15">
+					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=5) && new Boolean($F{ID_NEGERI}.intValue()!=14)]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Bookman Old Style" size="11"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Sekian, terima kasih."
-+"\n"
-+"\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
-+"\n\nSaya yang menjalankan amanah"
-+"\n"
-+"\n"
-+"\n"
-+"\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{nama_pegawai} != null ? $P{nama_pegawai}:"")+")</style>"
+				<textFieldExpression><![CDATA["<style isBold='true'>("+($P{nama_pegawai} != null ? $P{nama_pegawai}:"")+")</style>"
 +"\n"+($F{PENGARAH} != null ? $F{PENGARAH}:"")
-+"\nJabatan Ketua Pengarah Tanah dan Galian (Persekutuan)"
++"\nJabatan Ketua Pengarah Tanah dan Galian Persekutuan"
 +"\nNegeri "+($F{NAMA_NEGERI} != null ? $F{NAMA_NEGERI}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
@@ -317,10 +305,10 @@ AND C.ID_HAKMILIK = $P{id_hakmilik}]]>
 				<textFieldExpression><![CDATA["5.\tKerjasama pihak tuan dalam perkara ini adalah diharapkan dan amat dihargai."]]></textFieldExpression>
 			</textField>
 			<break>
-				<reportElement uuid="b9101b6a-515e-4615-999f-fbe77d01e0ca" positionType="FixRelativeToBottom" x="0" y="302" width="450" height="1"/>
+				<reportElement uuid="b9101b6a-515e-4615-999f-fbe77d01e0ca" positionType="FixRelativeToBottom" x="0" y="334" width="450" height="1"/>
 			</break>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="457b855e-fc88-4c38-b0e7-ae817ae61222" key="textField-11" positionType="Float" mode="Opaque" x="2" y="282" width="449" height="15"/>
+				<reportElement uuid="457b855e-fc88-4c38-b0e7-ae817ae61222" key="textField-11" positionType="Float" mode="Opaque" x="2" y="314" width="449" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
@@ -331,6 +319,28 @@ AND C.ID_HAKMILIK = $P{id_hakmilik}]]>
 +$F{POSKOD_PEJABAT}+$F{DAERAH_PEJABAT}
 +$F{NEGERI_PEJABAT}]]></textFieldExpression>
 			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="76dd29a8-4146-42d8-8365-b02d4d09450a" key="textField-48" positionType="Float" x="2" y="218" width="451" height="17">
+					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=05)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
+					<font fontName="Bookman Old Style" size="11"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Sekian, terima kasih."
++"\n"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
++"\n\nSaya yang menjalankan amanah"
++"\n"]]></textFieldExpression>
+			</textField>
+			<image>
+				<reportElement uuid="bd798527-7fc2-4b3b-8d64-c3a28b2a31a9" key="image-1" positionType="Float" x="106" y="234" width="95" height="64"/>
+				<imageExpression><![CDATA[$P{ReportDir} + File.separator+"ppk"+File.separator+"COP"+File.separator+$F{ID_DAERAHMHN}+".png"]]></imageExpression>
+			</image>
+			<image scaleImage="FillFrame" vAlign="Middle">
+				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="0" y="268" width="106" height="26"/>
+				<imageExpression><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+			</image>
 		</band>
 	</detail>
 	<columnFooter>
