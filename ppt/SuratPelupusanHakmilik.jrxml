@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="7"/>
+	<property name="ireport.y" value="97"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -12,6 +12,8 @@
 	<parameter name="namaPengarah" class="java.lang.String"/>
 	<parameter name="bilLot" class="java.lang.String"/>
 	<parameter name="no_fail" class="java.lang.String"/>
+	<parameter name="id_jawatan" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT DISTINCT B.ID_NEGERI, B.ID_FAIL, A.NO_RUJUKAN_PTG, REPLACE(INITCAP(C.NAMA_PEJABAT),'&','&#38;') AS NAMA_PEJABAT,
 REPLACE(INITCAP(NVL(C.ALAMAT1,'')),'&','&#38;') AS ALAMAT1, REPLACE(INITCAP(NVL(C.ALAMAT2,'')),'&','&#38;') AS ALAMAT2,
@@ -51,7 +53,12 @@ INITCAP(K.NAMA_DAERAH) AS NAMA_DAERAHJ, J.NAMA_NEGERI AS NEGERIJ, INITCAP(D.NAMA
         WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 11 THEN 'Zulkaedah'
         WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 12 THEN 'Zulhijjah'
     END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM
-    ,nvl(totalHM.total,0) as totalHM
+    ,nvl(totalHM.total,0) as totalHM,
+    CASE
+        WHEN $P!{id_jawatan} = 1 THEN 'Pengarah'
+        WHEN $P!{id_jawatan} = 4 THEN 'Pengarah'
+        ELSE 'b.p. Pengarah'
+    END AS PENGARAH, A.ID_DAERAH AS ID_DAERAHMHN
     FROM TBLPPTPERMOHONAN A,  TBLPFDFAIL B, TBLRUJPEJABAT C, TBLRUJNEGERI D, TBLRUJKEMENTERIAN E, TBLRUJNEGERI F,
     TBLRUJPEJABAT G, TBLRUJNEGERI H, TBLRUJPEJABATJKPTG I, TBLRUJNEGERI J, TBLRUJDAERAH K, TBLRUJDAERAH L, TBLRUJDAERAH M,
     (SELECT COUNT(N.ID_HAKMILIK) as total FROM TBLPPTHAKMILIK N, TBLPPTPERMOHONAN A,  TBLPFDFAIL B
@@ -72,6 +79,8 @@ INITCAP(K.NAMA_DAERAH) AS NAMA_DAERAHJ, J.NAMA_NEGERI AS NEGERIJ, INITCAP(D.NAMA
     AND I.ID_SEKSYEN = 1
     AND I.ID_DAERAH = K.ID_DAERAH
     --AND I.ID_JENISPEJABAT IN (21,22)
+    --AND G.FLAG_AKTIF NOT IN ('T')
+    AND (G.FLAG_AKTIF = 'Y' OR G.FLAG_AKTIF IS NULL)
     AND J.ID_NEGERI = I.ID_NEGERI
     AND A.ID_FAIL = $P{idfail}]]>
 	</queryString>
@@ -112,6 +121,8 @@ INITCAP(K.NAMA_DAERAH) AS NAMA_DAERAHJ, J.NAMA_NEGERI AS NEGERIJ, INITCAP(D.NAMA
 	<field name="BULAN_ISLAM" class="java.lang.String"/>
 	<field name="TAHUN_ISLAM" class="java.lang.String"/>
 	<field name="TOTALHM" class="java.math.BigDecimal"/>
+	<field name="PENGARAH" class="java.lang.String"/>
+	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -125,7 +136,7 @@ INITCAP(K.NAMA_DAERAH) AS NAMA_DAERAHJ, J.NAMA_NEGERI AS NEGERIJ, INITCAP(D.NAMA
 		<band splitType="Prevent"/>
 	</columnHeader>
 	<detail>
-		<band height="95" splitType="Stretch">
+		<band height="171" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="43a46574-def9-473a-8815-6824a11dd00f" key="textField-13" x="297" y="0" width="182" height="15"/>
 				<textElement textAlignment="Justified">
@@ -196,18 +207,41 @@ INITCAP(K.NAMA_DAERAH) AS NAMA_DAERAHJ, J.NAMA_NEGERI AS NEGERIJ, INITCAP(D.NAMA
 				<textFieldExpression><![CDATA[$F{HARI_SURAT}+" "+$F{BULAN_SURAT}+" "+$F{TAHUN_SURAT}]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="298bf813-151f-4e7f-84b0-6d6afc4c83fc" key="textField-7" positionType="Float" x="0" y="80" width="451" height="15">
-					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!= 4)]]></printWhenExpression>
+				<reportElement uuid="298bf813-151f-4e7f-84b0-6d6afc4c83fc" key="textField-7" positionType="Float" x="0" y="156" width="451" height="15">
+					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=5) && new Boolean($F{ID_NEGERI}.intValue()!=14)]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Justified" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
-+"\n\nSaya yang menjalankan amanah,"
-+"\n\n\n\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPengarah} != null ? $P{namaPengarah}:"                                  ")+")</style>"
+				<textFieldExpression><![CDATA["<style isBold='true'>("+($P{namaPengarah} != null ? $P{namaPengarah}:"                                  ")+")</style>"
++"\n"+$F{PENGARAH}
 +"\nJabatan Ketua Pengarah Tanah Dan Galian Persekutuan"
 +"\nNegeri "+($F{NEGERI}!=null ? $F{NEGERI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="298bf813-151f-4e7f-84b0-6d6afc4c83fc" key="textField-7" positionType="Float" x="0" y="156" width="451" height="15">
+					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==5) || new Boolean($F{ID_NEGERI}.intValue()==14)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true'>("+($P{namaPengarah} != null ? $P{namaPengarah}:"                                  ")+")</style>"
++"\n"+$F{PENGARAH}
++"\nJabatan Ketua Pengarah Tanah Dan Galian Persekutuan"
++"\n"+($F{NEGERI}!=null ? $F{NEGERI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="298bf813-151f-4e7f-84b0-6d6afc4c83fc" key="textField-7" positionType="Float" x="0" y="80" width="451" height="15">
+					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=4)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\n\n\n<style isBold='true'>'BERKHIDMAT UNTUK NEGARA'</style>"
++"\n\nSaya yang menjalankan amanah,"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="298bf813-151f-4e7f-84b0-6d6afc4c83fc" key="textField-7" positionType="Float" x="0" y="80" width="451" height="15">
@@ -217,27 +251,18 @@ INITCAP(K.NAMA_DAERAH) AS NAMA_DAERAHJ, J.NAMA_NEGERI AS NEGERIJ, INITCAP(D.NAMA
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>'MELAKAKU MAJUJAYA, RAKYAT BAHAGIA, MENGGAMIT DUNIA'"
-+"\n'BERKHIDMAT UNTUK NEGARA'</style>"
-+"\n\nSaya yang menjalankan amanah,"
-+"\n\n\n\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPengarah} != null ? $P{namaPengarah}:"                                  ")+")</style>"
-+"\nJabatan Ketua Pengarah Tanah Dan Galian Persekutuan"
-+"\nNegeri "+($F{NEGERI}!=null ? $F{NEGERI}:"")]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n\n\n<style isBold='true''BERKHIDMAT UNTUK NEGARA'"
++"\n'MELAKAKU MAJU JAYA, RAKYAT BAHAGIA, MENGGAMIT DUNIA'</style>"
++"\n\nSaya yang menjalankan amanah,"]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="298bf813-151f-4e7f-84b0-6d6afc4c83fc" key="textField-7" positionType="Float" x="0" y="80" width="451" height="15">
-					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==5)]]></printWhenExpression>
-				</reportElement>
-				<textElement textAlignment="Justified" markup="styled">
-					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
-					<paragraph lineSpacing="Single"/>
-				</textElement>
-				<textFieldExpression><![CDATA["\n\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
-+"\n\nSaya yang menjalankan amanah,"
-+"\n\n\n\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPengarah} != null ? $P{namaPengarah}:"                                  ")+")</style>"
-+"\nJabatan Ketua Pengarah Tanah Dan Galian Persekutuan"
-+"\n"+($F{NEGERI}!=null ? $F{NEGERI}:"")]]></textFieldExpression>
-			</textField>
+			<image scaleImage="FillFrame" vAlign="Middle">
+				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="-1" y="129" width="106" height="26"/>
+				<imageExpression><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+			</image>
+			<image>
+				<reportElement uuid="bd798527-7fc2-4b3b-8d64-c3a28b2a31a9" key="image-1" positionType="Float" x="105" y="95" width="95" height="64"/>
+				<imageExpression><![CDATA[$P{ReportDir} + File.separator+"ppk"+File.separator+"COP"+File.separator+$F{ID_DAERAHMHN}+".png"]]></imageExpression>
+			</image>
 		</band>
 	</detail>
 	<columnFooter>
