@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="244"/>
+	<property name="ireport.y" value="195"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -16,8 +16,9 @@
 	<parameter name="masa_siasatan" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
+	<parameter name="os" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT DISTINCT TO_CHAR(H.ID_HAKMILIK)AS ID_HAKMILIK, INITCAP(B.TUJUAN)AS TUJUAN_INIT, A.ID_NEGERI, B.NO_RUJUKAN_SURAT,
+		<![CDATA[SELECT DISTINCT TO_CHAR(H.ID_HAKMILIK)AS ID_HAKMILIK, INITCAP(B.TUJUAN)AS TUJUAN_INIT, A.ID_NEGERI, B.NO_RUJUKAN_SURAT, B.ID_DAERAH AS ID_DAERAHMHN,
 A.NO_FAIL, TO_CHAR(A.ID_FAIL) AS ID_FAIL, TO_CHAR(D.TARIKH_SIASATAN,'DD') AS HARI_SIASATAN,
     CASE
         WHEN TO_CHAR(D.TARIKH_SIASATAN,'MM')='01' THEN 'Januari'
@@ -96,7 +97,22 @@ CASE
     WHEN MM.NAMA_MUKIM LIKE '%MUKIM%' THEN '1'
     WHEN MM.NAMA_MUKIM LIKE '%PEKAN%' THEN '2'
     WHEN MM.NAMA_MUKIM LIKE '%BANDAR%' THEN '3'
-END AS SET_MUKIM
+END AS SET_MUKIM,
+TO_CHAR(SYSDATE,'DD') AS HARI_TT,
+    CASE
+        WHEN TO_CHAR(SYSDATE,'MM')='01' THEN 'Januari'
+        WHEN TO_CHAR(SYSDATE,'MM')='02' THEN 'Februari'
+        WHEN TO_CHAR(SYSDATE,'MM')='03' THEN 'Mac'
+        WHEN TO_CHAR(SYSDATE,'MM')='04' THEN 'April'
+        WHEN TO_CHAR(SYSDATE,'MM')='05' THEN 'Mei'
+        WHEN TO_CHAR(SYSDATE,'MM')='06' THEN 'Jun'
+        WHEN TO_CHAR(SYSDATE,'MM')='07' THEN 'Julai'
+        WHEN TO_CHAR(SYSDATE,'MM')='08' THEN 'Ogos'
+        WHEN TO_CHAR(SYSDATE,'MM')='09' THEN 'September'
+        WHEN TO_CHAR(SYSDATE,'MM')='10' THEN 'Oktober'
+        WHEN TO_CHAR(SYSDATE,'MM')='11' THEN 'November'
+        WHEN TO_CHAR(SYSDATE,'MM')='12' THEN 'Disember'
+    END AS BULAN_TT, TO_CHAR(SYSDATE,'yyyy') AS TAHUN_TT
     FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTBORANGE D, TBLRUJBANDAR E, TBLRUJNEGERI F, TBLRUJNEGERI G, TBLPPTHAKMILIK H,
     TBLPPTBORANGEHAKMILIK BEH, TBLRUJDAERAH DD,TBLRUJMUKIM MM,TBLPPTWARTA W
     WHERE A.ID_FAIL = B.ID_FAIL
@@ -116,6 +132,7 @@ END AS SET_MUKIM
 	<field name="TUJUAN_INIT" class="java.lang.String"/>
 	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
 	<field name="NO_RUJUKAN_SURAT" class="java.lang.String"/>
+	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="ID_FAIL" class="java.lang.String"/>
 	<field name="HARI_SIASATAN" class="java.lang.String"/>
@@ -145,6 +162,9 @@ END AS SET_MUKIM
 	<field name="JENIS_WAKTUBEH" class="java.lang.String"/>
 	<field name="MUKIM" class="java.lang.String"/>
 	<field name="SET_MUKIM" class="java.lang.String"/>
+	<field name="HARI_TT" class="java.lang.String"/>
+	<field name="BULAN_TT" class="java.lang.String"/>
+	<field name="TAHUN_TT" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -158,7 +178,7 @@ END AS SET_MUKIM
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="384" splitType="Stretch">
+		<band height="426" splitType="Stretch">
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="15dcb6a0-386a-4d1c-81e9-f13a692d4edc" key="textField-1" positionType="Float" mode="Transparent" x="0" y="1" width="451" height="13"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
@@ -184,7 +204,7 @@ END AS SET_MUKIM
 +($F{MASA_SIASATANBEH} != null ? $F{MASA_SIASATANBEH}:($F{MASA_SIASATAN}!=null?$F{MASA_SIASATAN}:".............................."))
 +" "+($F{JENIS_WAKTUBEH} != null ? $F{JENIS_WAKTUBEH}:($F{JENIS_WAKTU}!=null?$F{JENIS_WAKTU}:"..............."))
 +"</style> jam di <style isBold='true' pdfFontName='Helvetica-Bold'>"
-+($F{ALAMAT1} != null ? $F{ALAMAT1}+", ":"..........................................................................................")+($F{ALAMAT2} != null ? $F{ALAMAT2}+", ":"")+($F{ALAMAT3} != null ? $F{ALAMAT3}+", ":"")+($F{POSKOD} != null ? $F{POSKOD}+", ":"")+($F{NAMA_BANDAR} != null ? $F{NAMA_BANDAR}+", ":"")+($F{NAMA_NEGERI} != null ? $F{NAMA_NEGERI}+".":"")+"</style>"]]></textFieldExpression>
++($F{ALAMAT1} != null ? $F{ALAMAT1}+", ":"..........................................................................................")+($F{ALAMAT2} != null ? $F{ALAMAT2}+", ":"")+($F{ALAMAT3} != null ? $F{ALAMAT3}+", ":"")+($F{POSKOD} != null ? $F{POSKOD}+" ":"")+($F{NAMA_BANDAR} != null ? $F{NAMA_BANDAR}+", ":", ")+($F{NAMA_NEGERI} != null ? $F{NAMA_NEGERI}+".":"")+"</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="41966d67-7ee7-44b1-9e3c-e46bfd46699c" key="textField-6" positionType="Float" x="0" y="34" width="451" height="15"/>
@@ -323,15 +343,15 @@ END AS SET_MUKIM
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="237d8a02-f3c5-4867-a887-ad3d8fcb5373" key="textField-25" positionType="Float" x="2" y="315" width="450" height="15"/>
+				<reportElement uuid="237d8a02-f3c5-4867-a887-ad3d8fcb5373" key="textField-25" positionType="Float" x="2" y="348" width="450" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n\nJADUAL\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["JADUAL\n"]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
-				<reportElement uuid="6b02132e-6793-401f-afaf-7d5cba899f0a" key="subreport-1" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" mode="Transparent" x="-28" y="364" width="451" height="17" isPrintInFirstWholeBand="true"/>
+				<reportElement uuid="6b02132e-6793-401f-afaf-7d5cba899f0a" key="subreport-1" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" mode="Transparent" x="-28" y="397" width="451" height="17" isPrintInFirstWholeBand="true"/>
 				<subreportParameter name="id_Fail">
 					<subreportParameterExpression><![CDATA[$F{ID_FAIL}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -356,7 +376,7 @@ END AS SET_MUKIM
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="eb0e7fe5-5ae8-49f6-9a2b-4823c80267cb" key="textField-28" positionType="Float" x="293" y="296" width="155" height="15"/>
+				<reportElement uuid="eb0e7fe5-5ae8-49f6-9a2b-4823c80267cb" key="textField-28" positionType="Float" x="293" y="308" width="155" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
@@ -370,16 +390,15 @@ END AS SET_MUKIM
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\nBertarikh pada "+($F{HARI} != null ? $F{HARI}:"…………")+" haribulan "
-+($F{BULAN} != null ? $F{BULAN}:"…………………")+", "
-+($F{TAHUN} != null ? $F{TAHUN}:"20………")
-+"\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\nBertarikh pada "+($F{HARI_TT} != null ? $F{HARI_TT}:"…………")+" haribulan "
++($F{BULAN_TT} != null ? $F{BULAN_TT}:"…………………")+", "
++($F{TAHUN_TT} != null ? $F{TAHUN_TT}:"20………")]]></textFieldExpression>
 			</textField>
 			<break>
 				<reportElement uuid="4d72136b-ff75-44c8-a375-380736a1a3b5" positionType="Float" x="0" y="208" width="452" height="1"/>
 			</break>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="75" y="332" width="331" height="15"/>
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="75" y="365" width="331" height="15"/>
 				<textElement verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
@@ -387,7 +406,7 @@ END AS SET_MUKIM
 				<textFieldExpression><![CDATA[($F{NAMA_DAERAH} != null ? $F{NAMA_DAERAH}:"-")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="144" y="347" width="262" height="15"/>
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="144" y="380" width="262" height="15"/>
 				<textElement verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
@@ -396,7 +415,7 @@ END AS SET_MUKIM
 +"\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="332" width="38" height="15"/>
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="365" width="38" height="15"/>
 				<textElement verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
@@ -404,7 +423,7 @@ END AS SET_MUKIM
 				<textFieldExpression><![CDATA["<style isItalic='true'>Daerah</style> "]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="347" width="107" height="15">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="380" width="107" height="15">
 					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "3" )]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Top" markup="styled">
@@ -414,7 +433,7 @@ END AS SET_MUKIM
 				<textFieldExpression><![CDATA["Bandar<style isStrikeThrough='true'>/Pekan/Mukim</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="347" width="107" height="15">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="380" width="107" height="15">
 					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "1" )]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Top" markup="styled">
@@ -424,7 +443,7 @@ END AS SET_MUKIM
 				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/Pekan/</style>Mukim"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="347" width="107" height="15">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="37" y="380" width="107" height="15">
 					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "2" )]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Top" markup="styled">
@@ -434,8 +453,12 @@ END AS SET_MUKIM
 				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/</style>Pekan<style isStrikeThrough='true'>/Mukim</style>"]]></textFieldExpression>
 			</textField>
 			<image scaleImage="FillFrame" vAlign="Middle">
-				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="317" y="274" width="106" height="26"/>
+				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="317" y="286" width="106" height="26"/>
 				<imageExpression><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+			</image>
+			<image>
+				<reportElement uuid="bd798527-7fc2-4b3b-8d64-c3a28b2a31a9" key="image-1" positionType="Float" x="260" y="275" width="95" height="64"/>
+				<imageExpression><![CDATA[$P{ReportDir} + File.separator+"ppk"+File.separator+"COP"+File.separator+$F{ID_DAERAHMHN}+".png"]]></imageExpression>
 			</image>
 		</band>
 	</detail>
@@ -443,7 +466,7 @@ END AS SET_MUKIM
 		<band splitType="Stretch"/>
 	</columnFooter>
 	<pageFooter>
-		<band height="50">
+		<band height="2">
 			<break>
 				<reportElement uuid="4d72136b-ff75-44c8-a375-380736a1a3b5" positionType="Float" x="0" y="1" width="448" height="1"/>
 			</break>
@@ -453,7 +476,7 @@ END AS SET_MUKIM
 		<band splitType="Stretch"/>
 	</summary>
 	<noData>
-		<band height="50">
+		<band height="19">
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="237d8a02-f3c5-4867-a887-ad3d8fcb5373" key="textField-25" positionType="Float" x="0" y="4" width="450" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">

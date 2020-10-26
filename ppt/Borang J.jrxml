@@ -11,16 +11,17 @@
 	<parameter name="id_Fail" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT DISTINCT CASE
-    WHEN c.NO_LOT IS NOT NULL AND C.NO_PT IS NULL THEN C.NO_LOT
-    WHEN c.NO_LOT IS NULL AND C.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || C.NO_PT
-    WHEN c.NO_LOT IS NOT NULL AND C.NO_PT IS NOT NULL THEN JL.KETERANGAN  || C.NO_PT || CHR(32) || CHR(40) || C.NO_LOT  || CHR(41)
-    ELSE  ''
+		<![CDATA[SELECT DISTINCT B.ID_DAERAH AS ID_DAERAHMHN,
+CASE
+	WHEN c.NO_LOT IS NOT NULL AND C.NO_PT IS NULL THEN C.NO_LOT
+	WHEN c.NO_LOT IS NULL AND C.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || C.NO_PT
+	WHEN c.NO_LOT IS NOT NULL AND C.NO_PT IS NOT NULL THEN JL.KETERANGAN  || C.NO_PT || CHR(32) || CHR(40) || C.NO_LOT  || CHR(41)
+	ELSE  ''
 END AS NO_LOT,
-K.KETERANGAN,K.KOD_JENIS_HAKMILIK, C.NO_HAKMILIK, INITCAP(G.NAMA_MUKIM) AS NAMA_MUKIM,
-TO_CHAR(J.TEMPOH) AS TEMPOH, REPLACE(TO_CHAR(D.BAYAR_PAMPASAN,'999,999,990.99'),' ') AS BAYAR_PAMPASAN,
-    TO_CHAR(SYSDATE,'DD') AS HARI,
-    CASE
+K.KETERANGAN, K.KOD_JENIS_HAKMILIK, C.NO_HAKMILIK, INITCAP(G.NAMA_MUKIM) AS NAMA_MUKIM,
+TO_CHAR(J.TEMPOH) AS TEMPOH, REPLACE(TO_CHAR(D.BAYAR_PAMPASAN,'999999,990.99'),' ') AS BAYAR_PAMPASAN,
+TO_CHAR(SYSDATE,'DD') AS HARI,
+CASE
         WHEN TO_CHAR(SYSDATE,'MM')='01' THEN 'Januari'
         WHEN TO_CHAR(SYSDATE,'MM')='02' THEN 'Februari'
         WHEN TO_CHAR(SYSDATE,'MM')='03' THEN 'Mac'
@@ -33,23 +34,23 @@ TO_CHAR(J.TEMPOH) AS TEMPOH, REPLACE(TO_CHAR(D.BAYAR_PAMPASAN,'999,999,990.99'),
         WHEN TO_CHAR(SYSDATE,'MM')='10' THEN 'Oktober'
         WHEN TO_CHAR(SYSDATE,'MM')='11' THEN 'November'
         WHEN TO_CHAR(SYSDATE,'MM')='12' THEN 'Disember'
-    END AS BULAN,
-    TO_CHAR(SYSDATE,'YYYY') AS TAHUN,
-    TO_CHAR(NVL(E.NILAI_BANGUNAN,'0')) AS NILAI_BANGUNAN, TO_CHAR(NVL(E.KOS_PINDAH,'0')) AS KOS_PINDAH,
-REPLACE(TO_CHAR((TO_CHAR((NVL(E.NILAI_BANGUNAN,'0')))+(TO_CHAR(NVL(E.KOS_PINDAH,'0')))),'999,999,999.99'),' ') AS JUMLAH,
+END AS BULAN,
+TO_CHAR(SYSDATE,'YYYY') AS TAHUN,
+TO_CHAR(NVL(E.NILAI_BANGUNAN,'0')) AS NILAI_BANGUNAN, TO_CHAR(NVL(E.KOS_PINDAH,'0')) AS KOS_PINDAH,
+REPLACE(TO_CHAR((TO_CHAR((NVL(E.NILAI_BANGUNAN,'0')))+(TO_CHAR(NVL(E.KOS_PINDAH,'0')))),
+'999,999,999.99'),'') AS JUMLAH,
 CASE
-    WHEN G.NAMA_MUKIM LIKE '%MUKIM%' THEN '1'
-    WHEN G.NAMA_MUKIM LIKE '%PEKAN%' THEN '2'
-    WHEN G.NAMA_MUKIM LIKE '%BANDAR%' THEN '3'
+	WHEN G.NAMA_MUKIM LIKE '%MUKIM%' THEN '1'
+	WHEN G.NAMA_MUKIM LIKE '%PEKAN%' THEN '2'
+	WHEN G.NAMA_MUKIM LIKE '%BANDAR%' THEN '3'
 END AS SET_MUKIM,
 CASE
-    WHEN G.NAMA_MUKIM LIKE '%MUKIM%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'MUKIM',''))
-    WHEN G.NAMA_MUKIM LIKE '%PEKAN%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'PEKAN',''))
-    WHEN G.NAMA_MUKIM LIKE '%BANDAR%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'BANDAR',''))
+	WHEN G.NAMA_MUKIM LIKE '%MUKIM%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'MUKIM',''))
+	WHEN G.NAMA_MUKIM LIKE '%PEKAN%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'PEKAN',''))
+	WHEN G.NAMA_MUKIM LIKE '%BANDAR%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'BANDAR',''))
 END AS MUKIM
-FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTHAKMILIK C, TBLPPTAWARD D,
-TBLPPTBANGUNAN E, TBLPPTHAKMILIKPB F, TBLRUJMUKIM G, TBLPPTBORANGJ J, TBLRUJLOT JL,
-TBLRUJJENISHAKMILIK K
+FROM TBLPFDFAIL A, TBLPPTPERMOHONAN B, TBLPPTHAKMILIK C, TBLPPTAWARD D, TBLPPTBANGUNAN E, TBLPPTHAKMILIKPB F,
+TBLRUJMUKIM G, TBLPPTBORANGJ J, TBLRUJLOT JL, TBLRUJJENISHAKMILIK K
 WHERE A.ID_FAIL = B.ID_FAIL
 AND B.ID_PERMOHONAN = C.ID_PERMOHONAN
 AND F.ID_HAKMILIKPB = D.ID_HAKMILIKPB(+)
@@ -63,6 +64,7 @@ AND NVL(C.FLAG_PENARIKAN_KESELURUHAN,'0') <> 'Y'
 AND NVL(C.FLAG_PEMBATALAN_KESELURUHAN,'0') <> 'Y'
 AND A.ID_FAIL = $P{id_Fail}]]>
 	</queryString>
+	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
 	<field name="NO_LOT" class="java.lang.String"/>
 	<field name="KETERANGAN" class="java.lang.String"/>
 	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
@@ -91,7 +93,7 @@ AND A.ID_FAIL = $P{id_Fail}]]>
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="150" splitType="Stretch">
+		<band height="175" splitType="Stretch">
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="ab2fff52-ed72-45c2-9df2-70a077829010" key="textField-34" positionType="Float" x="51" y="62" width="400" height="15" isPrintWhenDetailOverflows="true">
 					<printWhenExpression><![CDATA[new Boolean(!$F{NILAI_BANGUNAN}.equals("0"))]]></printWhenExpression>
@@ -133,7 +135,7 @@ AND A.ID_FAIL = $P{id_Fail}]]>
 +"\n\n2.    Ambil perhatian bahawa saya dengan ini menawarkan kepada tuan punya premis itu pampasan sebanyak RM"+($F{BAYAR_PAMPASAN} != null ? $F{BAYAR_PAMPASAN}:"...............")+" yang pampasan itu adalah bagi—\n"]]></textFieldExpression>
 			</textField>
 			<break>
-				<reportElement uuid="cc599514-dbd1-4b5a-b3c1-229ca2a66d0f" key="element-1" x="0" y="149" width="451" height="1" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="cc599514-dbd1-4b5a-b3c1-229ca2a66d0f" key="element-1" x="0" y="174" width="451" height="1" isPrintWhenDetailOverflows="true"/>
 			</break>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
 				<reportElement uuid="98eef8d7-3210-4d69-8eef-58a31c1d1d8c" key="textField-29" positionType="Float" x="0" y="93" width="451" height="15" isPrintWhenDetailOverflows="true"/>
@@ -215,6 +217,10 @@ AND A.ID_FAIL = $P{id_Fail}]]>
 			<image scaleImage="FillFrame" vAlign="Middle">
 				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="305" y="110" width="106" height="26"/>
 				<imageExpression><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+			</image>
+			<image>
+				<reportElement uuid="bd798527-7fc2-4b3b-8d64-c3a28b2a31a9" key="image-1" positionType="Float" x="238" y="110" width="95" height="64"/>
+				<imageExpression><![CDATA[$P{ReportDir} + File.separator+"ppk"+File.separator+"COP"+File.separator+$F{ID_DAERAHMHN}+".png"]]></imageExpression>
 			</image>
 		</band>
 	</detail>
