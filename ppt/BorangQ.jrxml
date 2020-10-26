@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.y" value="120"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -136,7 +136,7 @@ AND ((SS.ID_SIASATAN IN (SELECT MAX(SS1.ID_SIASATAN) FROM TBLPPTSIASATAN SS1 WHE
 AND B.ID_HAKMILIK = $P!{idhakmilik}*/
 
 
-SELECT DISTINCT I.ID_FAIL, I.NO_FAIL,UPPER(A.TUJUAN) AS TUJUAN,B.ID_HAKMILIK,M.KOD_JENIS_HAKMILIK,B.NO_HAKMILIK,
+SELECT DISTINCT I.ID_FAIL, I.NO_FAIL,UPPER(A.TUJUAN) AS TUJUAN, B.ID_HAKMILIK, M.KOD_JENIS_HAKMILIK, B.NO_HAKMILIK, B.ID_DAERAH AS ID_DAERAHMHN,
 CASE
     WHEN B.NO_LOT IS NOT NULL AND B.NO_PT IS NULL THEN B.NO_LOT
     WHEN B.NO_LOT IS NULL AND B.NO_PT IS NOT NULL THEN  JL.KETERANGAN  || CHR(32) || B.NO_PT
@@ -246,10 +246,10 @@ CASE
     WHEN G.NAMA_MUKIM LIKE '%MUKIM%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'MUKIM',''))
     WHEN G.NAMA_MUKIM LIKE '%PEKAN%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'PEKAN',''))
     WHEN G.NAMA_MUKIM LIKE '%BANDAR%' THEN INITCAP(REPLACE(G.NAMA_MUKIM,'BANDAR',''))
-END AS MUKIM
+END AS MUKIM, aw.bayar_pampasan
 FROM TBLPPTPERMOHONAN A, TBLPPTHAKMILIK B, TBLPPTHAKMILIKPB C, TBLPPTPIHAKBERKEPENTINGAN D,
 TBLRUJNEGERI E, TBLRUJBANDAR F,TBLRUJMUKIM G,TBLPPTBORANGQ H,TBLPFDFAIL I,
-TBLRUJNEGERI K, TBLRUJBANDAR L,TBLRUJJENISHAKMILIK M, TBLRUJLOT JL, TBLPPTSIASATAN SS, TBLRUJNEGERI SSN, TBLRUJBANDAR SSB
+TBLRUJNEGERI K, TBLRUJBANDAR L,TBLRUJJENISHAKMILIK M, TBLRUJLOT JL, TBLPPTSIASATAN SS, TBLRUJNEGERI SSN, TBLRUJBANDAR SSB,TBLPPTAWARD aw
 WHERE A.ID_PERMOHONAN = B.ID_PERMOHONAN
 AND B.ID_HAKMILIK = C.ID_HAKMILIK
 AND SS.ID_NEGERI = SSN.ID_NEGERI(+)
@@ -263,6 +263,7 @@ AND B.ID_HAKMILIK = H.ID_HAKMILIK(+)
 AND I.ID_FAIL = A.ID_FAIL
 AND M.ID_JENISHAKMILIK(+) = B.ID_JENISHAKMILIK
 AND B.ID_HAKMILIK = SS.ID_HAKMILIK(+)
+and c.ID_HAKMILIKPB = aw.ID_HAKMILIKPB
 AND ((SS.ID_SIASATAN IN (SELECT MAX(SS1.ID_SIASATAN) FROM TBLPPTSIASATAN SS1 WHERE B.ID_HAKMILIK = SS1.ID_HAKMILIK)
     AND (SELECT COUNT(*) FROM TBLPPTSIASATAN WHERE B.ID_HAKMILIK = TBLPPTSIASATAN.ID_HAKMILIK) > 0 )
     OR
@@ -275,6 +276,7 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 	<field name="ID_HAKMILIK" class="java.math.BigDecimal"/>
 	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
 	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
 	<field name="NO_LOT" class="java.lang.String"/>
 	<field name="NAMA_MUKIM" class="java.lang.String"/>
 	<field name="NAMA_PB" class="java.lang.String"/>
@@ -307,6 +309,7 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 	<field name="TEMPOH_BULAN" class="java.math.BigDecimal"/>
 	<field name="SET_MUKIM" class="java.lang.String"/>
 	<field name="MUKIM" class="java.lang.String"/>
+	<field name="BAYAR_PAMPASAN" class="java.math.BigDecimal"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -320,7 +323,7 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 		<band splitType="Prevent"/>
 	</columnHeader>
 	<detail>
-		<band height="237" splitType="Stretch">
+		<band height="241" splitType="Stretch">
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
 				<reportElement uuid="655fd373-c2c2-4181-830d-b6b4864f3937" key="textField-1" positionType="Float" x="0" y="0" width="451" height="15"/>
 				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
@@ -384,7 +387,7 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Semua orang yang mempunyai kepentingan mengenai tanah di atas dengan ini diberitahu bahawa tanah itu diperlukan untuk pendudukan sementara/penggunaan sementara bagi tempoh "
-+($F{TEMPOH_BULAN} != null ? $F{TEMPOH_BULAN}+" ":".................... ")+" bulan "
++($F{TEMPOH_PENDUDUKAN} != null ? $F{TEMPOH_PENDUDUKAN}+" ":".................... ")+" hari "
 +" dari tarikh "+($F{HARI_MULA} != null ? $F{HARI_MULA}+" ":"..............")+($F{BULAN_MULA} != null ? $F{BULAN_MULA}+" ":".......................")+($F{TAHUN_MULA} != null ? $F{TAHUN_MULA}:"....................")
 +" hingga "+($F{HARI_AKHIR} != null ? $F{HARI_AKHIR}+" ":"..............")+($F{BULAN_AKHIR} != null ? $F{BULAN_AKHIR}+" ":".......................")+($F{TAHUN_AKHIR} != null ? $F{TAHUN_AKHIR}:"....................")+" bagi maksud yang berikut: "]]></textFieldExpression>
 			</textField>
@@ -397,7 +400,7 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 				<textFieldExpression><![CDATA[$F{TUJUAN}]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="75d51708-b04f-4db8-bdf3-c7d88077568a" key="textField-21" positionType="Float" x="263" y="196" width="188" height="19"/>
+				<reportElement uuid="75d51708-b04f-4db8-bdf3-c7d88077568a" key="textField-21" positionType="Float" x="306" y="196" width="145" height="19"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
@@ -406,7 +409,7 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 +"\n<style isItalic='true' pdfFontName='Helvetica-Oblique'>Pentadbir Tanah</style>"]]></textFieldExpression>
 			</textField>
 			<break>
-				<reportElement uuid="808f2c48-10a7-4075-a3e7-eec0b96b9957" key="element-1" x="0" y="216" width="451" height="1"/>
+				<reportElement uuid="808f2c48-10a7-4075-a3e7-eec0b96b9957" key="element-1" x="0" y="239" width="451" height="1"/>
 			</break>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
 				<reportElement uuid="e035feaf-cd0d-43a5-afd9-e636ee7a1d3f" key="textField-22" positionType="Float" x="0" y="19" width="451" height="3"/>
@@ -417,7 +420,7 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="7095b84b-323a-47ae-ae04-d072a170cc00" key="textField-24" positionType="Float" x="0" y="158" width="451" height="15"/>
+				<reportElement uuid="7095b84b-323a-47ae-ae04-d072a170cc00" key="textField-24" positionType="Float" x="0" y="158" width="273" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
 					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
@@ -459,23 +462,27 @@ AND B.ID_HAKMILIK = $P!{idhakmilik}]]>
 					<paragraph lineSpacing="1_1_2" tabStopWidth="20"/>
 				</textElement>
 				<textFieldExpression><![CDATA["2.\tPada menjalankan kuasa yang diberi oleh seksyen 58 Akta Pengambilan Tanah 1960, saya dengan ini memberi notis bahawa saya bersedia untuk *membuat tawaran pampasan  sebanyak "
-+".................................................................. "
-+"/*merunding bayaran pampasan sebanyak ............................................................ "
-+"bagi pendudukan/penggunaan tanah di atas/*atau sebahagian daripadanya dianggarkan ........................................................... "
-+"**seperti yang ditunjukkan dalam pelan yang dilampirkan dan bahawa saya menghendaki tiap-tiap orang yang mempunyai kepentingan mengenai tanah itu supaya hadir di hadapan saya pada "+($F{TARIKH_SIASATAN} != null ? $F{HARI_SIASATAN}+" haribulan "+$F{BULAN_SIASATAN}+", "+$F{TAHUN_SIASATAN} :"...................................")
-+" di "+($F{TEMPAT_SIASATAN} != null ? $F{TEMPAT_SIASATAN}+" ":"................... ")
-+($F{ALAMAT_SIASATAN1} != null ? $F{ALAMAT_SIASATAN1}+" ":"................... ")
-+($F{ALAMAT_SIASATAN2} != null ? $F{ALAMAT_SIASATAN2}+" ":"")
-+($F{ALAMAT_SIASATAN3} != null ? $F{ALAMAT_SIASATAN3}+" ":"")
++($F{BAYAR_PAMPASAN}!=null?"RM"+$F{BAYAR_PAMPASAN}:"....................................... ")
++" /*merunding bayaran pampasan sebanyak "+($F{BAYAR_PAMPASAN}!=null?"RM"+$F{BAYAR_PAMPASAN}:"....................................... ")
++" bagi pendudukan/penggunaan tanah di atas /*atau sebahagian daripadanya dianggarkan "+($F{BAYAR_PAMPASAN}!=null?"RM"+$F{BAYAR_PAMPASAN}:"....................................... ")
++" **seperti yang ditunjukkan dalam pelan yang dilampirkan dan bahawa saya menghendaki tiap-tiap orang yang mempunyai kepentingan mengenai tanah itu supaya hadir di hadapan saya pada "+($F{TARIKH_SIASATAN} != null ? $F{HARI_SIASATAN}+" haribulan "+$F{BULAN_SIASATAN}+", "+$F{TAHUN_SIASATAN} :"...................................")
++" di <style isBold='true'>"+($F{TEMPAT_SIASATAN} != null ? $F{TEMPAT_SIASATAN}.toUpperCase()+", ":"................... ")
++($F{ALAMAT_SIASATAN1} != null ? $F{ALAMAT_SIASATAN1}.toUpperCase()+", ":"................... ")
++($F{ALAMAT_SIASATAN2} != null ? $F{ALAMAT_SIASATAN2}.toUpperCase()+", ":"")
++($F{ALAMAT_SIASATAN3} != null ? $F{ALAMAT_SIASATAN3}.toUpperCase()+", ":"")
 +($F{POSKOD} != null ? $F{POSKOD}+" ":"................... ")
-+($F{BANDAR_SIASATAN} != null ? $F{BANDAR_SIASATAN}+" ":"................... ")
-+($F{NEGERI_SIASATAN} != null ? $F{NEGERI_SIASATAN}:"................... ")
++($F{BANDAR_SIASATAN} != null ? $F{BANDAR_SIASATAN}.toUpperCase()+" ":"................... ")
++($F{NEGERI_SIASATAN} != null ? $F{NEGERI_SIASATAN}.toUpperCase():"................... ") +"</style>"
 +" pada jam "+($F{MASA_SIASATAN} != null ? $F{MASA_SIASATAN}:".........")
 + ($F{JENIS_WAKTU} == "pagi" ? " <style isStrikeThrough='true'>pagi</style>/petang ": $F{JENIS_WAKTU} == "petang" ? "pagi/<style isStrikeThrough='true'>petang</style>" : " pagi/petang ")]]></textFieldExpression>
 			</textField>
 			<image scaleImage="FillFrame" vAlign="Middle">
-				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="299" y="177" width="106" height="26"/>
+				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="324" y="173" width="106" height="26"/>
 				<imageExpression><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+			</image>
+			<image>
+				<reportElement uuid="bd798527-7fc2-4b3b-8d64-c3a28b2a31a9" key="image-1" positionType="Float" x="248" y="173" width="95" height="64"/>
+				<imageExpression><![CDATA[$P{ReportDir} + File.separator+"ppk"+File.separator+"COP"+File.separator+$F{ID_DAERAHMHN}+".png"]]></imageExpression>
 			</image>
 		</band>
 	</detail>
