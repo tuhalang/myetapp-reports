@@ -27,7 +27,8 @@
 	<parameter name="namaPegawai" isForPrompting="true" class="java.lang.String"/>
 	<parameter name="no_fail" isForPrompting="true" class="java.lang.String"/>
 	<parameter name="sysdate" isForPrompting="true" class="java.lang.String"/>
-	<queryString><![CDATA[SELECT TBLPFDFAIL.id_negeri, TBLPFDFAIL.ID_FAIL, TBLPPTPERMOHONAN.NO_RUJUKAN_SURAT, REPLACE(INITCAP(C.NAMA_KEMENTERIAN),'&','&#38;') AS NAMA_KEMENTERIAN, REPLACE(INITCAP(TBLRUJAGENSI.NAMA_AGENSI),'&','&#38;') AS NAMA_AGENSI, REPLACE((NVL(C.ALAMAT1,'')),'&','&#38;') AS ALAMAT1,
+	<parameter name="ReportDir" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT TBLPFDFAIL.id_negeri, TBLPFDFAIL.ID_FAIL,TBLPPTPERMOHONAN.ID_DAERAH, TBLPPTPERMOHONAN.NO_RUJUKAN_SURAT, REPLACE(INITCAP(C.NAMA_KEMENTERIAN),'&','&#38;') AS NAMA_KEMENTERIAN, REPLACE(INITCAP(TBLRUJAGENSI.NAMA_AGENSI),'&','&#38;') AS NAMA_AGENSI, REPLACE((NVL(C.ALAMAT1,'')),'&','&#38;') AS ALAMAT1,
     REPLACE((NVL(C.ALAMAT2,'')),'&','&#38;') AS ALAMAT2, REPLACE((NVL(C.ALAMAT3,'')),'&','&#38;') AS ALAMAT3, NVL(TBLRUJAGENSI.POSKOD,'') AS POSKOD, TBLPFDFAIL.NO_FAIL,
     TBLRUJNEGERI.NAMA_NEGERI, UPPER(TBLPPTPERMOHONAN.TUJUAN) AS TUJUAN, TO_CHAR(TBLPFDFAIL.TARIKH_DAFTAR_FAIL,'dd/MM/yyyy') AS TARIKH_DAFTAR_FAIL, TBLPPTPERMOHONAN.NO_RUJUKAN_PTG,
     TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
@@ -82,15 +83,16 @@
     WHERE TBLPFDFAIL.ID_FAIL = TBLPPTPERMOHONAN.ID_FAIL
     AND TBLPFDFAIL.ID_KEMENTERIAN = C.ID_KEMENTERIAN
     AND TBLPPTPERMOHONAN.ID_PERMOHONAN = B.ID_PERMOHONAN
-    AND TBLRUJAGENSI.ID_AGENSI = TBLPPTPERMOHONAN.ID_AGENSI(+)
-    AND TBLRUJNEGERI.ID_NEGERI = C.ID_NEGERI
-    AND TBLPFDFAIL.ID_NEGERI = A.ID_NEGERI
+    AND TBLRUJAGENSI.ID_AGENSI = TBLPPTPERMOHONAN.ID_AGENSI
+    AND TBLRUJNEGERI.ID_NEGERI = C.ID_NEGERI(+)
+    AND TBLPFDFAIL.ID_NEGERI = A.ID_NEGERI(+)
     AND B.ID_HAKMILIK = TBLPPTSIASATAN.ID_HAKMILIK
     AND TBLPPTSIASATAN.ID_SIASATAN = (SELECT MAX(C.ID_SIASATAN) FROM TBLPPTSIASATAN C WHERE B.ID_HAKMILIK = C.ID_HAKMILIK)
     AND TBLPFDFAIL.ID_FAIL = $P!{idFail}]]></queryString>
 
 	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
 	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="ID_DAERAH" class="java.math.BigDecimal"/>
 	<field name="NO_RUJUKAN_SURAT" class="java.lang.String"/>
 	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
 	<field name="NAMA_AGENSI" class="java.lang.String"/>
@@ -134,7 +136,7 @@
 			</band>
 		</columnHeader>
 		<detail>
-			<band height="81"  isSplitAllowed="true" >
+			<band height="190"  isSplitAllowed="true" >
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
@@ -166,14 +168,7 @@
 +"\nSekian, terima kasih."
 +"\n"
 +"\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
-+"\n\nSaya yang menurut perintah"
-+"\n"
-+"\n"
-+"\n"
-+"\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPegawai} != null ? $P{namaPegawai}:"\t\t\t\t")+")</style>"
-+"\nb.p Pengarah"
-+"\nJabatan Ketua Pengarah Tanah dan Galian (Persekutuan)"
-+"\n"+($F{NEGERIBWH} != null ? $F{NEGERIBWH}:"")]]></textFieldExpression>
++"\n\nSaya yang menurut perintah"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -206,19 +201,12 @@
 +"\nSekian, terima kasih."
 +"\n"
 +"\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
-+"\n\nSaya yang menurut perintah"
-+"\n"
-+"\n"
-+"\n"
-+"\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPegawai} != null ? $P{namaPegawai}:"\t\t\t\t")+")</style>"
-+"\nb.p Pengarah"
-+"\nJabatan Ketua Pengarah Tanah dan Galian (Persekutuan)"
-+"\nNegeri "+($F{NEGERIBWH} != null ? $F{NEGERIBWH}:"")]]></textFieldExpression>
++"\n\nSaya yang menurut perintah"]]></textFieldExpression>
 				</textField>
 				<break>
 					<reportElement
 						x="0"
-						y="80"
+						y="189"
 						width="451"
 						height="0"
 						key="element-1"/>
@@ -302,6 +290,107 @@
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA[":"]]></textFieldExpression>
 				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="78"
+						width="451"
+						height="15"
+						key="textField-26"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==14)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Sekian, terima kasih."
++"\n"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
++"\nSaya yang menurut perintah"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="78"
+						width="451"
+						height="15"
+						key="textField-27"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=14)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Sekian, terima kasih."
++"\n"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
++"\nSaya yang menurut perintah"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="172"
+						width="451"
+						height="15"
+						key="textField-28"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==14 || $F{ID_NEGERI}.intValue()== 5 )]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPegawai} != null ? $P{namaPegawai}:"\t\t\t\t")+")</style>"
++"\nb.p Pengarah"
++"\nJabatan Ketua Pengarah Tanah dan Galian Persekutuan"
++"\n"+($F{NEGERIBWH} != null ? $F{NEGERIBWH}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="172"
+						width="451"
+						height="15"
+						key="textField-29"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=14)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPegawai} != null ? $P{namaPegawai}:"\t\t\t\t")+")</style>"
++"\nb.p Pengarah"
++"\nJabatan Ketua Pengarah Tanah dan Galian Persekutuan"
++"\nNegeri "+($F{NEGERIBWH} != null ? $F{NEGERIBWH}:"")
+]]></textFieldExpression>
+				</textField>
+				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="150"
+						y="115"
+						width="95"
+						height="55"
+						key="image-1"
+						positionType="Float"/>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[$P{ReportDir} + File.separator+"ppk"+File.separator+"COP"+File.separator+$F{ID_DAERAH}+".png"]]></imageExpression>
+				</image>
+				<image  scaleImage="FillFrame" vAlign="Middle" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="28"
+						y="132"
+						width="106"
+						height="26"
+						key="image-2"
+						positionType="Float"/>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[$P{ReportDir} + "/730131145045.jpeg"]]></imageExpression>
+				</image>
 			</band>
 		</detail>
 		<columnFooter>
