@@ -24,24 +24,27 @@
 	<import value="net.sf.jasperreports.engine.data.*" />
 
 	<parameter name="ID_FAIL" isForPrompting="true" class="java.lang.String"/>
-	<queryString><![CDATA[SELECT DISTINCT A.ID_FAIL,UPPER(A.NO_FAIL)AS NO_FAIL,A.TAJUK_FAIL, C.NAMA AS NAMA_PEMEGANG_LESEN,
-C.ALAMAT1_TETAP AS ALAMAT_PEMOHON1,C.ALAMAT2_TETAP AS ALAMAT_PEMOHON2,C.ALAMAT3_TETAP AS ALAMAT_PEMOHON3,C.NO_PENGENALAN,
-E.LOKASI_PERMOHONAN AS TEMPAT,LUAS_KAWASAN,C.ID_PEMOHON,
-B.ID_PERMOHONAN,G.JUMLAH_FEELESEN,G.NO_LESEN, 
-TO_CHAR(G.TARIKH_MULA_LESEN,'DD/MM/YYYY')AS TARIKH_MULA_LESEN,
-TO_CHAR(G.TARIKH_TAMAT_LESEN,'DD/MM/YYYY')AS TARIKH_TAMAT_LESEN,
-H.NO_RESIT, 
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="noFailremoveslash" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT A.ID_FAIL,A.NO_FAIL,A.TAJUK_FAIL, C.NAMA AS NAMA_PEMEGANG_LESEN,
+C.ALAMAT1_TETAP AS ALAMAT_PEMOHON1,C.ALAMAT2_TETAP AS ALAMAT_PEMOHON2,C.ALAMAT3_TETAP AS ALAMAT_PEMOHON3,
+C.NO_PENGENALAN, TO_CHAR(G.JUMLAH_FEELESEN,'999,999,999.99') AS JUMLAH_FEELESEN,G.NO_LESEN,
+TO_CHAR(G.TARIKH_MULA_LESEN,'DD/MM/YYYY') AS TARIKH_MULA_LESEN,
+TO_CHAR(G.TARIKH_TAMAT_LESEN, 'DD/MM/YYYY') AS TARIKH_TAMAT_LESEN,
+G.LUAS_KAWASAN, E.LOKASI_PERMOHONAN AS TEMPAT,
 TO_CHAR(I.TARIKH_KELUAR_LESEN,'DD/MM/YYYY') AS TARIKH_KELUAR_LESEN
+,H.ID_JENISBAYARAN,
+H.NO_RESIT
 
-FROM TBLPFDFAIL A,TBLPERMOHONAN B, TBLPHPPEMOHON C, TBLPHPKERTASKERJAAPB D, TBLPHPPMOHONNJDUALPERTAMA E,
- TBLRUJNEGERI F, TBLPHPBYRNSYRTKLLSNLESENAPB G, TBLPHPAKAUN H, TBLPHPJADUALKEDUALESENAPB I
+
+FROM TBLPFDFAIL A,TBLPERMOHONAN B, TBLPHPPEMOHON C,TBLPHPPMOHONNJDUALPERTAMA E,TBLPHPBYRNSYRTKLLSNLESENAPB G, TBLPHPJADUALKEDUALESENAPB I,TBLPHPAKAUN H
 
 WHERE A.ID_FAIL=B.ID_FAIL
 AND C.ID_PEMOHON=B.ID_PEMOHON 
-AND D.ID_PERMOHONAN=B.ID_PERMOHONAN 
 AND G.ID_PERMOHONAN=B.ID_PERMOHONAN
-AND I.ID_PERMOHONAN=G.ID_PERMOHONAN
-AND E.ID_PHPPMOHONNJDUALPERTAMA =H.ID_PHPPMOHONNJDUALPERTAMA  
+AND G.ID_PERMOHONAN=E.ID_PERMOHONAN
+AND E.ID_PHPPMOHONNJDUALPERTAMA = H.ID_PHPPMOHONNJDUALPERTAMA
+AND H.ID_JENISBAYARAN IN (19) AND H.NO_RESIT IS NOT NULL
 AND A.ID_FAIL=$P{ID_FAIL}]]></queryString>
 
 	<field name="ID_FAIL" class="java.math.BigDecimal"/>
@@ -52,16 +55,15 @@ AND A.ID_FAIL=$P{ID_FAIL}]]></queryString>
 	<field name="ALAMAT_PEMOHON2" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON3" class="java.lang.String"/>
 	<field name="NO_PENGENALAN" class="java.lang.String"/>
-	<field name="TEMPAT" class="java.lang.String"/>
-	<field name="LUAS_KAWASAN" class="java.lang.String"/>
-	<field name="ID_PEMOHON" class="java.math.BigDecimal"/>
-	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
 	<field name="JUMLAH_FEELESEN" class="java.lang.String"/>
 	<field name="NO_LESEN" class="java.lang.String"/>
 	<field name="TARIKH_MULA_LESEN" class="java.lang.String"/>
 	<field name="TARIKH_TAMAT_LESEN" class="java.lang.String"/>
-	<field name="NO_RESIT" class="java.lang.String"/>
+	<field name="LUAS_KAWASAN" class="java.math.BigDecimal"/>
+	<field name="TEMPAT" class="java.lang.String"/>
 	<field name="TARIKH_KELUAR_LESEN" class="java.lang.String"/>
+	<field name="ID_JENISBAYARAN" class="java.math.BigDecimal"/>
+	<field name="NO_RESIT" class="java.lang.String"/>
 
 		<background>
 			<band height="0"  isSplitAllowed="true" >
@@ -139,10 +141,7 @@ AND A.ID_FAIL=$P{ID_FAIL}]]></queryString>
 				<textFieldExpression   class="java.lang.String"><![CDATA["Nombor Kad Pengenalan /Nombor Pendaftaran Syarikat : "
 + ($F{NO_PENGENALAN}!=null ? $F{NO_PENGENALAN}:"")+"\n\n"
 
-+"\nadalah dengan ini diberi lesen untuk melombong bagi mendapatkan" 
- +($F{TAJUK_FAIL}!=null ? $F{TAJUK_FAIL}:"")
-+"dalam kawasan yang berikut di pelantar benua :"
-
++"\nadalah dengan ini diberi lesen untuk menjalankan operasi bagi mendapatkan pasir dari kawasan yang berikut di pelantar benua:" 
 +"\n\n"]]></textFieldExpression>
 				</textField>
 			</band>
@@ -152,7 +151,7 @@ AND A.ID_FAIL=$P{ID_FAIL}]]></queryString>
 			</band>
 		</columnHeader>
 		<detail>
-			<band height="171"  isSplitAllowed="true" >
+			<band height="174"  isSplitAllowed="true" >
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
@@ -261,7 +260,8 @@ AND A.ID_FAIL=$P{ID_FAIL}]]></queryString>
 						<font fontName="Arial" pdfFontName="Helvetica" size="11" isBold="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["Lesen ini dikeluarkan pada :"
-+($F{TARIKH_KELUAR_LESEN}!=null ? $F{TARIKH_KELUAR_LESEN}:"")]]></textFieldExpression>
++($F{TARIKH_KELUAR_LESEN}!=null ? $F{TARIKH_KELUAR_LESEN}:"")+"\n\n"
++"NO. RESIT :"+ ($F{NO_RESIT}!=null ? $F{NO_RESIT}:"")]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -279,6 +279,17 @@ AND A.ID_FAIL=$P{ID_FAIL}]]></queryString>
 				<textFieldExpression   class="java.lang.String"><![CDATA["Menteri"
 +($F{TARIKH_KELUAR_LESEN}!=null ? $F{TARIKH_KELUAR_LESEN}:"")]]></textFieldExpression>
 				</textField>
+				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="337"
+						y="103"
+						width="107"
+						height="71"
+						key="image-1"/>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[$P{ReportDir} +"//php2//qrcode//"+$P{noFailremoveslash}+".png"]]></imageExpression>
+				</image>
 			</band>
 		</detail>
 		<columnFooter>
@@ -290,7 +301,20 @@ AND A.ID_FAIL=$P{ID_FAIL}]]></queryString>
 			</band>
 		</pageFooter>
 		<summary>
-			<band height="0"  isSplitAllowed="true" >
+			<band height="88"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="336"
+						y="1"
+						width="110"
+						height="46"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Muat turun Aplikasi MyeTaPP di Playstore/GAMMA]]></text>
+				</staticText>
 			</band>
 		</summary>
 </jasperReport>
