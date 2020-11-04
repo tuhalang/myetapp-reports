@@ -52,13 +52,34 @@
     F.ID_SIMATI,
     F.NAMA_SIMATI,F.NAMA_LAIN,
    
-    CASE 
-       WHEN LENGTH(AAA.NO_KP1) is null THEN  ''
-       WHEN LENGTH(AAA.NO_KP1)<12 THEN  ''||RTRIM(AAA.NO_KP1)||''
-       WHEN LENGTH(RTRIM(AAA.NO_KP1))=12 THEN SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4) 
-       ELSE SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4)  ||' ('||SUBSTR(AAA.NO_KP1,13,LENGTH(AAA.NO_KP1))||')'
-     END  AS KP_SIMATI
-	,CASE
+   -- CASE 
+   --    WHEN LENGTH(AAA.NO_KP1) is null THEN  ''
+   --    WHEN LENGTH(AAA.NO_KP1)<12 THEN  ''||RTRIM(AAA.NO_KP1)||''
+   --    WHEN LENGTH(RTRIM(AAA.NO_KP1))=12 THEN SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4) 
+   --    ELSE SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4)  ||' ('||SUBSTR(AAA.NO_KP1,13,LENGTH(AAA.NO_KP1))||')'
+   --  END  AS KP_SIMATI,
+Case
+         WHEN (f.no_kp_baru IS NOT NULL OR f.no_kp_lama IS NOT NULL) THEN ', No. KP : '
+                --WHEN f.jenis_kp in (0,5,6,7) THEN ', No. KP : '
+                WHEN (f.no_kp_baru IS NULL and f.no_kp_lama is NULL and f.no_kp_lain IS NOT NULL and f.jenis_kp <> 4) THEN ', No. KP : '
+                WHEN f.jenis_kp=4 and (f.no_kp_baru IS NULL OR f.no_kp_lama IS NULL) THEN ', No. PASPORT : '
+            -- null,6,0,5,7,4,
+                Else ''
+            END AS Jenis_kp_simati,
+         CASE
+                WHEN f.no_kp_baru IS NOT NULL AND f.no_kp_lama IS NULL and f.no_kp_lain IS NULL THEN SUBSTR(f.no_kp_baru,1,6) || '-' || SUBSTR(f.no_kp_baru,7,2) || '-' || SUBSTR(f.no_kp_baru,9,4)
+                WHEN f.no_kp_baru IS NOT NULL AND f.no_kp_lama IS NOT NULL AND f.no_kp_lain IS NULL THEN SUBSTR(f.no_kp_baru,1,6) || '-' || SUBSTR(f.no_kp_baru,7,2) || '-' || SUBSTR(f.no_kp_baru,9,4) || ' ('||f.no_kp_lama ||')'
+                WHEN f.no_kp_baru IS NOT NULL AND f.no_kp_lama IS NOT NULL AND f.no_kp_lain IS NOT NULL AND f.jenis_kp <> 4 THEN SUBSTR(f.no_kp_baru,1,6) || '-' || SUBSTR(f.no_kp_baru,7,2) || '-' || SUBSTR(f.no_kp_baru,9,4) || ' ('||f.no_kp_lama ||' / '||f.no_kp_lain ||')'
+                WHEN f.no_kp_baru IS NOT NULL AND f.no_kp_lama IS NOT NULL AND f.no_kp_lain IS NOT NULL AND f.jenis_kp = 4 THEN SUBSTR(f.no_kp_baru,1,6) || '-' || SUBSTR(f.no_kp_baru,7,2) || '-' || SUBSTR(f.no_kp_baru,9,4) || ' ('||f.no_kp_lama ||' ) No. PASPORT : '||f.no_kp_lain ||''
+                WHEN f.no_kp_baru IS NOT NULL AND f.no_kp_lama IS NULL AND f.no_kp_lain IS NOT NULL AND f.jenis_kp = 4 THEN SUBSTR(f.no_kp_baru,1,6) || '-' || SUBSTR(f.no_kp_baru,7,2) || '-' || SUBSTR(f.no_kp_baru,9,4) || ' No. PASPORT : '||f.no_kp_lain ||''
+                WHEN f.no_kp_baru IS NOT NULL AND f.no_kp_lama IS NULL and f.no_kp_lain IS NOT NULL AND f.jenis_kp <> 4 THEN SUBSTR(f.no_kp_baru,1,6) || '-' || SUBSTR(f.no_kp_baru,7,2) || '-' || SUBSTR(f.no_kp_baru,9,4)  || ' ('||f.no_kp_lain ||')'
+                WHEN f.no_kp_baru IS NULL AND f.no_kp_lama IS NOT NULL and f.no_kp_lain IS NULL THEN REPLACE(f.no_kp_lama,'&','&#38;')
+                WHEN f.no_kp_baru IS NULL AND f.no_kp_lama IS NOT NULL and f.no_kp_lain IS NOT NULL AND f.jenis_kp = 4 THEN REPLACE(f.no_kp_lama,'&','&#38;') || ' No. PASPORT : '||f.no_kp_lain ||''
+                WHEN f.no_kp_baru IS NULL AND f.no_kp_lama IS NOT NULL and f.no_kp_lain IS NOT NULL AND f.jenis_kp <> 4 THEN REPLACE(f.no_kp_lama,'&','&#38;') || ' ('||f.no_kp_lain ||')'
+                WHEN f.no_kp_baru IS NULL AND f.no_kp_lama IS NULL and f.no_kp_lain IS NOT NULL THEN REPLACE(f.no_kp_lain,'&','&#38;')
+                ELSE ''
+            END AS kp_simati,	
+     CASE
 		WHEN AAA.NO_KP_BARU IS NOT NULL OR AAA.NO_KP_LAMA IS NOT NULL THEN 'Y' 
 		ELSE 'N'
 	END ISKPBARU_SIMATI
@@ -195,6 +216,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 	<field name="ID_SIMATI" class="java.math.BigDecimal"/>
 	<field name="NAMA_SIMATI" class="java.lang.String"/>
 	<field name="NAMA_LAIN" class="java.lang.String"/>
+	<field name="JENIS_KP_SIMATI" class="java.lang.String"/>
 	<field name="KP_SIMATI" class="java.lang.String"/>
 	<field name="ISKPBARU_SIMATI" class="java.lang.String"/>
 	<field name="KP_PEMOHON" class="java.lang.String"/>
@@ -261,7 +283,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 				<staticText>
 					<reportElement
 						x="28"
-						y="211"
+						y="205"
 						width="478"
 						height="28"
 						key="staticText-17"
@@ -270,7 +292,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
 						<font fontName="Verdana" size="8"/>
 					</textElement>
-				<text><![CDATA[*    Masukkan Pentadbir Tanah Daerah / Pemungut / Pegawai Daerah / Pegawai Pentadbir Sarawak, mengikut kehendak keadaan.]]></text>
+				<text><![CDATA[*    Masukkan Pegawai Pembahagian Pusaka Malaysia / Pemungut / Pegawai Daerah / Pegawai Pentadbir Sarawak, mengikut kehendak keadaan.]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -284,7 +306,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
 						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["Dalam hal Harta Pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>"+ ($F{NAMA_LAIN}!= null ? $F{NAMA_SIMATI}+" @ " +$F{NAMA_LAIN}:$F{NAMA_SIMATI})+($F{ISKPBARU_SIMATI}.equals("Y")?", No. KP: ":", ")+($F{KP_SIMATI}!= null ? $F{KP_SIMATI}:"TIADA")+", Tarikh mati: "+($F{TARIKH_MATI}!= null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
+				<textFieldExpression   class="java.lang.String"><![CDATA["Dalam hal Harta Pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>"+ ($F{NAMA_LAIN}!= null ? $F{NAMA_SIMATI}+" @ " +$F{NAMA_LAIN}:$F{NAMA_SIMATI})+($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"")+", Tarikh mati: "+($F{TARIKH_MATI}!= null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
 +"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($P{namaPemohon}!= null ? $P{namaPemohon}:"TIADA") + ($P{kpPemohon}!= "" ?", No. KP: "+ $P{kpPemohon}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ ($P{alamatPemohon}!= null ? $P{alamatPemohon}:"TIADA")+"</style>."
 +"\n\n                             <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH ATAS PERMOHONAN YANG BERIKUTNYA</style>"
 +"\n                                                          (Seksyen 17)"
@@ -329,7 +351,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 				<staticText>
 					<reportElement
 						x="10"
-						y="195"
+						y="189"
 						width="515"
 						height="14"
 						key="staticText-18"
@@ -492,8 +514,19 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 						y="283"
 						width="535"
 						height="0"
-						key="element-2"/>
+						key="element-2">
+							<printWhenExpression><![CDATA[new Boolean ((!$F{ID_PERINTAHHTAOBMST}.equals("0")))]]></printWhenExpression>
+						</reportElement>
 				</break>
+				<rectangle>
+					<reportElement
+						x="603"
+						y="269"
+						width="0"
+						height="0"
+						key="rectangle-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
 			</band>
 		</detail>
 		<columnFooter>
@@ -505,7 +538,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="209"
-						y="81"
+						y="87"
 						width="89"
 						height="18"
 						key="textField-37"
@@ -519,7 +552,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="299"
-						y="81"
+						y="87"
 						width="23"
 						height="18"
 						key="textField-38"
@@ -534,7 +567,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 					<reportElement
 						mode="Transparent"
 						x="449"
-						y="-1"
+						y="5"
 						width="86"
 						height="86"
 						key="image-2">
@@ -548,7 +581,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="452"
-						y="81"
+						y="87"
 						width="80"
 						height="16"
 						key="textField-41"
@@ -565,7 +598,7 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="453"
-						y="76"
+						y="82"
 						width="80"
 						height="18"
 						key="textField-42"
@@ -579,6 +612,15 @@ AND A.ID_FAIL = $P!{idfail}]]></queryString>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["Muat turun Aplikasi MyeTaPP"]]></textFieldExpression>
 				</textField>
+				<rectangle>
+					<reportElement
+						x="300"
+						y="58"
+						width="0"
+						height="0"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
 			</band>
 		</pageFooter>
 		<summary>
