@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="143"/>
+	<property name="ireport.y" value="287"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -12,6 +12,8 @@
 	<parameter name="id_bantahan" class="java.lang.String"/>
 	<parameter name="namaPegawai" class="java.lang.String"/>
 	<parameter name="id_jawatan" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="userlogin" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT G.ID_NEGERI, A.NO_RUJUKAN_SURAT,A.NO_RUJUKAN_PTG,G.NO_FAIL,REPLACE(INITCAP(H.NAMA_AGENSI),'&','&#38;') AS NAMA_AGENSI,REPLACE(INITCAP(H.ALAMAT1),'&','&#38;') AS ALAMAT1,REPLACE(INITCAP(H.ALAMAT2),'&','&#38;') AS ALAMAT2,REPLACE(INITCAP(H.ALAMAT3),'&','&#38;') AS ALAMAT3,NVL(H.POSKOD,'') AS POSKOD,I.NAMA_NEGERI AS NEGERI_AGENSI,
 I2.NAMA_NEGERI AS NEGERI_MAHKAMAH,INITCAP(I2.NAMA_NEGERI) AS NEGERI_MAHKAMAHBWH,F.NO_RUJUKAN_TANAH,INITCAP(C.NAMA_PB) AS NAMA_PB,C.NO_PB,INITCAP(A.TUJUAN) AS TUJUAN,
@@ -55,7 +57,7 @@ TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
         ELSE 'b.p. Pengarah'
     END AS PENGARAH
     ,B.NO_LOT, B.NO_PT, B.NO_HAKMILIK, rl.keterangan, jh.kod_jenis_hakmilik,
-    BPB.SYER_ATAS, BPB.SYER_BAWAH
+    BPB.SYER_ATAS, BPB.SYER_BAWAH, A.ID_DAERAH
 FROM TBLPFDFAIL G,
 TBLPPTPERMOHONAN A,
 TBLPPTHAKMILIK B,
@@ -75,9 +77,9 @@ AND B.ID_HAKMILIK = D.ID_HAKMILIK
 AND C.ID_PIHAKBERKEPENTINGAN = D.ID_PIHAKBERKEPENTINGAN
 AND E.ID_BANTAHAN = F.ID_BANTAHAN
 AND D.ID_HAKMILIKPB = E.ID_HAKMILIKPB
-and d.id_bahagianpb = bpb.id_bahagianpb
-and b.id_jenishakmilik = jh.id_jenishakmilik
-and b.ID_LOT = rl.id_lot
+and d.id_bahagianpb = bpb.id_bahagianpb(+)
+and b.id_jenishakmilik = jh.id_jenishakmilik(+)
+and b.ID_LOT = rl.id_lot(+)
 AND A.ID_AGENSI = H.ID_AGENSI
 AND H.ID_NEGERI = I.ID_NEGERI
 AND J.ID_NEGERI = I2.ID_NEGERI
@@ -123,6 +125,7 @@ AND E.ID_BANTAHAN = $P!{id_bantahan}]]>
 	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
 	<field name="SYER_ATAS" class="java.math.BigDecimal"/>
 	<field name="SYER_BAWAH" class="java.math.BigDecimal"/>
+	<field name="ID_DAERAH" class="java.math.BigDecimal"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -136,7 +139,7 @@ AND E.ID_BANTAHAN = $P!{id_bantahan}]]>
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="321" splitType="Stretch">
+		<band height="376" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="9c3b8e6d-baf1-4321-8db8-8613c4b41103" key="textField-21" positionType="Float" x="0" y="117" width="451" height="15">
 					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()==14)]]></printWhenExpression>
@@ -345,7 +348,7 @@ AND E.ID_BANTAHAN = $P!{id_bantahan}]]>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
 				<textFieldExpression><![CDATA["3. Sila keluarkan bayaran pampasan tambahan berjumlah RM" + ($F{AMAUN_AWARD} != null ? $F{AMAUN_AWARD} : "...............")
-+" sebagai penyelesaikan muktamad kepada akaun Tetuan ..................... sebagaimana dalam perintah tersebut. Bayaran faedah 5% selanjutnya akan dikira selepas bayaran pampasan tambahan ini dibuat oleh pihak agensi."]]></textFieldExpression>
++" sebagai penyelesaikan muktamad sebagaimana dalam perintah tersebut. Bayaran faedah 5% selanjutnya akan dikira selepas bayaran pampasan tambahan ini dibuat oleh pihak agensi."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="ada61ae4-2c3d-46ea-8978-b33a70e99bb4" key="textField-39" positionType="Float" x="0" y="282" width="451" height="15">
@@ -360,14 +363,7 @@ AND E.ID_BANTAHAN = $P!{id_bantahan}]]>
 +"\nSekian, terima kasih"
 +"\n"
 +"\n<style isBold='true' pdfFontName='Helvetica-Bold'>'BERKHIDMAT UNTUK NEGARA'</style>"
-+"\n\nSaya yang menjalankan amanah,"
-+"\n"
-+"\n"
-+"\n"
-+"\n<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPegawai} != null ? $P{namaPegawai}:"")+")</style>"
-+"\n"+($F{PENGARAH} != null ? $F{PENGARAH}:"")
-+"\nJabatan Ketua Pengarah Tanah dan Galian (Persekutuan)"
-+"\nNegeri "+($F{NEGERIBWH} != null ? $F{NEGERIBWH}:"")]]></textFieldExpression>
++"\n\nSaya yang menjalankan amanah,"]]></textFieldExpression>
 			</textField>
 			<break>
 				<reportElement uuid="b4c759f1-9eaa-4158-97f2-03ffe7987d07" positionType="Float" x="0" y="277" width="451" height="1"/>
@@ -408,6 +404,27 @@ AND E.ID_BANTAHAN = $P!{id_bantahan}]]>
 			<line>
 				<reportElement uuid="8e08d332-1c08-4e60-86c2-60c6c00ea698" positionType="Float" x="0" y="197" width="451" height="1"/>
 			</line>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="ada61ae4-2c3d-46ea-8978-b33a70e99bb4" key="textField-39" positionType="Float" x="0" y="361" width="451" height="15">
+					<printWhenExpression><![CDATA[new Boolean($F{ID_NEGERI}.intValue()!=14)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled">
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>("+($P{namaPegawai} != null ? $P{namaPegawai}:"")+")</style>"
++"\n"+($F{PENGARAH} != null ? $F{PENGARAH}:"")
++"\nJabatan Ketua Pengarah Tanah dan Galian Persekutuan"
++"\nNegeri "+($F{NEGERIBWH} != null ? $F{NEGERIBWH}:"")]]></textFieldExpression>
+			</textField>
+			<image scaleImage="FillFrame" vAlign="Middle">
+				<reportElement uuid="5f1499e2-283b-40df-a963-1d884eaa6840" key="image-1" positionType="Float" x="2" y="333" width="106" height="26"/>
+				<imageExpression><![CDATA[$P{ReportDir} + File.separator+"ppt"+File.separator+"tandatangan"+File.separator+$P{userlogin}+".png"]]></imageExpression>
+			</image>
+			<image>
+				<reportElement uuid="bd798527-7fc2-4b3b-8d64-c3a28b2a31a9" key="image-1" positionType="Float" x="108" y="297" width="95" height="64"/>
+				<imageExpression><![CDATA[$P{ReportDir} + File.separator+"ppk"+File.separator+"COP"+File.separator+$F{ID_DAERAH}+".png"]]></imageExpression>
+			</image>
 		</band>
 	</detail>
 	<columnFooter>
