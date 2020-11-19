@@ -10,39 +10,35 @@
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="idpermohonan" class="java.lang.String"/>
 	<parameter name="TAHUN" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="patutBayar" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select mt.no_hakmilik,'RM '||LTRIM(TO_CHAR(mt.cukai_terkini,'99,999,999.00')) Cukai_terkiniF
---,mt.id_luas,mt.luas
-,mt.id_luas_bersamaan,TO_CHAR(mt.luas_bersamaan,'99,999,999.000') Luas_asalF
-,RJA.KETERANGAN
-,TO_CHAR(NVL(mtu.luas_bersamaan,0),'99,999,999.000') Luas_pajakF
-,(
---	CASE
---		WHEN (PAJ.KATEGORI_CUKAI='P')
---			THEN
---				(mt.cukai_terkini)
---		ELSE
-			(mt.cukai_terkini)* (mtu.LUAS_BERSAMAAN/mt.luas_bersamaan)
---	END
-) JUMLAH_CUKAI,PAJ.KATEGORI_CUKAI
-from tblhtphakmilikurusan mtu, tblhtphakmilik mt,TBLRUJLUAS RJA
-,TBLHTPPAJAKAN PAJ
-where
-mtu.pegangan_hakmilik=mt.pegangan_hakmilik
-and MT.ID_LUAS_BERSAMAAN= RJA.ID_LUAS
-AND PAJ.ID_PERMOHONAN = MTU.ID_PERMOHONAN
-and mtu.id_permohonan= $P{idpermohonan}]]>
+		<![CDATA[select
+'RM '||LTRIM(TO_CHAR(paj.kadar_pajakan,'99,999,999.00')) kadar_pajakanf
+,PAJ.DENDA
+,'RM '||LTRIM(TO_CHAR(paj.kadar_pajakan*((BA.TARIKH_RESIT - to_date(TO_CHAR(PAJ.TARIKH_PATUT_BAYAR,'DD FMMonth')||To_CHAR(sysdate,'YYYY'),'dd Month YYYY'))/365)*(PAJ.DENDA/100),'99,999,999.00')) jumlah_denda
+--, BA.JUMLAH_BAYARANF
+--, 'RM '||LTRIM(TO_CHAR((paj.kadar_cukai-BA.JUMLAH_BAYARAN),'99,999,999.00')) BAKI_CUKAIF
+,(BA.TARIKH_RESIT - to_date(TO_CHAR(PAJ.TARIKH_PATUT_BAYAR,'DD FMMonth')||To_CHAR(sysdate,'YYYY'),'dd Month YYYY')) bilhari
+,BA.TARIKH_RESITF TARIKH_BAYAR
+FROM TBLHTPPAJAKAN PAJ
+,(SELECT TPB.ID_PERMOHONAN,TPB.TARIKH_RESIT
+	,TO_CHAR(TPB.TARIKH_RESIT,'DD FMMonth YYYY') TARIKH_RESITF,TPB.JUMLAH_BAYARAN,'RM '||LTRIM(TO_CHAR(TPB.JUMLAH_BAYARAN,'99,999,999.00')) JUMLAH_BAYARANF
+FROM TBLHTPBAYARAN TPB
+WHERE
+--TO_CHAR(TPB.TARIKH_RESIT,'YYYY') = '2013'
+--
+TO_CHAR(TPB.TARIKH_RESIT,'YYYY') = TO_CHAR(sysdate,'YYYY')
+) BA
+WHERE PAJ.ID_PERMOHONAN = BA.ID_PERMOHONAN(+)
+and PAJ.id_permohonan= $P{idpermohonan}]]>
 	</queryString>
-	<field name="NO_HAKMILIK" class="java.lang.String"/>
-	<field name="CUKAI_TERKINIF" class="java.lang.String"/>
-	<field name="ID_LUAS_BERSAMAAN" class="java.math.BigDecimal"/>
-	<field name="LUAS_ASALF" class="java.lang.String"/>
-	<field name="KETERANGAN" class="java.lang.String"/>
-	<field name="LUAS_PAJAKF" class="java.lang.String"/>
-	<field name="JUMLAH_CUKAI" class="java.math.BigDecimal"/>
-	<field name="KATEGORI_CUKAI" class="java.lang.String"/>
+	<field name="KADAR_PAJAKANF" class="java.lang.String"/>
+	<field name="DENDA" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_DENDA" class="java.lang.String"/>
+	<field name="BILHARI" class="java.math.BigDecimal"/>
+	<field name="TARIKH_BAYAR" class="java.lang.String"/>
 	<variable name="JUMLAH_CUKAI" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{JUMLAH_CUKAI}]]></variableExpression>
+		<variableExpression><![CDATA[]]></variableExpression>
 	</variable>
 	<background>
 		<band splitType="Stretch"/>
@@ -137,8 +133,9 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" size="8"/>
+					<paragraph rightIndent="1"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{LUAS_PAJAKF}+" / " + $F{LUAS_ASALF}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{patutBayar}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="false">
 				<reportElement uuid="4a7e9fd8-a4f8-4186-9610-ef73e40aa4e3" key="textField-14" x="20" y="30" width="265" height="25"/>
@@ -165,8 +162,9 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" size="8" isBold="false" pdfFontName="Helvetica-Bold"/>
+					<paragraph rightIndent="1"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$V{JUMLAH_CUKAI}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{TARIKH_BAYAR}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="false">
 				<reportElement uuid="4a7e9fd8-a4f8-4186-9610-ef73e40aa4e3" key="textField-14" x="20" y="55" width="265" height="25"/>
@@ -193,8 +191,9 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" size="8" isBold="false" pdfFontName="Helvetica-Bold"/>
+					<paragraph rightIndent="1"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$V{JUMLAH_CUKAI}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{KADAR_PAJAKANF}+" X"+ $F{DENDA}+"% X "+$F{BILHARI}+"/365"]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.00" isBlankWhenNull="false">
 				<reportElement uuid="2853ccec-506e-422a-996d-d9231aeb2bc9" key="textField-15" x="285" y="80" width="194" height="25"/>
@@ -207,8 +206,9 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph rightIndent="1"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$V{JUMLAH_CUKAI}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{JUMLAH_DENDA}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="false">
 				<reportElement uuid="4a7e9fd8-a4f8-4186-9610-ef73e40aa4e3" key="textField-14" x="20" y="80" width="265" height="25"/>
