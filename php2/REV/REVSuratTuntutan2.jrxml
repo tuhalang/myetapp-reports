@@ -50,17 +50,19 @@
     TBLPHPPEMOHON.NAMA, INITCAP(TBLPHPPEMOHON.ALAMAT1_TETAP) AS ALAMAT1, INITCAP(TBLPHPPEMOHON.ALAMAT2_TETAP) AS ALAMAT2, 
     INITCAP(TBLPHPPEMOHON.ALAMAT3_TETAP) AS ALAMAT3, TBLPHPPEMOHON.POSKOD_TETAP AS POSKOD, INITCAP(TBLRUJBANDAR.KETERANGAN) AS BANDAR, UPPER(TBLRUJNEGERI.NAMA_NEGERI) AS NEGERI,
     REPLACE (TBLPFDFAIL.TAJUK_FAIL, 'PERMOHONAN', '') AS TAJUK_FAIL,
-    TBLPHPNOTISHASIL.JUMLAH_TUNGGAKAN, TBLPHPHASIL.ID_HASIL,
+    TBLPHPNOTISHASIL.JUMLAH_TUNGGAKAN, TBLPHPBAYARANPERLUDIBAYAR.DEPOSIT, TBLPHPHASIL.ID_HASIL,
     TBLPHPHASIL.MAKLUMAT_LOT, TBLPHPHASIL.TUJUAN
   FROM TBLPHPNOTISHASIL,
        TBLPHPHASIL,
        TBLPFDFAIL,
        TBLPHPPEMOHON,
        TBLRUJBANDAR,
-       TBLRUJNEGERI
+       TBLRUJNEGERI,
+       TBLPHPBAYARANPERLUDIBAYAR
  WHERE TBLPHPNOTISHASIL.ID_HASIL = TBLPHPHASIL.ID_HASIL
    AND TBLPHPHASIL.ID_FAIL = TBLPFDFAIL.ID_FAIL
    AND TBLPHPHASIL.ID_PEMOHON = TBLPHPPEMOHON.ID_PEMOHON
+   AND TBLPHPHASIL.ID_HASIL = TBLPHPBAYARANPERLUDIBAYAR.ID_HASIL(+)
    AND TBLPHPPEMOHON.ID_BANDARTETAP = TBLRUJBANDAR.ID_BANDAR(+)
    AND TBLPHPPEMOHON.ID_NEGERITETAP = TBLRUJNEGERI.ID_NEGERI(+)
    AND ID_NOTIS = $P{ID_NOTIS}]]></queryString>
@@ -76,6 +78,7 @@
 	<field name="NEGERI" class="java.lang.String"/>
 	<field name="TAJUK_FAIL" class="java.lang.String"/>
 	<field name="JUMLAH_TUNGGAKAN" class="java.lang.String"/>
+	<field name="DEPOSIT" class="java.lang.String"/>
 	<field name="ID_HASIL" class="java.lang.String"/>
 	<field name="MAKLUMAT_LOT" class="java.lang.String"/>
 	<field name="TUJUAN" class="java.lang.String"/>
@@ -85,11 +88,11 @@
 			</band>
 		</background>
 		<title>
-			<band height="172"  isSplitAllowed="false" >
+			<band height="190"  isSplitAllowed="false" >
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="157"
+						y="167"
 						width="451"
 						height="14"
 						key="textField-27"
@@ -98,19 +101,14 @@
 					<textElement textAlignment="Justified" verticalAlignment="Middle" isStyledText="true" lineSpacing="Single">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isItalic="false" isPdfEmbedded ="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["4.        Pihak tuan juga dikehendaki menjelaskan bayaran baki tunggakan sewa berjumlah"
-+ " <style isBold='true' pdfFontName='Helvetica-Bold'>RM " + new DecimalFormat("#,###,##0.00").format(Double.valueOf($P{BAKI_TUNGGAKAN})) + "</style>"
-+ " dalam masa <style isBold='true' pdfFontName='Helvetica-Bold'>tiga puluh (30) hari</style> dari tarikh surat ini."
-+ " <style isBold='true' pdfFontName='Helvetica-Bold'>TUNTUTAN AKAN DIBUAT KE MAHKAMAH</style> tanpa sebarang notis"
-+ " kepada pihak tuan sekiranya gagal membuat bayaran dalam masa yang ditetapkan.\n\n"
+				<textFieldExpression   class="java.lang.String"><![CDATA["4.	   Sebagaimana dimaklumkan sebelum ini, Jabatan ini hanya menerima bayaran sewa dalam bentuk"
++"<style isBold='true' pdfFontName='Helvetica-Bold'> Bank Deraf, Kiriman Wang atau Wang Pos</style> atas nama"
++"<style isBold='true' pdfFontName='Helvetica-Bold'> PESURUHJAYA TANAH PERSEKUTUAN</style>. Kerjasama pihak tuan dalam memberikan maklum balas terhadap perkara ini amatlah dihargai.\n\n"
 
-+ "5.        Bagi sebarang tujukan pertanyaan berkaitan, pihak tuan boleh menghubuni Unit Sewa di talian"
-+ " 03-8871 2886/2756/2730/2927.\n\n"
-
-+ "Sekian dimaklumkan untuk tindakan segera pihak tuan jua.\n\n"
++ "Sekian Terima Kasih\n\n"
 
 + "<style isBold='true' pdfFontName='Helvetica-Bold'>“BERKHIDMAT UNTUK NEGARA”</style>\n\n"
-+ "Saya yang menurut perintah,\n\n\n\n"
++ "Saya yang menjalankan amanah,\n\n\n\n"
 + "<style isBold='true' pdfFontName='Helvetica-Bold'>(" + $P{NAMA_PEGAWAI} + ")</style>\n"
 + "b.p Pesuruhjaya Tanah Persekutuan\n"
 + "Jabatan Ketua Pengarah Tanah dan Galian (Persekutuan)\n"]]></textFieldExpression>
@@ -118,7 +116,7 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="123"
+						y="142"
 						width="451"
 						height="20"
 						key="textField-28"
@@ -129,18 +127,28 @@
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["Dengan segala hormatnya saya diarah merujuk kepada perkara diatas.\n\n" 
 
-+ "2.        Dukacita dimaklumkan bahawa tuan"
-+ " <style isBold='true' pdfFontName='Helvetica-Bold'>TELAH GAGAL MENJELASKAN TUNGGAKAN BAYARAN SEWA BERJUMLAH RM " + new DecimalFormat("#,###,##0.00").format(Double.valueOf($F{JUMLAH_TUNGGAKAN})) + ".</style>\n\n"
++ "2.	     Dukacita dimaklumkan, Wang Deposit bernilai RM"+
+new DecimalFormat("#,###,##0.00").format(Double.valueOf($F{DEPOSIT}))+
+" bagi penyewaan pihak tuan di tapak ini telah dirampas pada "
++$F{TARIKH_NOTIS}+
+". Didapati setelah wang deposit diselaraskan, akaun penyewaan pihak tuan masih berbaki tunggakan bayaran sewa berjumlah"+
+"<style isBold='true' pdfFontName='Helvetica-Bold'> RM"+
+new DecimalFormat("#,###,##0.00").format(Double.valueOf($F{JUMLAH_TUNGGAKAN})) + ".</style>\n\n"
 
-+ "3.        Sehubungan dengan itu, sebagaimana yang telah tuan persetujui melalui"
-+ " Perjanjian, Jabatan dengan ini memberi notis kepada pihak tuan bahawa Wang Cagaran"
-+ " sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'>RM " + new DecimalFormat("#,###,##0.00").format(Double.valueOf($P{JUMLAH_DEPOSIT_DIRAMPAS})) + ".</style>"
-+ " Tindakan ini adalah selaras dengan Fasal 4.2 Perjanjian :\n"]]></textFieldExpression>
++ "3.	     Sehubungan itu, pihak tuan dengan ini diberi"
++"<style isBold='true' pdfFontName='Helvetica-Bold'> NOTIS PERINGATAN TERAKHIR</style>"
++" bagi menjelaskan tunggakan sewa berjumlah"
++"<style isBold='true' pdfFontName='Helvetica-Bold'> RM"
++new DecimalFormat("#,###,##0.00").format(Double.valueOf($F{JUMLAH_TUNGGAKAN})) + ".</style> dalam"
++"<style isBold='true' pdfFontName='Helvetica-Bold'>tempoh dua puluh satu (21) hari daripada tarikh notis tuntutan ini</style>."
++" Kegagalan pihak tuan untuk mematuhi kehendak notis ini boleh menyebabkan"
++"<style isBold='true' pdfFontName='Helvetica-Bold'> TUNTUTAN AKAN DIBUAT KE MAHKAMAH</style>"
++" tanpa sebarang notis kepada pihak tuan lagi.\n"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="177"
-						y="33"
+						y="58"
 						width="93"
 						height="14"
 						key="textField-29"
@@ -154,7 +162,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="270"
-						y="33"
+						y="58"
 						width="14"
 						height="14"
 						key="textField-30"
@@ -168,7 +176,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="177"
-						y="19"
+						y="44"
 						width="93"
 						height="14"
 						key="textField-31"
@@ -182,7 +190,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="270"
-						y="19"
+						y="44"
 						width="14"
 						height="14"
 						key="textField-32"
@@ -196,7 +204,7 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="72"
+						y="91"
 						width="227"
 						height="14"
 						key="textField-33"
@@ -216,7 +224,7 @@
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="284"
-						y="19"
+						y="44"
 						width="167"
 						height="14"
 						key="textField-34"
@@ -231,7 +239,7 @@
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="284"
-						y="33"
+						y="58"
 						width="167"
 						height="14"
 						key="textField-35"
@@ -246,7 +254,7 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="95"
+						y="114"
 						width="451"
 						height="15"
 						key="textField-36"
@@ -255,14 +263,14 @@
 					<textElement textAlignment="Justified" verticalAlignment="Middle" markup="styled">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true" isUnderline="false"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["NOTIS RAMPASAN DEPOSIT DAN TUNTUTAN TUNGGAKAN BAYARAN BAGI " 
+				<textFieldExpression   class="java.lang.String"><![CDATA["NOTIS TUNTUTAN TUNGGAKAN BAYARAN SEWA PENYEWAAN " 
 + ($F{MAKLUMAT_LOT} == null ? "" : $F{MAKLUMAT_LOT}.trim()) 
-+ " (" + ($F{TUJUAN} == null ? "" : $F{TUJUAN}.trim()) + ")"]]></textFieldExpression>
++ " -" + ($F{TUJUAN} == null ? "" : $F{TUJUAN}.trim())]]></textFieldExpression>
 				</textField>
 				<line direction="TopDown">
 					<reportElement
 						x="0"
-						y="113"
+						y="132"
 						width="451"
 						height="1"
 						key="line-1"
@@ -285,19 +293,17 @@
 				</textField>
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="46"
-						y="143"
-						width="405"
+						x="1"
+						y="20"
+						width="274"
 						height="14"
-						key="textField-38"
+						key="textField-39"
 						positionType="Float"/>
 					<box></box>
-					<textElement textAlignment="Justified" verticalAlignment="Middle" isStyledText="true" lineSpacing="Single">
-						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isItalic="false" isPdfEmbedded ="true"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true" isUnderline="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["“Sekiranya Penyewa gagal mematuhi Klausa 4.1, Tuan Tanah berhak untuk merampas sebahagian"
-+ " atau kesemua Wang Cagaran Kadar Sewaan seperti diperuntukkan di Klausa 3 berdasarkan kepada"
-+ " kadar sewaan yang tertunggak.“\n"]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NOTIS TUNTUTAN"]]></textFieldExpression>
 				</textField>
 			</band>
 		</title>
