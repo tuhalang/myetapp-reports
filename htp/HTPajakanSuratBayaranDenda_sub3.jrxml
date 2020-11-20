@@ -11,38 +11,34 @@
 	<parameter name="idpermohonan" class="java.lang.String"/>
 	<parameter name="TAHUN" class="java.lang.String" isForPrompting="false"/>
 	<queryString>
-		<![CDATA[select mt.no_hakmilik,'RM '||LTRIM(TO_CHAR(mt.cukai_terkini,'99,999,999.00')) Cukai_terkiniF
---,mt.id_luas,mt.luas
-,mt.id_luas_bersamaan,TO_CHAR(mt.luas_bersamaan,'99,999,999.000') Luas_asalF
-,RJA.KETERANGAN
-,TO_CHAR(NVL(mtu.luas_bersamaan,0),'99,999,999.000') Luas_pajakF
-,(
---	CASE
---		WHEN (PAJ.KATEGORI_CUKAI='P')
---			THEN
---				(mt.cukai_terkini)
---		ELSE
-			(mt.cukai_terkini)* (mtu.LUAS_BERSAMAAN/mt.luas_bersamaan)
---	END
-) JUMLAH_CUKAI,PAJ.KATEGORI_CUKAI
-from tblhtphakmilikurusan mtu, tblhtphakmilik mt,TBLRUJLUAS RJA
-,TBLHTPPAJAKAN PAJ
-where
-mtu.pegangan_hakmilik=mt.pegangan_hakmilik
-and MT.ID_LUAS_BERSAMAAN= RJA.ID_LUAS
-AND PAJ.ID_PERMOHONAN = MTU.ID_PERMOHONAN
-and mtu.id_permohonan= $P{idpermohonan}]]>
+		<![CDATA[select
+LTRIM(TO_CHAR(paj.kadar_pajakan*((BA.TARIKH_RESIT - to_date(TO_CHAR(PAJ.TARIKH_PATUT_BAYAR,'DD FMMonth')||To_CHAR(sysdate,'YYYY'),'dd Month YYYY'))/365)*(PAJ.DENDA/100),'99,999,999.00')) jumlah_denda
+,LTRIM(TO_CHAR((paj.kadar_cukai-BA.JUMLAH_BAYARAN),'99,999,999.00')) BAKI_CUKAI
+,LTRIM(TO_CHAR(
+	( paj.kadar_pajakan*((BA.TARIKH_RESIT - to_date(TO_CHAR(PAJ.TARIKH_PATUT_BAYAR,'DD FMMonth')||To_CHAR(sysdate,'YYYY'),'dd Month YYYY'))/365)*(PAJ.DENDA/100)
+		+ (paj.kadar_cukai-BA.JUMLAH_BAYARAN))
+	,'99,999,999.00')) JUMLAH
+FROM TBLHTPPAJAKAN PAJ
+,(SELECT TPB.ID_PERMOHONAN,TPB.TARIKH_RESIT
+	,TO_CHAR(TPB.TARIKH_RESIT,'DD FMMonth YYYY') TARIKH_RESITF,TPB.JUMLAH_BAYARAN,'RM '||LTRIM(TO_CHAR(TPB.JUMLAH_BAYARAN,'99,999,999.00')) JUMLAH_BAYARANF
+FROM TBLHTPBAYARAN TPB
+WHERE
+--TO_CHAR(TPB.TARIKH_RESIT,'YYYY') = '2013'
+--
+TO_CHAR(TPB.TARIKH_RESIT,'YYYY') = TO_CHAR(sysdate,'YYYY')
+) BA
+WHERE PAJ.ID_PERMOHONAN = BA.ID_PERMOHONAN(+)
+and PAJ.id_permohonan= $P{idpermohonan}]]>
 	</queryString>
-	<field name="NO_HAKMILIK" class="java.lang.String"/>
-	<field name="CUKAI_TERKINIF" class="java.lang.String"/>
-	<field name="ID_LUAS_BERSAMAAN" class="java.math.BigDecimal"/>
-	<field name="LUAS_ASALF" class="java.lang.String"/>
-	<field name="KETERANGAN" class="java.lang.String"/>
-	<field name="LUAS_PAJAKF" class="java.lang.String"/>
-	<field name="JUMLAH_CUKAI" class="java.math.BigDecimal"/>
-	<field name="KATEGORI_CUKAI" class="java.lang.String"/>
+	<field name="JUMLAH_DENDA" class="java.lang.String"/>
+	<field name="BAKI_CUKAI" class="java.lang.String"/>
+	<field name="JUMLAH" class="java.lang.String"/>
 	<variable name="JUMLAH_CUKAI" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{JUMLAH_CUKAI}]]></variableExpression>
+		<variableExpression><![CDATA[]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="var1" class="java.lang.String">
+		<initialValueExpression><![CDATA[$F{JUMLAH}]]></initialValueExpression>
 	</variable>
 	<background>
 		<band splitType="Stretch"/>
@@ -76,7 +72,7 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Butiran Bayaran"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Perihal Bayaran"]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
 				<reportElement uuid="867e2acd-ef28-4725-b0ed-d806dd439118" key="textField-5" mode="Opaque" x="285" y="0" width="194" height="40" backcolor="#CCCCCC"/>
@@ -89,7 +85,7 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["KELUASAN DIPAJAK/\nKELUASAN KESELURUHAN"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["JUMLAH PATUT BAYAR/\n(RM)"]]></textFieldExpression>
 			</textField>
 		</band>
 	</pageHeader>
@@ -97,7 +93,7 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 		<band splitType="Prevent"/>
 	</columnHeader>
 	<detail>
-		<band height="56" splitType="Stretch">
+		<band height="55" splitType="Stretch">
 			<textField pattern="#,##0" isBlankWhenNull="false">
 				<reportElement uuid="8160b5e7-db2d-4f9a-a0b3-ac9da7d4efe6" key="textField-2" x="0" y="0" width="20" height="30"/>
 				<box>
@@ -124,7 +120,7 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Cukai Tahun tahun ....... terkurang bayar"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Cukai Tahun "+$P{TAHUN}+" terkurang bayar"]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00" isBlankWhenNull="false">
 				<reportElement uuid="760c7af2-1973-428c-a8f4-367e6a486400" key="textField-13" x="285" y="0" width="194" height="30"/>
@@ -138,7 +134,7 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{LUAS_PAJAKF}+" / " + $F{LUAS_ASALF}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{BAKI_CUKAI}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="false">
 				<reportElement uuid="4a7e9fd8-a4f8-4186-9610-ef73e40aa4e3" key="textField-14" x="20" y="30" width="265" height="25"/>
@@ -166,7 +162,7 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" size="8" isBold="false" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$V{JUMLAH_CUKAI}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{JUMLAH_DENDA}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="false">
 				<reportElement uuid="8160b5e7-db2d-4f9a-a0b3-ac9da7d4efe6" key="textField-2" x="0" y="30" width="20" height="25"/>
@@ -204,7 +200,7 @@ and mtu.id_permohonan= $P{idpermohonan}]]>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$V{JUMLAH_CUKAI}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{JUMLAH}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="false">
 				<reportElement uuid="4a7e9fd8-a4f8-4186-9610-ef73e40aa4e3" key="textField-14" x="0" y="0" width="285" height="25"/>
