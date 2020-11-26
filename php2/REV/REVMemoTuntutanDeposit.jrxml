@@ -29,7 +29,7 @@
 	<parameter name="EMAIL" isForPrompting="false" class="java.lang.String"/>
 	<parameter name="ID_NOTIS" isForPrompting="true" class="java.lang.String"/>
 	<queryString><![CDATA[SELECT
-    CASE 
+    DISTINCT CASE 
         WHEN BIL_PERINGATAN = 1 THEN 'NOTIS PERINGATAN'
         WHEN BIL_PERINGATAN = 2 THEN 'NOTIS PERINGATAN'
         WHEN BIL_PERINGATAN = 3 THEN 'NOTIS PERINGATAN'
@@ -66,13 +66,29 @@
         WHEN TO_CHAR (TBLPHPNOTISHASIL.TARIKH_AKHIR_NOTIS, 'MM') = 11 THEN 'November' || ' ' || TO_CHAR (TBLPHPNOTISHASIL.TARIKH_AKHIR_NOTIS, 'YYYY')
         WHEN TO_CHAR (TBLPHPNOTISHASIL.TARIKH_AKHIR_NOTIS, 'MM') = 12 THEN 'Disember' || ' ' || TO_CHAR (TBLPHPNOTISHASIL.TARIKH_AKHIR_NOTIS, 'YYYY')
     END AS TARIKH_AKHIR_NOTIS,
-    TBLPHPPEMOHON.NAMA, INITCAP(TBLPHPPEMOHON.ALAMAT1_TETAP) AS ALAMAT1, INITCAP(TBLPHPPEMOHON.ALAMAT2_TETAP) AS ALAMAT2, 
-    INITCAP(TBLPHPPEMOHON.ALAMAT3_TETAP) AS ALAMAT3, TBLPHPPEMOHON.POSKOD_TETAP AS POSKOD, INITCAP(TBLRUJBANDAR.KETERANGAN) AS BANDAR, UPPER(TBLRUJNEGERI.NAMA_NEGERI) AS NEGERI,
+    INITCAP(TBLPHPPEMOHON.NAMA) AS NAMA, INITCAP(TBLPHPPEMOHON.ALAMAT1_TETAP) AS ALAMAT1, INITCAP(TBLPHPPEMOHON.ALAMAT2_TETAP) AS ALAMAT2, 
+    INITCAP(TBLPHPPEMOHON.ALAMAT3_TETAP) AS ALAMAT3, TBLPHPPEMOHON.POSKOD_TETAP AS POSKOD, INITCAP(TBLRUJBANDAR.KETERANGAN) AS BANDAR, INITCAP(TBLRUJNEGERI.NAMA_NEGERI) AS NEGERI,
+    TBLPHPPEMOHON.NO_PENGENALAN,
     REPLACE (TBLPFDFAIL.TAJUK_FAIL, 'PERMOHONAN', '') AS TAJUK_FAIL,
     TBLPHPNOTISHASIL.JUMLAH_TUNGGAKAN, TBLPHPBAYARANPERLUDIBAYAR.DEPOSIT,
     TBLPHPHASIL.ID_HASIL, TBLPHPNOTISHASIL.BIL_PERINGATAN,
     TBLPHPHASIL.MAKLUMAT_LOT, TBLPHPHASIL.TUJUAN,
-    TBLPHPAKAUN.NO_RESIT,TBLPHPAKAUN.ID_BANK,TBLRUJBANK.NAMA_BANK
+    TBLPHPAKAUN.NO_RESIT,TBLPHPAKAUN.ID_BANK,TBLRUJBANK.NAMA_BANK,TBLPHPAKAUN.NO_RUJUKAN,
+    TO_CHAR (TBLPHPAKAUN.TARIKH, 'DD') || ' ' || 
+    CASE
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 01 THEN 'Januari' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 02 THEN 'Februari' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 03 THEN 'Mac' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 04 THEN 'April' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 05 THEN 'Mei' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 06 THEN 'Jun' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 07 THEN 'Julai' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 08 THEN 'Ogos' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 09 THEN 'September' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 10 THEN 'Oktober' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 11 THEN 'November' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+        WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 12 THEN 'Disember' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
+    END AS TARIKH_TRANSAKSI
   FROM TBLPHPNOTISHASIL,
        TBLPHPHASIL,
        TBLPFDFAIL,
@@ -90,6 +106,7 @@
    AND TBLPHPPEMOHON.ID_BANDARTETAP = TBLRUJBANDAR.ID_BANDAR(+)
    AND TBLPHPPEMOHON.ID_NEGERITETAP = TBLRUJNEGERI.ID_NEGERI(+)
    AND TBLPHPAKAUN.ID_BANK = TBLRUJBANK.ID_BANK(+)
+   AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_AKTIF = 'Y'
    AND ID_NOTIS = $P{ID_NOTIS}]]></queryString>
 
 	<field name="PERINGATAN" class="java.lang.String"/>
@@ -103,6 +120,7 @@
 	<field name="POSKOD" class="java.lang.String"/>
 	<field name="BANDAR" class="java.lang.String"/>
 	<field name="NEGERI" class="java.lang.String"/>
+	<field name="NO_PENGENALAN" class="java.lang.String"/>
 	<field name="TAJUK_FAIL" class="java.lang.String"/>
 	<field name="JUMLAH_TUNGGAKAN" class="java.lang.String"/>
 	<field name="DEPOSIT" class="java.lang.String"/>
@@ -113,6 +131,8 @@
 	<field name="NO_RESIT" class="java.lang.String"/>
 	<field name="ID_BANK" class="java.lang.String"/>
 	<field name="NAMA_BANK" class="java.lang.String"/>
+	<field name="NO_RUJUKAN" class="java.lang.String"/>
+	<field name="TARIKH_TRANSAKSI" class="java.lang.String"/>
 
 		<background>
 			<band height="0"  isSplitAllowed="true" >
@@ -144,7 +164,7 @@
 			</band>
 		</columnHeader>
 		<detail>
-			<band height="520"  isSplitAllowed="true" >
+			<band height="591"  isSplitAllowed="true" >
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
@@ -164,7 +184,7 @@
 						x="0"
 						y="63"
 						width="79"
-						height="80"
+						height="105"
 						key="textField-211"
 						positionType="Float"/>
 					<box leftPadding="3">					<pen lineWidth="0.25"/>
@@ -181,7 +201,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="79"
-						y="143"
+						y="168"
 						width="280"
 						height="46"
 						key="textField-213"
@@ -203,10 +223,10 @@
 						x="79"
 						y="63"
 						width="396"
-						height="80"
+						height="105"
 						key="textField-214"
 						positionType="Float"/>
-					<box leftPadding="3" rightPadding="3">					<pen lineWidth="0.25"/>
+					<box leftPadding="3" rightPadding="3" topPadding="3">					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
 					<leftPen lineWidth="0.25"/>
 					<bottomPen lineWidth="0.25"/>
@@ -215,12 +235,21 @@
 					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[$F{TAJUK_FAIL}]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA["PERMOHONAN UNTUK MENDAPATKAN SEMULA WANG CAGARAN/DEPOSIT:-\n\n"+
+"NAMA PENYEWA : "+$F{NAMA}.toUpperCase()+($F{NO_PENGENALAN}!=null ?" ("+ $F{NO_PENGENALAN}+")":"")+"\n"+
+"JENIS PENYEWAAN : TANAH PERSEKUTUAN\n"+
+"ALAMAT : "+
+($F{ALAMAT1}!=null ? $F{ALAMAT1}+",":"").toUpperCase()
++($F{ALAMAT2}!=null ? $F{ALAMAT2}+",":"").toUpperCase()
++($F{ALAMAT3}!=null ? $F{ALAMAT3}+",":"").toUpperCase()
++($F{POSKOD}!=null ? $F{POSKOD}+" ":"").toUpperCase()
++($F{BANDAR}!=null ? $F{BANDAR}+",":"").toUpperCase()
++($F{NEGERI} !=null ? $F{NEGERI}:"").toUpperCase()]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="359"
-						y="143"
+						y="168"
 						width="116"
 						height="93"
 						key="textField-215"
@@ -275,7 +304,7 @@
 						key="textField-220"
 						positionType="Float"/>
 					<box></box>
-					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+					<textElement textAlignment="Right" verticalAlignment="Top" markup="styled" lineSpacing="Single">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["Tarikh : "+$F{TARIKH_NOTIS}]]></textFieldExpression>
@@ -299,7 +328,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="143"
+						y="168"
 						width="79"
 						height="46"
 						key="textField-234"
@@ -318,7 +347,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="79"
-						y="189"
+						y="214"
 						width="280"
 						height="47"
 						key="textField-235"
@@ -338,7 +367,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="189"
+						y="214"
 						width="79"
 						height="47"
 						key="textField-237"
@@ -357,7 +386,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="26"
-						y="311"
+						y="336"
 						width="37"
 						height="15"
 						key="textField-241"
@@ -371,7 +400,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="74"
-						y="311"
+						y="336"
 						width="146"
 						height="15"
 						key="textField-242"
@@ -386,7 +415,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="225"
-						y="311"
+						y="336"
 						width="13"
 						height="15"
 						key="textField-243"
@@ -400,7 +429,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="239"
-						y="311"
+						y="336"
 						width="187"
 						height="15"
 						key="textField-244"
@@ -417,7 +446,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="307"
+						y="332"
 						width="474"
 						height="3"
 						key="textField-245"
@@ -431,7 +460,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="26"
-						y="335"
+						y="360"
 						width="37"
 						height="15"
 						key="textField-246"
@@ -445,7 +474,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="74"
-						y="335"
+						y="360"
 						width="146"
 						height="15"
 						key="textField-247"
@@ -459,7 +488,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="225"
-						y="335"
+						y="360"
 						width="13"
 						height="15"
 						key="textField-248"
@@ -473,7 +502,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="239"
-						y="335"
+						y="360"
 						width="187"
 						height="15"
 						key="textField-249"
@@ -482,12 +511,13 @@
 					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>no resit</style>"]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>"+
+($F{NO_RUJUKAN} != null ? $F{NO_RUJUKAN}:"-")+"</style>"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="331"
+						y="356"
 						width="474"
 						height="3"
 						key="textField-250"
@@ -501,7 +531,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="26"
-						y="358"
+						y="383"
 						width="37"
 						height="15"
 						key="textField-251"
@@ -515,7 +545,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="74"
-						y="358"
+						y="383"
 						width="146"
 						height="15"
 						key="textField-252"
@@ -529,7 +559,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="225"
-						y="358"
+						y="383"
 						width="13"
 						height="15"
 						key="textField-253"
@@ -543,7 +573,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="239"
-						y="358"
+						y="383"
 						width="187"
 						height="15"
 						key="textField-254"
@@ -558,7 +588,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="354"
+						y="379"
 						width="474"
 						height="3"
 						key="textField-255"
@@ -572,7 +602,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="26"
-						y="382"
+						y="407"
 						width="37"
 						height="15"
 						key="textField-256"
@@ -586,7 +616,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="74"
-						y="382"
+						y="407"
 						width="146"
 						height="15"
 						key="textField-257"
@@ -600,7 +630,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="225"
-						y="382"
+						y="407"
 						width="13"
 						height="15"
 						key="textField-258"
@@ -614,7 +644,7 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="239"
-						y="382"
+						y="407"
 						width="187"
 						height="15"
 						key="textField-259"
@@ -624,15 +654,18 @@
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>"+
-$F{ALAMAT1}
-+"\n"
-+$F{ALAMAT2}
+($F{ALAMAT1}!=null ? $F{ALAMAT1}+",":"")
++($F{ALAMAT2}!=null ? $F{ALAMAT2}+",":"")
++($F{ALAMAT3}!=null ? $F{ALAMAT3}+",":"")
++($F{POSKOD}!=null ? $F{POSKOD}+" ":"")
++($F{BANDAR}!=null ? $F{BANDAR}+",":"")
++($F{NEGERI} !=null ? $F{NEGERI}:"")
 +"</style>"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="378"
+						y="403"
 						width="474"
 						height="3"
 						key="textField-260"
@@ -646,7 +679,7 @@ $F{ALAMAT1}
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="26"
-						y="406"
+						y="431"
 						width="37"
 						height="15"
 						key="textField-261"
@@ -660,7 +693,7 @@ $F{ALAMAT1}
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="74"
-						y="406"
+						y="431"
 						width="214"
 						height="15"
 						key="textField-262"
@@ -674,7 +707,7 @@ $F{ALAMAT1}
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="402"
+						y="427"
 						width="474"
 						height="3"
 						key="textField-263"
@@ -688,7 +721,7 @@ $F{ALAMAT1}
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="26"
-						y="429"
+						y="454"
 						width="37"
 						height="15"
 						key="textField-264"
@@ -704,7 +737,7 @@ $F{ALAMAT1}
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="74"
-						y="429"
+						y="454"
 						width="352"
 						height="15"
 						key="textField-265"
@@ -718,7 +751,7 @@ $F{ALAMAT1}
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="425"
+						y="450"
 						width="474"
 						height="3"
 						key="textField-266"
@@ -732,7 +765,7 @@ $F{ALAMAT1}
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="498"
+						y="523"
 						width="415"
 						height="14"
 						key="textField-271"
@@ -742,17 +775,12 @@ $F{ALAMAT1}
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isUnderline="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["Sekian,\n\n\n\n"
-+"("+($P{NAMA_PEGAWAI}!=null?$P{NAMA_PEGAWAI}:"")+")\n"
-+"Bahagian Penguatkuasa dan Hasil Persekutuan\n"
-+"b.p Pesuruhjaya Tanah Persekutuan\n"
-+"Bahagian Penguatkuasa Dan Hasil Persekutuan\n"
-+""+($P{NO_TEL}!=null && $P{NO_TEL} != "" ?"No. Tel: "+$P{NO_TEL}+"\n":"")+""
-+""+($P{EMAIL}!=null && $P{EMAIL}!=""?"Email: "+$P{EMAIL}:"")+"\n\n"]]></textFieldExpression>
++"("+($P{NAMA_PEGAWAI}!=null?$P{NAMA_PEGAWAI}:"")+")"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="244"
+						y="269"
 						width="475"
 						height="15"
 						key="textField-272"
@@ -768,7 +796,7 @@ $F{ALAMAT1}
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="264"
+						y="289"
 						width="475"
 						height="15"
 						key="textField-273"
@@ -783,14 +811,14 @@ $F{ALAMAT1}
 $F{NAMA}+
 "</style> telah ditamatkan berkuatkuasa "+
 $F{TARIKH_NOTIS}+
-".. Semakan ke atas akaun mendapati penyewa telah membuat pembayaran deposit berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'>RM"+
+". Semakan ke atas akaun mendapati penyewa telah membuat pembayaran deposit berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'>RM"+
 new DecimalFormat("#,###,##0.00").format(Double.valueOf($F{DEPOSIT}))+"</style> pada "+
-$F{TARIKH_NOTIS}+". Berdasarkan rekod, tiada bayaran sewaan yang tertunggak dan pihak kami tiada halangan untuk mengembalikan semula wang cagaran/deposit tersebut.\n"]]></textFieldExpression>
+$F{TARIKH_TRANSAKSI}+". Berdasarkan rekod, tiada bayaran sewaan yang tertunggak dan pihak kami tiada halangan untuk mengembalikan semula wang cagaran/deposit tersebut.\n"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="284"
+						y="309"
 						width="475"
 						height="15"
 						key="textField-274"
@@ -806,7 +834,7 @@ $F{TARIKH_NOTIS}+". Berdasarkan rekod, tiada bayaran sewaan yang tertunggak dan 
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="26"
-						y="450"
+						y="475"
 						width="37"
 						height="15"
 						key="textField-275"
@@ -820,7 +848,7 @@ $F{TARIKH_NOTIS}+". Berdasarkan rekod, tiada bayaran sewaan yang tertunggak dan 
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="74"
-						y="450"
+						y="475"
 						width="214"
 						height="15"
 						key="textField-276"
@@ -834,7 +862,7 @@ $F{TARIKH_NOTIS}+". Berdasarkan rekod, tiada bayaran sewaan yang tertunggak dan 
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="446"
+						y="471"
 						width="474"
 						height="3"
 						key="textField-277"
@@ -848,7 +876,7 @@ $F{TARIKH_NOTIS}+". Berdasarkan rekod, tiada bayaran sewaan yang tertunggak dan 
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="472"
+						y="497"
 						width="475"
 						height="15"
 						key="textField-278"
@@ -866,13 +894,67 @@ $P{EMAIL}+"</style>. Kerjasama dan tindakan awal daripada pihak tuan diucapkan t
 				</textField>
 				<break>
 					<reportElement
-						x="12"
-						y="467"
-						width="451"
+						x="0"
+						y="492"
+						width="475"
 						height="0"
 						key="element-1"
 						positionType="Float"/>
 				</break>
+				<image  vAlign="Middle" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="546"
+						width="14"
+						height="14"
+						key="image-2"
+						positionType="Float"/>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[$P{ReportDir}+"//tel.png"]]></imageExpression>
+				</image>
+				<image  vAlign="Middle" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="559"
+						width="14"
+						height="14"
+						key="image-3"
+						positionType="Float"/>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[$P{ReportDir}+"//email.png"]]></imageExpression>
+				</image>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="19"
+						y="546"
+						width="415"
+						height="14"
+						key="textField-279"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{NO_TEL}!=null && $P{NO_TEL} != "" ?"No. Tel: "+$P{NO_TEL}+"\n":"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="19"
+						y="560"
+						width="415"
+						height="14"
+						key="textField-280"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($P{EMAIL}!=null && $P{EMAIL}!=""?"Email: "+$P{EMAIL}:"")]]></textFieldExpression>
+				</textField>
 			</band>
 		</detail>
 		<columnFooter>
