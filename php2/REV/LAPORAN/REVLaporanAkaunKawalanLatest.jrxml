@@ -1,13 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="REVLaporanAkaunKawalanLatest" pageWidth="1146" pageHeight="842" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="1086" leftMargin="30" rightMargin="30" topMargin="30" bottomMargin="30" uuid="8bd82210-b1d3-4ea9-b514-22831f97fec4">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="REVLaporanAkaunKawalanLatest" pageWidth="1148" pageHeight="842" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="1088" leftMargin="30" rightMargin="30" topMargin="30" bottomMargin="30" uuid="8bd82210-b1d3-4ea9-b514-22831f97fec4">
 	<property name="ireport.zoom" value="1.0"/>
-	<property name="ireport.x" value="33"/>
+	<property name="ireport.x" value="175"/>
 	<property name="ireport.y" value="0"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="noFail_1" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[(
+    !$P{noFail}.trim().equalsIgnoreCase("")
+    &&
+    $P{noFail} != null ? " AND UPPER(A.NO_FAIL) LIKE '%" + $P{noFail}.toUpperCase() + "%'"
+    : ""
+)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="noFail" class="java.lang.String"/>
+	<parameter name="noRujukan" class="java.lang.String"/>
+	<parameter name="jenisFail_1" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[(!$P{jenisFail}.trim().equalsIgnoreCase("") && $P{jenisFail} != null ? ($P{jenisFail}.trim().equalsIgnoreCase("D") ? " AND TBLPHPHASIL.FLAG_TUNGGAKAND = 'Y' AND TBLPHPBAYARANPERLUDIBAYAR.STATUS = '2'" : ($P{jenisFail}.trim().equalsIgnoreCase("S") ? " AND B.FLAG_TUNGGAKAN = 'Y'" : "")) : "")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="idBank_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="jenisFail" class="java.lang.String"/>
+	<parameter name="namaPemohon" class="java.lang.String"/>
+	<parameter name="noResit_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="statusPerjanjian" class="java.lang.String"/>
+	<parameter name="noRujukan_1" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[(!$P{noRujukan}.trim().equalsIgnoreCase("") && $P{noRujukan} != null ? " AND UPPER(H.NO_RUJUKAN) LIKE '%" + $P{noRujukan}.toUpperCase() + "%'" : "")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="noCek_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="noResit" class="java.lang.String"/>
+	<parameter name="statusPerjanjian_1" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[(!$P{statusPerjanjian}.trim().equalsIgnoreCase("") && $P{statusPerjanjian} != null ? " AND H.STATUS = '" + $P{statusPerjanjian} + "'" : "")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="noCek" class="java.lang.String"/>
+	<parameter name="namaPemohon_1" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[(!$P{namaPemohon}.trim().equalsIgnoreCase("") && $P{namaPemohon} != null ? " AND UPPER(C.NAMA) LIKE '%" + $P{namaPemohon}.toUpperCase() + "%'" : "")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="idBank" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT DISTINCT A.NO_FAIL, C.NAMA AS NAMA_PEMOHON, H.NO_RUJUKAN, TO_CHAR(H.TARIKH_MULA,'DD/MM/YYYY') AS MULA_PERJANJIAN, TO_CHAR(H.TARIKH_TAMAT,'DD/MM/YYYY') AS TAMAT_PERJANJIAN,
 B.FLAG_TUNGGAKAN, B.FLAG_TUNGGAKAND,
@@ -21,12 +52,17 @@ CASE
     WHEN B.NILAI_TUNGGAKAN = 0 THEN '0.00'
     ELSE '(' || REPLACE(TO_CHAR(B.NILAI_TUNGGAKAN,'9,999,990.99'),' ')|| ')'
 END AS NILAI_TUNGGAKAN,
-I.NAMA_KEMENTERIAN, J.NAMA_SUBURUSAN AS JENIS_SEWA, REPLACE(TO_CHAR(H.DEPOSIT,'9,999,990.99'),' ') AS DEPOSIT,
-K.NAMA_NEGERI, L.KADAR_SEWA, B.MAKLUMAT_LOT, M.LUAS_MHNBERSAMAAN, B.LUAS
-FROM TBLPFDFAIL A, TBLPHPHASIL B, TBLPHPPEMOHON C,
-TBLPERMOHONAN E, TBLPHPHAKMILIKPERMOHONAN F, TBLPHPHAKMILIK G,
+I.NAMA_KEMENTERIAN, REPLACE(TO_CHAR(H.DEPOSIT,'9,999,990.99'),' ') AS DEPOSIT,
+K.NAMA_NEGERI, B.MAKLUMAT_LOT, M.LUAS_MHNBERSAMAAN, B.LUAS, REPLACE(TO_CHAR(H.BAYARAN,'9,999,990.99'),' ') AS BAYARAN_SEWA,
+CASE
+    WHEN A.ID_SUBURUSAN = 35 THEN 'BANGUNAN'
+    ELSE 'TANAH'
+END AS JENIS_SEWA
+
+FROM TBLPFDFAIL A, TBLPHPHASIL B, TBLPHPPEMOHON C, TBLPERMOHONAN E, TBLPHPHAKMILIKPERMOHONAN F, TBLPHPHAKMILIK G,
 TBLPHPBAYARANPERLUDIBAYAR H, TBLRUJKEMENTERIAN I, TBLRUJSUBURUSAN J,
 TBLRUJNEGERI K, TBLPHPNOTISHASIL L, TBLPHPPERMOHONANSEWA M
+
 WHERE B.ID_FAIL = A.ID_FAIL(+)
      AND B.ID_PEMOHON = C.ID_PEMOHON(+)
      AND A.ID_FAIL = E.ID_PERMOHONAN(+)
@@ -41,7 +77,13 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
      AND A.ID_URUSAN = 115
      AND H.FLAG_AKTIF = 'Y'
      AND H.FLAG_PERJANJIAN = 'U'
-     AND F.FLAG_HAKMILIK(+) = 'U']]>
+     AND F.FLAG_HAKMILIK(+) = 'U'
+     $P!{noFail_1}
+     $P!{namaPemohon_1}
+     $P!{noRujukan_1}
+     $P!{jenisFail_1}
+     $P!{statusPerjanjian_1}
+ORDER BY MULA_PERJANJIAN DESC NULLS LAST]]>
 	</queryString>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="NAMA_PEMOHON" class="java.lang.String"/>
@@ -53,13 +95,13 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 	<field name="STATUS_PERJANJIAN" class="java.lang.String"/>
 	<field name="NILAI_TUNGGAKAN" class="java.lang.String"/>
 	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
-	<field name="JENIS_SEWA" class="java.lang.String"/>
 	<field name="DEPOSIT" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
-	<field name="KADAR_SEWA" class="java.math.BigDecimal"/>
 	<field name="MAKLUMAT_LOT" class="java.lang.String"/>
 	<field name="LUAS_MHNBERSAMAAN" class="java.math.BigDecimal"/>
 	<field name="LUAS" class="java.lang.String"/>
+	<field name="BAYARAN_SEWA" class="java.lang.String"/>
+	<field name="JENIS_SEWA" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -195,7 +237,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["CAGARAN/DEPOSIT"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="f2d3b8f1-ce34-4075-a9d2-bf84089bdd0d" key="textField-67" stretchType="RelativeToTallestObject" mode="Opaque" x="614" y="0" width="62" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="f2d3b8f1-ce34-4075-a9d2-bf84089bdd0d" key="textField-67" stretchType="RelativeToTallestObject" mode="Opaque" x="614" y="0" width="66" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -237,7 +279,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["NO FAIL"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="461ca5b3-1309-4008-8027-047aaadc26a0" key="textField-158" stretchType="RelativeToTallestObject" mode="Opaque" x="676" y="0" width="75" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="461ca5b3-1309-4008-8027-047aaadc26a0" key="textField-158" stretchType="RelativeToTallestObject" mode="Opaque" x="680" y="0" width="75" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -251,7 +293,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["KJP"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="cedb93b1-e624-4459-90fc-c3b45858e3ba" key="textField-159" stretchType="RelativeToTallestObject" mode="Opaque" x="751" y="0" width="94" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="cedb93b1-e624-4459-90fc-c3b45858e3ba" key="textField-159" stretchType="RelativeToTallestObject" mode="Opaque" x="755" y="0" width="94" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -265,7 +307,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["TAPAK YG DISEWAKAN"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="69abbe22-0536-4e61-853b-d941e4b9029b" key="textField-161" stretchType="RelativeToTallestObject" mode="Opaque" x="917" y="0" width="56" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="69abbe22-0536-4e61-853b-d941e4b9029b" key="textField-161" stretchType="RelativeToTallestObject" mode="Opaque" x="921" y="0" width="56" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -279,7 +321,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["KELUASAN DALAM HEKTAR"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="6bf7f1ca-7370-40c4-93f5-097a3faff2c1" key="textField-162" stretchType="RelativeToTallestObject" mode="Opaque" x="973" y="0" width="52" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="6bf7f1ca-7370-40c4-93f5-097a3faff2c1" key="textField-162" stretchType="RelativeToTallestObject" mode="Opaque" x="977" y="0" width="52" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -293,7 +335,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["KADAR SETAHUN SEMASA"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="cedb93b1-e624-4459-90fc-c3b45858e3ba" key="textField-159" stretchType="RelativeToTallestObject" mode="Opaque" x="845" y="0" width="72" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="cedb93b1-e624-4459-90fc-c3b45858e3ba" key="textField-159" stretchType="RelativeToTallestObject" mode="Opaque" x="849" y="0" width="72" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -307,7 +349,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["KELUASAN YG DISEWA"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="6bf7f1ca-7370-40c4-93f5-097a3faff2c1" key="textField-162" stretchType="RelativeToTallestObject" mode="Opaque" x="1025" y="0" width="59" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="6bf7f1ca-7370-40c4-93f5-097a3faff2c1" key="textField-162" stretchType="RelativeToTallestObject" mode="Opaque" x="1029" y="0" width="59" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -358,25 +400,25 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="556" y="0" width="58" height="35" isPrintWhenDetailOverflows="true"/>
 			</rectangle>
 			<rectangle>
-				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="614" y="0" width="62" height="35" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="614" y="0" width="66" height="35" isPrintWhenDetailOverflows="true"/>
 			</rectangle>
 			<rectangle>
-				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="751" y="0" width="94" height="35" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="755" y="0" width="94" height="35" isPrintWhenDetailOverflows="true"/>
 			</rectangle>
 			<rectangle>
-				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="676" y="0" width="75" height="35" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="680" y="0" width="75" height="35" isPrintWhenDetailOverflows="true"/>
 			</rectangle>
 			<rectangle>
-				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="845" y="0" width="72" height="35" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="849" y="0" width="72" height="35" isPrintWhenDetailOverflows="true"/>
 			</rectangle>
 			<rectangle>
-				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="917" y="0" width="56" height="35" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="921" y="0" width="56" height="35" isPrintWhenDetailOverflows="true"/>
 			</rectangle>
 			<rectangle>
-				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="1025" y="0" width="59" height="35" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="1029" y="0" width="59" height="35" isPrintWhenDetailOverflows="true"/>
 			</rectangle>
 			<rectangle>
-				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="973" y="0" width="52" height="35" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8db11fa4-7e52-439f-a067-b2eda1e60ffb" stretchType="RelativeToTallestObject" x="977" y="0" width="52" height="35" isPrintWhenDetailOverflows="true"/>
 			</rectangle>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="9c95a78f-fa3b-4ce9-a425-2eed4d0222cc" key="textField-13" stretchType="RelativeToBandHeight" isPrintRepeatedValues="false" x="0" y="0" width="20" height="35"/>
@@ -422,7 +464,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="322" y="0" width="49" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="322" y="0" width="49" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="8"/>
@@ -432,7 +474,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 +($F{TAMAT_PERJANJIAN}!=null?$F{TAMAT_PERJANJIAN}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="375" y="0" width="52" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="375" y="0" width="52" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="8"/>
@@ -448,7 +490,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA[($F{DEPOSIT}!=null?$F{DEPOSIT}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="478" y="0" width="75" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="478" y="0" width="75" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="8"/>
@@ -456,31 +498,31 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA[($F{JENIS_SEWA}!=null?$F{JENIS_SEWA}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="559" y="0" width="52" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="559" y="0" width="52" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
-				<textElement textAlignment="Left" verticalAlignment="Middle">
+				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[($F{KADAR_SEWA}!=null?$F{KADAR_SEWA}:"")]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{BAYARAN_SEWA}!=null?$F{BAYARAN_SEWA}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="617" y="0" width="56" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="617" y="0" width="61" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
-				<textElement textAlignment="Left" verticalAlignment="Middle">
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{NAMA_NEGERI}!=null?$F{NAMA_NEGERI}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="679" y="0" width="69" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="683" y="0" width="69" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
-				<textElement textAlignment="Left" verticalAlignment="Middle">
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{NAMA_KEMENTERIAN}!=null ? $F{NAMA_KEMENTERIAN} : "")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="754" y="0" width="88" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="758" y="0" width="88" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="8"/>
@@ -488,7 +530,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA[($F{MAKLUMAT_LOT}!=null ? $F{MAKLUMAT_LOT}: "")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="920" y="0" width="50" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="924" y="0" width="50" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="8"/>
@@ -496,7 +538,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA[($F{LUAS_MHNBERSAMAAN} != null ? $F{LUAS_MHNBERSAMAAN}: "")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="848" y="0" width="66" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="852" y="0" width="66" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="8"/>
@@ -504,14 +546,15 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA[($F{LUAS} != null ? $F{LUAS} : "")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="976" y="0" width="46" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="980" y="0" width="46" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="8"/>
 				</textElement>
+				<textFieldExpression><![CDATA[]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
-				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="1028" y="0" width="53" height="35"/>
+				<reportElement uuid="f5a7effd-0d87-4824-960e-a841e450c475" key="textField-7" stretchType="RelativeToTallestObject" x="1032" y="0" width="53" height="35"/>
 				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font size="8"/>
@@ -529,7 +572,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 	<noData>
 		<band height="67" splitType="Stretch">
 			<staticText>
-				<reportElement uuid="feb0b3ba-f948-45e6-ade6-74cbca46abfa" key="staticText-2" x="0" y="49" width="1084" height="18"/>
+				<reportElement uuid="feb0b3ba-f948-45e6-ade6-74cbca46abfa" key="staticText-2" x="0" y="49" width="1088" height="18"/>
 				<box>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -543,7 +586,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 ]]></text>
 			</staticText>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="69abbe22-0536-4e61-853b-d941e4b9029b" key="textField-161" stretchType="RelativeToTallestObject" mode="Opaque" x="917" y="1" width="56" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="69abbe22-0536-4e61-853b-d941e4b9029b" key="textField-161" stretchType="RelativeToTallestObject" mode="Opaque" x="921" y="1" width="56" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -585,7 +628,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["TEMPOH PERJANJIAN"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="6bf7f1ca-7370-40c4-93f5-097a3faff2c1" key="textField-162" stretchType="RelativeToTallestObject" mode="Opaque" x="973" y="1" width="52" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="6bf7f1ca-7370-40c4-93f5-097a3faff2c1" key="textField-162" stretchType="RelativeToTallestObject" mode="Opaque" x="977" y="1" width="52" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -627,7 +670,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["NO FAIL"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="cedb93b1-e624-4459-90fc-c3b45858e3ba" key="textField-159" stretchType="RelativeToTallestObject" mode="Opaque" x="845" y="1" width="72" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="cedb93b1-e624-4459-90fc-c3b45858e3ba" key="textField-159" stretchType="RelativeToTallestObject" mode="Opaque" x="849" y="1" width="72" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -655,7 +698,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["KADAR SEWA"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="f2d3b8f1-ce34-4075-a9d2-bf84089bdd0d" key="textField-67" stretchType="RelativeToTallestObject" mode="Opaque" x="614" y="1" width="62" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="f2d3b8f1-ce34-4075-a9d2-bf84089bdd0d" key="textField-67" stretchType="RelativeToTallestObject" mode="Opaque" x="614" y="1" width="66" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -697,7 +740,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["AKAUN SUBSIDIARI"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="cedb93b1-e624-4459-90fc-c3b45858e3ba" key="textField-159" stretchType="RelativeToTallestObject" mode="Opaque" x="751" y="1" width="94" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="cedb93b1-e624-4459-90fc-c3b45858e3ba" key="textField-159" stretchType="RelativeToTallestObject" mode="Opaque" x="755" y="1" width="94" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -739,7 +782,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["STATUS PERJANJIAN"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="6bf7f1ca-7370-40c4-93f5-097a3faff2c1" key="textField-162" stretchType="RelativeToTallestObject" mode="Opaque" x="1025" y="1" width="59" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="6bf7f1ca-7370-40c4-93f5-097a3faff2c1" key="textField-162" stretchType="RelativeToTallestObject" mode="Opaque" x="1029" y="1" width="59" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
@@ -781,7 +824,7 @@ WHERE B.ID_FAIL = A.ID_FAIL(+)
 				<textFieldExpression><![CDATA["Bil."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="461ca5b3-1309-4008-8027-047aaadc26a0" key="textField-158" stretchType="RelativeToTallestObject" mode="Opaque" x="676" y="1" width="75" height="48" backcolor="#CCCCCC"/>
+				<reportElement uuid="461ca5b3-1309-4008-8027-047aaadc26a0" key="textField-158" stretchType="RelativeToTallestObject" mode="Opaque" x="680" y="1" width="75" height="48" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.25"/>
 					<topPen lineWidth="0.25"/>
