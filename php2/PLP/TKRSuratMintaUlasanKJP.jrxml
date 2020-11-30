@@ -81,7 +81,7 @@ CASE
     WHEN SUBSTR(ROUND(TBLPHPPERMOHONANPELEPASAN.LUAS_MHNBERSAMAAN,4),1,1) = '.' THEN '0'|| ROUND(TBLPHPPERMOHONANPELEPASAN.LUAS_MHNBERSAMAAN,4)
     WHEN SUBSTR(ROUND(TBLPHPPERMOHONANPELEPASAN.LUAS_MHNBERSAMAAN,4),1,1) != '.' THEN '' || ROUND(TBLPHPPERMOHONANPELEPASAN.LUAS_MHNBERSAMAAN,4)
 END AS LUAS_MHN,
-TBLHTPHAKMILIK.NO_LOT AS LOT,
+INITCAP(TBLRUJLOT.KETERANGAN) || ' '||  TBLHTPHAKMILIK.NO_LOT AS LOT,
 CASE
     WHEN TBLHTPHAKMILIK.NO_WARTA IS NULL THEN TBLRUJJENISHAKMILIK.KOD_JENIS_HAKMILIK ||' '||TBLHTPHAKMILIK.NO_HAKMILIK 
     WHEN TBLHTPHAKMILIK.NO_HAKMILIK IS NULL THEN TBLHTPHAKMILIK.NO_WARTA 
@@ -119,12 +119,15 @@ TBLRUJMUKIM,
 TBLRUJJENISHAKMILIK,
 TBLRUJNEGERI NEGERIKEM,
 TBLRUJNEGERI NEGERIAGEN,
-TBLRUJNEGERI NEGERIPEMOHON
+TBLRUJNEGERI NEGERIPEMOHON,
+USERS_KEMENTERIAN,
+TBLRUJLOT
 WHERE TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL
 AND TBLPERMOHONAN.ID_PEMOHON = TBLPHPPEMOHON.ID_PEMOHON
 AND TBLPHPPEMOHON.ID_NEGERITETAP = NEGERIPEMOHON.ID_NEGERI(+)
+AND USERS_KEMENTERIAN.ID_USERSKEMENTERIAN = TBLPHPPEMOHON.ID_MASUK(+)
 AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPHAKMILIKPERMOHONAN.ID_PERMOHONAN
-AND TBLPHPHAKMILIKPERMOHONAN.ID_HAKMILIKAGENSI = TBLHTPHAKMILIKAGENSI.ID_HAKMILIKAGENSI
+AND TBLPHPHAKMILIKPERMOHONAN.ID_HAKMILIKAGENSI = TBLHTPHAKMILIKAGENSI.ID_HAKMILIK
 AND TBLHTPHAKMILIKAGENSI.ID_HAKMILIK = TBLHTPHAKMILIK.ID_HAKMILIK
 AND TBLHTPHAKMILIKAGENSI.ID_KEMENTERIAN = TBLRUJKEMENTERIAN.ID_KEMENTERIAN
 AND TBLRUJKEMENTERIAN.ID_NEGERI = NEGERIKEM.ID_NEGERI(+)
@@ -134,10 +137,11 @@ AND TBLHTPHAKMILIK.ID_DAERAH = DAERAHHAKMILIK.ID_DAERAH(+)
 AND TBLHTPHAKMILIK.ID_NEGERI = NEGERIHAKMILIK.ID_NEGERI(+) 
 AND TBLHTPHAKMILIK.ID_MUKIM = TBLRUJMUKIM.ID_MUKIM(+)
 AND TBLHTPHAKMILIK.ID_JENISHAKMILIK = TBLRUJJENISHAKMILIK.ID_JENISHAKMILIK(+)
+AND TBLHTPHAKMILIK.ID_LOT = TBLRUJLOT.ID_LOT(+)
 AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERMOHONANPELEPASAN.ID_PERMOHONAN
 AND TBLPFDFAIL.ID_FAIL =  $P!{ID_FAIL}]]></queryString>
 
-	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="ID_FAIL" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="TAJUK_FAIL" class="java.lang.String"/>
 	<field name="TARIKH_HARI_INI" class="java.lang.String"/>
@@ -349,7 +353,7 @@ AND TBLPFDFAIL.ID_FAIL =  $P!{ID_FAIL}]]></queryString>
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["Dengan hormatnya saya diarah untuk menarik perhatian tuan kepada perkara di atas dan surat daripada "+($F{KJT_PEMOHON}!=null ? $F{KJT_PEMOHON}:"")+" bertarikh "+($F{TARIKH_SURAT}!=null ? $F{TARIKH_SURAT}:"")+" ["+($F{NO_RUJ_SURAT}!=null ? $F{NO_RUJ_SURAT}:"")+"] adalah berkaitan (sesalinan surat tersebut dilampirkan bersama).\n\n"
-+"2.     Untuk makluman pihak tuan <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{LOT}!= null ? $F{LOT}+", ":"")+($F{MUKIM_HAKMILIK}!=null ? $F{MUKIM_HAKMILIK}+", ":"")+($F{DAERAH_HAKMILIK}!=null ? "Daerah "+$F{DAERAH_HAKMILIK}+", ":"")+($F{NEGERI_HAKMILIK}!=null ? "Negeri "+$F{NEGERI_HAKMILIK}:"")+"</style> adalah tanah "+($F{JENIS_TANAH}!=null ? $F{JENIS_TANAH}:"")+" Persekutuan di bawah kawalan "+($F{KEMENTERIAN}!=null ? $F{KEMENTERIAN}:"")+" iaitu tapak "+($F{KEGUNAAN_TANAH}!=null ? $F{KEGUNAAN_TANAH}:"")+". "+($F{KJT_PEMOHON}!=null ? $F{KJT_PEMOHON}:"")+" telah mengemukakan permohonan untuk menukarguna "+($F{FLAG_GUNA}!=null ? $F{FLAG_GUNA}:"")+" tanah tersebut bagi tujuan "+($F{CADANGAN_KEGUNAAN} !=null ? $F{CADANGAN_KEGUNAAN}:"")+"."
++"2.     Untuk makluman pihak tuan <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{LOT}!= null ? $F{LOT}+", ":"").toUpperCase()+($F{MUKIM_HAKMILIK}!=null ? $F{MUKIM_HAKMILIK}+", ":"")+($F{DAERAH_HAKMILIK}!=null ? "Daerah "+$F{DAERAH_HAKMILIK}+", ":"")+($F{NEGERI_HAKMILIK}!=null ? "Negeri "+$F{NEGERI_HAKMILIK}:"")+"</style> adalah tanah "+($F{JENIS_TANAH}!=null ? $F{JENIS_TANAH}:"")+" Persekutuan di bawah kawalan "+($F{KEMENTERIAN}!=null ? $F{KEMENTERIAN}:"")+" iaitu tapak "+($F{KEGUNAAN_TANAH}!=null ? $F{KEGUNAAN_TANAH}:"")+". "+($F{KJT_PEMOHON}!=null ? $F{KJT_PEMOHON}:"")+" telah mengemukakan permohonan untuk menukarguna "+($F{FLAG_GUNA}!=null ? $F{FLAG_GUNA}:"")+" tanah tersebut bagi tujuan "+($F{CADANGAN_KEGUNAAN} !=null ? $F{CADANGAN_KEGUNAAN}:"")+"."
 +"\n\n3.     Sehubungan dengan itu, pihak tuan dipohon untuk <style isBold='true' pdfFontName='Helvetica-Bold'>memberi ulasan secara bertulis</style> mengenai permohonan tukarguna tersebut. Kerjasama dan tindakan awal daripada pihak tuan adalah amat dihargai."
 +"\n\nSekian, terima kasih.\n\n"
 +"<style isBold='true' pdfFontName='Helvetica-Bold'>“BERKHIDMAT UNTUK NEGARA”</style>\n\n"

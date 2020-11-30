@@ -30,28 +30,28 @@
 	<queryString><![CDATA[SELECT DISTINCT
 	A.CATATAN,
 	A.FLAG_SYOR,
+	A.CATATAN_RINGKASAN_PERTIMBANGAN,
+	CASE WHEN A.KADAR_SEWA_BULANAN IS NOT NULL THEN 'RM '||(replace(to_char(A.KADAR_SEWA_BULANAN,'999,999,999.99'),' ', ''))
+	END AS KADAR_SEWA_BULANAN,
+	CASE WHEN A.TEMPOH_SEWA IS NOT NULL THEN A.TEMPOH_SEWA ||' '|| 'TAHUN'
+	END AS TEMPOH_SEWA,
 	C.NAMA AS NAMA_PEMOHON,
-	REPLACE(REPLACE(TRIM(C.ALAMAT1_TETAP),'&','&#38;'),',')  AS ALAMAT_1,
-	REPLACE(REPLACE(TRIM(C.ALAMAT2_TETAP),'&','&#38;'),',')  AS ALAMAT_2,
-	REPLACE(REPLACE(TRIM(C.ALAMAT3_TETAP),'&','&#38;'),',')  AS ALAMAT_3,
-	UPPER(R.KETERANGAN) AS BANDAR_PEMOHON, S.NAMA_NEGERI AS NEGERI_PEMOHON,
-	C.POSKOD_TETAP,
 	D.NO_FAIL,
 	CASE WHEN E.FLAG_GUNA = '1' THEN 'SEBAHAGIAN'
 		 WHEN E.FLAG_GUNA = '2' THEN 'KESELURUHAN'
-	END AS FLAG_GUNA, E.LUAS_MHNBERSAMAAN,
-	G.NAMA_SUBSUBURUSAN AS TUJUAN,
+	END AS FLAG_GUNA, 
 	J.NAMA_KEMENTERIAN AS KJP,
-	I.NO_LOT, K.KETERANGAN,
+	CASE WHEN I.NO_LOT IS NOT NULL THEN K.KETERANGAN ||' '|| I.NO_LOT
+	END AS NO_LOT, 
+	CASE WHEN I.NO_HAKMILIK IS NOT NULL THEN T.KOD_JENIS_HAKMILIK ||' '|| I.NO_HAKMILIK
+	ELSE I.NO_WARTA
+	END AS NO_HAKMILIK,
 	L.NAMA_MUKIM, M.NAMA_DAERAH,
-	N.NAMA_NEGERI, I.LUAS,
-	CASE WHEN I.LUAS IS NOT NULL THEN O.KETERANGAN 
+	N.NAMA_NEGERI,
+	CASE WHEN I.LUAS IS NOT NULL THEN I.LUAS ||' '|| O.KETERANGAN 
 		 ELSE ''
 	END AS UNIT_LUAS,
-	P.ULASAN AS ULASAN_JPPH, 
-	NVL(P.KADAR_SEWA_BULANAN, 0) AS KADAR_SEWA,
-	TO_CHAR (Q.TARIKH_MULA_PERJANJIAN, 'dd/MM/yyyy') AS TARIKH_MULA_PERJANJIAN,
-	TO_CHAR (Q.TARIKH_TAMAT_PERJANJIAN, 'dd/MM/yyyy') AS TARIKH_TAMAT_PERJANJIAN
+	P.ULASAN AS ULASAN_JPPH 
 FROM
 	TBLPHPMESYUARATPERMOHONAN A,
 	TBLPERMOHONAN B,
@@ -59,7 +59,6 @@ FROM
 	TBLPFDFAIL D,
 	TBLPHPPERMOHONANSEWA E,
 	TBLPHPPERMOHONANTUJUAN F,
-	TBLRUJSUBSUBURUSAN G, 
 	TBLPHPHAKMILIKPERMOHONAN H,
 	TBLPHPHAKMILIK I,
 	TBLRUJKEMENTERIAN J,
@@ -69,16 +68,15 @@ FROM
 	TBLRUJNEGERI N,
 	TBLRUJLUAS O,
 	TBLPHPULASANTEKNIKAL P,
-	TBLPHPPERJANJIAN Q,
 	TBLRUJBANDAR R,
-	TBLRUJNEGERI S
+	TBLRUJNEGERI S,
+	TBLRUJJENISHAKMILIK T
 WHERE
 	A.ID_PERMOHONAN = B.ID_PERMOHONAN
 	AND B.ID_PEMOHON = C.ID_PEMOHON 
 	AND B.ID_FAIL = D.ID_FAIL
 	AND B.ID_PERMOHONAN = E.ID_PERMOHONAN 
 	AND E.ID_PHPPERMOHONANSEWA = F.ID_PHPPERMOHONANSEWA(+)
-	AND F.ID_JENISTUJUAN = G.ID_SUBSUBURUSAN(+)
 	AND B.ID_PERMOHONAN = H.ID_PERMOHONAN
 	AND H.ID_HAKMILIKPERMOHONAN = I.ID_HAKMILIKPERMOHONAN
 	AND I.ID_KEMENTERIAN = J.ID_KEMENTERIAN(+)
@@ -88,9 +86,9 @@ WHERE
 	AND M.ID_NEGERI = N.ID_NEGERI(+)
 	AND I.ID_LUAS = O.ID_LUAS(+)
 	AND B.ID_PERMOHONAN = P.ID_PERMOHONAN
-	AND B.ID_PERMOHONAN = Q.ID_PERMOHONAN(+)
 	AND C.ID_BANDARTETAP = R.ID_BANDAR(+)
 	AND C.ID_NEGERITETAP = S.ID_NEGERI(+)
+	AND I.ID_JENISHAKMILIK = T.ID_JENISHAKMILIK
 	AND A.FLAG_JENIS_PERMOHONAN = 'L'
 	AND P.FLAG_KJP = 'JPPH'
 	AND B.FLAG_PERJANJIAN = 'U'
@@ -99,29 +97,20 @@ WHERE
 
 	<field name="CATATAN" class="java.lang.String"/>
 	<field name="FLAG_SYOR" class="java.lang.String"/>
+	<field name="CATATAN_RINGKASAN_PERTIMBANGAN" class="java.lang.String"/>
+	<field name="KADAR_SEWA_BULANAN" class="java.lang.String"/>
+	<field name="TEMPOH_SEWA" class="java.lang.String"/>
 	<field name="NAMA_PEMOHON" class="java.lang.String"/>
-	<field name="ALAMAT_1" class="java.lang.String"/>
-	<field name="ALAMAT_2" class="java.lang.String"/>
-	<field name="ALAMAT_3" class="java.lang.String"/>
-	<field name="BANDAR_PEMOHON" class="java.lang.String"/>
-	<field name="NEGERI_PEMOHON" class="java.lang.String"/>
-	<field name="POSKOD_TETAP" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="FLAG_GUNA" class="java.lang.String"/>
-	<field name="LUAS_MHNBERSAMAAN" class="java.lang.String"/>
-	<field name="TUJUAN" class="java.lang.String"/>
 	<field name="KJP" class="java.lang.String"/>
 	<field name="NO_LOT" class="java.lang.String"/>
-	<field name="KETERANGAN" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
 	<field name="NAMA_MUKIM" class="java.lang.String"/>
 	<field name="NAMA_DAERAH" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
-	<field name="LUAS" class="java.lang.String"/>
 	<field name="UNIT_LUAS" class="java.lang.String"/>
 	<field name="ULASAN_JPPH" class="java.lang.String"/>
-	<field name="KADAR_SEWA" class="java.lang.String"/>
-	<field name="TARIKH_MULA_PERJANJIAN" class="java.lang.String"/>
-	<field name="TARIKH_TAMAT_PERJANJIAN" class="java.lang.String"/>
 
 		<background>
 			<band height="0"  isSplitAllowed="true" >
@@ -283,11 +272,11 @@ WHERE
 			<band height="171"  isSplitAllowed="true" >
 				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="508"
+						x="507"
 						y="0"
 						width="139"
 						height="107"
-						key="textField-1"/>
+						key="textField-9"/>
 					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -301,11 +290,11 @@ WHERE
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="1"
+						x="0"
 						y="0"
 						width="35"
 						height="171"
-						key="textField-2"/>
+						key="textField-10"/>
 					<box leftPadding="2" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -319,11 +308,11 @@ WHERE
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="214"
+						x="213"
 						y="0"
 						width="94"
 						height="171"
-						key="textField-3"/>
+						key="textField-11"/>
 					<box leftPadding="2" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -333,16 +322,17 @@ WHERE
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="9"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TUJUAN} == null ? "" : "" + $F{TUJUAN})]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{CATATAN_RINGKASAN_PERTIMBANGAN} != null && $F{CATATAN_RINGKASAN_PERTIMBANGAN} != "" 
+? $F{CATATAN_RINGKASAN_PERTIMBANGAN} : "-")]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="36"
+						x="35"
 						y="0"
 						width="178"
 						height="171"
-						key="textField-4"/>
-					<box leftPadding="2" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
+						key="textField-12"/>
+					<box leftPadding="5" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
@@ -351,18 +341,18 @@ WHERE
 					<textElement textAlignment="Left" verticalAlignment="Middle">
 						<font size="9"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PEMOHON} == null ? "" : " " + $F{NAMA_PEMOHON})+"\n"
-+"NO. FAIL :" +($F{NO_FAIL} == null ? "" : " " + $F{NO_FAIL})+"\n"
-+"KJP :" + ($F{KJP} == null ? "" : " " + $F{KJP})+"\n\n"
-+($F{ALAMAT_1}!=null ? $F{ALAMAT_1}+"\n":"")
-+($F{ALAMAT_2}!=null ? $F{ALAMAT_2}+"\n":"")
-+($F{ALAMAT_3}!=null ? $F{ALAMAT_3}+"\n":"")
-+(($F{POSKOD_TETAP}!=null && $F{BANDAR_PEMOHON}!=null) ? $F{POSKOD_TETAP}+" "+$F{BANDAR_PEMOHON}+"\n":($F{POSKOD_TETAP}==null && $F{BANDAR_PEMOHON}!=null) ? $F{BANDAR_PEMOHON}+"\n":($F{POSKOD_TETAP}!=null && $F{BANDAR_PEMOHON}==null) ? $F{POSKOD_TETAP}+"\n":"")
-+($F{NEGERI_PEMOHON}!=null ? $F{NEGERI_PEMOHON}:"")]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PEMOHON} != null && $F{NAMA_PEMOHON} != "" ? $F{NAMA_PEMOHON} : "")+"\n"
++"RUJ. FAIL : " + ($F{NO_FAIL} != null && $F{NO_FAIL} != "" ? $F{NO_FAIL} : " ")+"\n"
++"KJP 	    : " + ($F{KJP} != null && $F{KJP} != "" ? $F{KJP} : "")+"\n\n"
++($F{NO_LOT} != null && $F{NO_LOT} != "" ? $F{NO_LOT} + ", " : "")
++($F{NO_HAKMILIK} != null && $F{NO_HAKMILIK} != "" ? $F{NO_HAKMILIK} : "")+"\n"
++($F{NAMA_MUKIM} != null && $F{NAMA_MUKIM} != "" ? $F{NAMA_MUKIM} : "")+"\n"
++($F{NAMA_DAERAH} != null && $F{NAMA_DAERAH} != "" ? "DAERAH " + $F{NAMA_DAERAH} : "")+"\n"
++($F{NAMA_NEGERI} != null && $F{NAMA_NEGERI} != "" ? "NEGERI " +$F{NAMA_NEGERI} : "")]]></textFieldExpression>
 				</textField>
 				<rectangle>
 					<reportElement
-						x="616"
+						x="615"
 						y="10"
 						width="21"
 						height="14"
@@ -371,11 +361,11 @@ WHERE
 				</rectangle>
 				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="647"
+						x="646"
 						y="0"
-						width="155"
+						width="156"
 						height="171"
-						key="textField-5"/>
+						key="textField-13"/>
 					<box leftPadding="2" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -389,11 +379,11 @@ WHERE
 				</textField>
 				<staticText>
 					<reportElement
-						x="520"
+						x="519"
 						y="10"
 						width="83"
 						height="14"
-						key="staticText-10"/>
+						key="staticText-21"/>
 					<box></box>
 					<textElement>
 						<font size="9"/>
@@ -402,11 +392,11 @@ WHERE
 				</staticText>
 				<staticText>
 					<reportElement
-						x="520"
-						y="35"
+						x="519"
+						y="34"
 						width="83"
 						height="14"
-						key="staticText-11"/>
+						key="staticText-22"/>
 					<box></box>
 					<textElement>
 						<font size="9"/>
@@ -415,24 +405,24 @@ WHERE
 				</staticText>
 				<staticText>
 					<reportElement
-						x="520"
-						y="62"
+						x="519"
+						y="58"
 						width="83"
 						height="14"
-						key="staticText-12"/>
+						key="staticText-23"/>
 					<box></box>
 					<textElement>
 						<font size="9"/>
 					</textElement>
-				<text><![CDATA[TUNGGAK]]></text>
+				<text><![CDATA[TOLAK]]></text>
 				</staticText>
 				<staticText>
 					<reportElement
-						x="520"
-						y="86"
+						x="519"
+						y="82"
 						width="83"
 						height="14"
-						key="staticText-13"/>
+						key="staticText-24"/>
 					<box></box>
 					<textElement>
 						<font size="9"/>
@@ -441,7 +431,7 @@ WHERE
 				</staticText>
 				<rectangle>
 					<reportElement
-						x="616"
+						x="615"
 						y="34"
 						width="21"
 						height="14"
@@ -450,19 +440,19 @@ WHERE
 				</rectangle>
 				<line direction="BottomUp">
 					<reportElement
-						x="621"
-						y="37"
+						x="620"
+						y="36"
 						width="10"
 						height="10"
 						key="line-1">
-							<printWhenExpression><![CDATA[new Boolean (($F{FLAG_SYOR}.equals("LD"))==true)]]></printWhenExpression>
+							<printWhenExpression><![CDATA[new Boolean (($F{FLAG_SYOR}.equals("D"))==true)]]></printWhenExpression>
 						</reportElement>
 					<graphicElement stretchType="NoStretch"/>
 				</line>
 				<rectangle>
 					<reportElement
-						x="616"
-						y="63"
+						x="615"
+						y="57"
 						width="21"
 						height="14"
 						key="rectangle-3"/>
@@ -470,8 +460,8 @@ WHERE
 				</rectangle>
 				<line direction="BottomUp">
 					<reportElement
-						x="622"
-						y="66"
+						x="621"
+						y="59"
 						width="10"
 						height="10"
 						key="line-2">
@@ -481,8 +471,8 @@ WHERE
 				</line>
 				<rectangle>
 					<reportElement
-						x="616"
-						y="86"
+						x="615"
+						y="82"
 						width="21"
 						height="14"
 						key="rectangle-4"/>
@@ -490,8 +480,8 @@ WHERE
 				</rectangle>
 				<line direction="BottomUp">
 					<reportElement
-						x="622"
-						y="89"
+						x="621"
+						y="83"
 						width="10"
 						height="10"
 						key="line-3">
@@ -501,7 +491,7 @@ WHERE
 				</line>
 				<line direction="BottomUp">
 					<reportElement
-						x="622"
+						x="621"
 						y="12"
 						width="10"
 						height="10"
@@ -512,11 +502,11 @@ WHERE
 				</line>
 				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="508"
+						x="507"
 						y="107"
 						width="139"
 						height="64"
-						key="textField-6"/>
+						key="textField-14"/>
 					<box leftPadding="2" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -526,18 +516,17 @@ WHERE
 					<textElement textAlignment="Left" verticalAlignment="Middle">
 						<font size="9"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["SEWA BULANAN: RM"+($F{KADAR_SEWA} != null ? $F{KADAR_SEWA} : "-" )+"\n\n"
-+ "TEMPOH SEWAAN: " +($F{TARIKH_MULA_PERJANJIAN} != null ? $F{TARIKH_MULA_PERJANJIAN} + " - " : "" )
-+($F{TARIKH_TAMAT_PERJANJIAN} != null ? $F{TARIKH_TAMAT_PERJANJIAN} : "-")]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA["SEWA BULANAN : " + ($F{KADAR_SEWA_BULANAN} != null && $F{KADAR_SEWA_BULANAN} != "" ? $F{KADAR_SEWA_BULANAN} : "-" ) +"\n\n"
++ "TEMPOH SEWAAN : " + ($F{TEMPOH_SEWA} != null && $F{TEMPOH_SEWA} != "" ? $F{TEMPOH_SEWA} : "-")]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="308"
+						x="307"
 						y="0"
 						width="200"
 						height="171"
-						key="textField-7"/>
-					<box leftPadding="2" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
+						key="textField-15"/>
+					<box leftPadding="5" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
@@ -546,7 +535,8 @@ WHERE
 					<textElement textAlignment="Left" verticalAlignment="Middle">
 						<font size="9"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["KELUASAN : "+(($F{LUAS_MHNBERSAMAAN}!=null && $F{UNIT_LUAS}!=null) ? $F{LUAS_MHNBERSAMAAN}+" "+$F{UNIT_LUAS}:($F{LUAS_MHNBERSAMAAN}==null && $F{UNIT_LUAS}!=null) ? $F{UNIT_LUAS}:($F{LUAS_MHNBERSAMAAN}!=null && $F{UNIT_LUAS}==null) ? $F{LUAS_MHNBERSAMAAN}:"")+"\n\n"
+				<textFieldExpression   class="java.lang.String"><![CDATA["KELUASAN : "+($F{UNIT_LUAS} != null && $F{UNIT_LUAS} != "" ? $F{UNIT_LUAS} : "-")
++" ("+($F{FLAG_GUNA}!=null && $F{FLAG_GUNA}!="" ? $F{FLAG_GUNA} : "")+")\n\n"
 + "PENILAIAN JPPH : "+($F{ULASAN_JPPH} == null ? "" : $F{ULASAN_JPPH})]]></textFieldExpression>
 				</textField>
 			</band>
