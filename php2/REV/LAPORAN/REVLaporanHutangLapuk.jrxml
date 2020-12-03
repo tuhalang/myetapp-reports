@@ -1,498 +1,379 @@
-<?xml version="1.0" encoding="UTF-8"  ?>
-<!-- Created with iReport - A designer for JasperReports -->
-<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
-<jasperReport
-		 name="REVLaporanHutangLapuk"
-		 columnCount="1"
-		 printOrder="Vertical"
-		 orientation="Landscape"
-		 pageWidth="842"
-		 pageHeight="595"
-		 columnWidth="802"
-		 columnSpacing="0"
-		 leftMargin="20"
-		 rightMargin="20"
-		 topMargin="20"
-		 bottomMargin="20"
-		 whenNoDataType="NoDataSection"
-		 isTitleNewPage="false"
-		 isSummaryNewPage="false">
-	<property name="ireport.zoom" value="1.0" />
-	<property name="ireport.x" value="0" />
-	<property name="ireport.y" value="0" />
-	<property name="ireport.scriptlethandling" value="0" />
-	<property name="ireport.encoding" value="UTF-8" />
-	<import value="java.util.*" />
-	<import value="net.sf.jasperreports.engine.*" />
-	<import value="net.sf.jasperreports.engine.data.*" />
-
-	<parameter name="TAHUN" isForPrompting="true" class="java.lang.String"/>
-	<queryString><![CDATA[SELECT TBLPFDFAIL.NO_FAIL, TBLPHPPEMOHON.NAMA, TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA, TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT,
-(TRUNC (TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT) - TRUNC (SYSDATE)) AS BIL_HARI_AKAN_TAMAT,
-(SELECT CASE WHEN SUM (TBLPHPAKAUN.DEBIT) IS NULL THEN 0 ELSE SUM (TBLPHPAKAUN.DEBIT) END FROM TBLPHPAKAUN WHERE TBLPHPAKAUN.ID_JENISBAYARAN = 10 AND TBLPHPAKAUN.ID_HASIL = TBLPHPHASIL.ID_HASIL) -
-(SELECT CASE WHEN SUM (TBLPHPAKAUN.KREDIT) IS NULL THEN 0 ELSE SUM (TBLPHPAKAUN.KREDIT) END FROM TBLPHPAKAUN WHERE TBLPHPAKAUN.ID_JENISBAYARAN = 10 AND TBLPHPAKAUN.ID_HASIL = TBLPHPHASIL.ID_HASIL) AS LEBIHAN
-
-FROM TBLPHPHASIL, TBLPFDFAIL, TBLPHPPEMOHON, TBLPHPBAYARANPERLUDIBAYAR
-
-WHERE TBLPHPHASIL.ID_FAIL = TBLPFDFAIL.ID_FAIL
-AND TBLPHPHASIL.ID_PEMOHON= TBLPHPPEMOHON.ID_PEMOHON
-AND TBLPHPHASIL.ID_HASIL = TBLPHPBAYARANPERLUDIBAYAR.ID_HASIL
-AND TBLPFDFAIL.ID_URUSAN = '115'
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="REVLaporanHutangLapuk" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="3aeefae7-a608-4d85-9728-3184d4db9e34">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="TAHUN" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT DISTINCT TBLPHPHASIL.ID_HASIL, TBLPHPPEMOHON.NAMA AS NAMA_PEMOHON, TBLBULAN.BULAN, TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA) AS TARIKH_MULA, TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT) AS TARIKH_TAMAT,
+TBLRUJKEMENTERIAN.NAMA_KEMENTERIAN, TBLPHPHASIL.TUJUAN, TBLPHPBAYARANPERLUDIBAYAR.BAYARAN, TBLBULAN.TUNGGAKAN, TBLPHPHASIL.MAKLUMAT_LOT
+FROM TBLPFDFAIL, TBLPHPHASIL, TBLPHPPEMOHON, TBLPHPBAYARANPERLUDIBAYAR, TBLRUJKEMENTERIAN, TBLPHPAKAUN,
+(SELECT TBLPHPHASIL.ID_HASIL, TBLPHPBAYARANPERLUDIBAYAR.BAYARAN,
+TO_NUMBER (CEIL((SUM (NVL (DEBIT, 0)) - SUM (NVL (KREDIT, 0))) / TBLPHPBAYARANPERLUDIBAYAR.BAYARAN), '999,999,990.99') AS BULAN,
+TO_CHAR ((SUM (NVL (DEBIT, 0)) - SUM (NVL (KREDIT, 0))),'999,999,990.99') AS TUNGGAKAN
+FROM TBLPHPAKAUN AKAUN, TBLPHPHASIL, TBLPFDFAIL, TBLPHPBAYARANPERLUDIBAYAR
+WHERE TBLPHPHASIL.ID_FAIL = TBLPFDFAIL.ID_FAIL(+)
+AND AKAUN.ID_HASIL = TBLPHPHASIL.ID_HASIL
+AND TBLPHPHASIL.ID_HASIL = TBLPHPBAYARANPERLUDIBAYAR.ID_HASIL(+)
 AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_PERJANJIAN = 'U'
 AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_AKTIF = 'Y'
-AND TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA IS NOT NULL
-AND TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT IS NOT NULL
-AND TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT >= SYSDATE
-AND TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT,'YYYY')  = $P{TAHUN}
-ORDER BY TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT DESC, TBLPHPPEMOHON.NAMA ASC]]></queryString>
-
-	<field name="NO_FAIL" class="java.lang.String"/>
-	<field name="NAMA" class="java.lang.String"/>
-	<field name="TARIKH_MULA" class="java.sql.Timestamp"/>
-	<field name="TARIKH_TAMAT" class="java.sql.Timestamp"/>
-	<field name="BIL_HARI_AKAN_TAMAT" class="java.math.BigDecimal"/>
-	<field name="LEBIHAN" class="java.lang.Double"/>
-
-		<background>
-			<band height="0"  isSplitAllowed="true" >
-			</band>
-		</background>
-		<title>
-			<band height="35"  isSplitAllowed="true" >
-				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="0"
-						y="0"
-						width="802"
-						height="35"
-						key="staticText"/>
-					<box></box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" isBold="true" isUnderline="true"/>
-					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["LAPORAN SENARAI HUTANG LAPUK (HUTANG MELEBIHI AKTA MASA IAITU LEBIH TEMPOH 6 TAHUN)"]]></textFieldExpression>
-				</textField>
-			</band>
-		</title>
-		<pageHeader>
-			<band height="35"  isSplitAllowed="true" >
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="103"
-						y="15"
-						width="110"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText"/>
-					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
+AND TBLPHPBAYARANPERLUDIBAYAR.BAYARAN > 0
+AND AKAUN.ID_JENISBAYARAN = 10
+AND AKAUN.FLAG_AKTIF = 'Y'
+GROUP BY TBLPHPBAYARANPERLUDIBAYAR.BAYARAN, TBLPHPHASIL.ID_HASIL) TBLBULAN
+WHERE TBLPFDFAIL.ID_FAIL = TBLPHPHASIL.ID_FAIL
+AND TBLPHPHASIL.ID_PEMOHON = TBLPHPPEMOHON.ID_PEMOHON(+)
+AND TBLPHPHASIL.ID_HASIL = TBLBULAN.ID_HASIL(+)
+AND TBLPFDFAIL.ID_KEMENTERIAN = TBLRUJKEMENTERIAN.ID_KEMENTERIAN(+)
+AND TBLPHPHASIL.ID_HASIL = TBLPHPBAYARANPERLUDIBAYAR.ID_HASIL(+)
+AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_PERJANJIAN = 'U'
+AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_AKTIF = 'Y'
+AND TBLPHPBAYARANPERLUDIBAYAR.BAYARAN > 0
+AND TBLBULAN.BULAN >= 72
+AND (TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA,'YYYY') = $P!{TAHUN}
+OR TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT,'YYYY') = $P!{TAHUN})
+]]>
+	</queryString>
+	<field name="ID_HASIL" class="java.math.BigDecimal"/>
+	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="BULAN" class="java.math.BigDecimal"/>
+	<field name="TARIKH_MULA" class="java.lang.String"/>
+	<field name="TARIKH_TAMAT" class="java.lang.String"/>
+	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="BAYARAN" class="java.math.BigDecimal"/>
+	<field name="TUNGGAKAN" class="java.lang.String"/>
+	<field name="MAKLUMAT_LOT" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="35" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="320e517f-2198-451c-9c80-6975a5c0f3c1" key="staticText" x="0" y="0" width="802" height="35"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style" isBold="true" isUnderline="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["LAPORAN SENARAI HUTANG LAPUK (HUTANG MELEBIHI AKTA MASA IAITU LEBIH TEMPOH 6 TAHUN)"]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="e57e7968-71d0-4a03-8a56-5ed1674a4c3b" key="staticText" mode="Opaque" x="103" y="15" width="110" height="20" backcolor="#CCCCCC"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[NAMA PENYEWA]]></text>
-				</staticText>
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="213"
-						y="15"
-						width="90"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText"/>
-					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e25a65e0-1326-415e-8a57-43a5361e502c" key="staticText" mode="Opaque" x="213" y="15" width="90" height="20" backcolor="#CCCCCC"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[TARIKH MULA DAN TARIKH TAMAT SEWA]]></text>
-				</staticText>
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="303"
-						y="15"
-						width="80"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText"/>
-					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1c14bbcd-8b70-4411-bfcc-074e156aa081" key="staticText" mode="Opaque" x="303" y="15" width="80" height="20" backcolor="#CCCCCC"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[TAPAK]]></text>
-				</staticText>
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="497"
-						y="15"
-						width="79"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText"/>
-					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1d816060-ef31-4418-8eff-e6bf16b42e8d" key="staticText" mode="Opaque" x="497" y="15" width="79" height="20" backcolor="#CCCCCC"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[KADAR SEWA (RM)]]></text>
-				</staticText>
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="0"
-						y="15"
-						width="35"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText"/>
-					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
+			</staticText>
+			<staticText>
+				<reportElement uuid="11cbf35e-4872-41a9-8ed5-6cbed74e3b5a" key="staticText" mode="Opaque" x="0" y="15" width="35" height="20" backcolor="#CCCCCC"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[BIL]]></text>
-				</staticText>
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="35"
-						y="15"
-						width="68"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText"/>
-					<box>					<pen lineWidth="0.5"/>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6ec56fcb-625c-4993-abde-971342d5a7c2" key="staticText" mode="Opaque" x="35" y="15" width="68" height="20" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[KJP]]></text>
-				</staticText>
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="383"
-						y="15"
-						width="115"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText-1"/>
-					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4b305667-aac0-4332-abcf-c235e2f58bdb" key="staticText-1" mode="Opaque" x="383" y="15" width="115" height="20" backcolor="#CCCCCC"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[TUJUAN SEWAAN]]></text>
-				</staticText>
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="576"
-						y="15"
-						width="76"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText-3"/>
-					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a4432e26-65e5-4a89-881d-4115d17838df" key="staticText-3" mode="Opaque" x="576" y="15" width="76" height="20" backcolor="#CCCCCC"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[BULAN TERTUNGGAK]]></text>
-				</staticText>
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="652"
-						y="15"
-						width="86"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText-4"/>
-					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
+			</staticText>
+			<staticText>
+				<reportElement uuid="05c1e881-eb5c-4f74-a3d4-673ba94b7f1d" key="staticText-4" mode="Opaque" x="652" y="15" width="86" height="20" backcolor="#CCCCCC"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[BIL. BULAN TERTUNGGAK]]></text>
-				</staticText>
-				<staticText>
-					<reportElement
-						mode="Opaque"
-						x="737"
-						y="15"
-						width="65"
-						height="20"
-						backcolor="#CCCCCC"
-						key="staticText-5"/>
-					<box leftPadding="2" rightPadding="2">					<pen lineWidth="0.5"/>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b8d6d561-6474-4f74-b976-de8577ca7709" key="staticText-5" mode="Opaque" x="737" y="15" width="65" height="20" backcolor="#CCCCCC"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[JUMLAH TUNGGAKAN SEWA]]></text>
-				</staticText>
-			</band>
-		</pageHeader>
-		<columnHeader>
-			<band height="0"  isSplitAllowed="true" >
-			</band>
-		</columnHeader>
-		<detail>
-			<band height="40"  isSplitAllowed="true" >
-				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="0"
-						y="0"
-						width="35"
-						height="40"
-						key="textField"/>
-					<box leftPadding="2" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="40" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="f7387853-adaa-401b-8a45-139438439b56" key="textField" x="0" y="0" width="35" height="40"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="103"
-						y="0"
-						width="110"
-						height="40"
-						key="textField"/>
-					<box leftPadding="2" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="de38f4ba-33cf-47a3-bc48-2c47e427e1ca" key="textField" x="103" y="0" width="110" height="40"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA} == null ? "" : "" + $F{NAMA})]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="213"
-						y="0"
-						width="90"
-						height="40"
-						key="textField"/>
-					<box>					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_PEMOHON}!=null ? $F{NAMA_PEMOHON} : "")]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement uuid="18016024-26ab-4463-a536-6d22e0608f82" key="textField" x="213" y="0" width="90" height="40"/>
+				<box>
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.util.Date"><![CDATA[$F{TARIKH_MULA}]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="303"
-						y="0"
-						width="80"
-						height="40"
-						key="textField"/>
-					<box>					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TARIKH_MULA} !=null ? $F{TARIKH_MULA} : "")
++" - "
++($F{TARIKH_TAMAT} != null ? $F{TARIKH_TAMAT} : "")]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement uuid="0f5ab7e9-9b34-48f7-a30b-7c89af9f8be8" key="textField" x="303" y="0" width="80" height="40"/>
+				<box>
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.util.Date"><![CDATA[]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="35"
-						y="0"
-						width="68"
-						height="40"
-						key="textField"/>
-					<box leftPadding="2" rightPadding="2" topPadding="5" bottomPadding="5">					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{MAKLUMAT_LOT} != null ? $F{MAKLUMAT_LOT} : "")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="16e5ac37-eb9c-4107-9010-da5dbe72fa14" key="textField" x="35" y="0" width="68" height="40"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_FAIL} == null ? "" : " " + $F{NO_FAIL})]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="383"
-						y="0"
-						width="115"
-						height="40"
-						key="textField-1"/>
-					<box>					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_KEMENTERIAN} != null ? $F{NAMA_KEMENTERIAN} : "")]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="16781c6c-e1c3-4e94-b9f6-d0b52b6f7be0" key="textField-1" x="383" y="0" width="115" height="40"/>
+				<box>
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="497"
-						y="0"
-						width="79"
-						height="40"
-						key="textField-2"/>
-					<box>					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TUJUAN} != null ? $F{TUJUAN} : "")]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="b55c64f5-8a51-45e5-9355-dd5fd5565103" key="textField-2" x="497" y="0" width="79" height="40"/>
+				<box>
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.util.Date"><![CDATA[]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="576"
-						y="0"
-						width="76"
-						height="40"
-						key="textField-3"/>
-					<box>					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{BAYARAN} != null ? $F{BAYARAN} : "")]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement uuid="18a6460f-7f60-47d8-8463-be73ea317315" key="textField-3" x="576" y="0" width="76" height="40"/>
+				<box>
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.util.Date"><![CDATA[]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="652"
-						y="0"
-						width="86"
-						height="40"
-						key="textField-4"/>
-					<box>					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0" isBlankWhenNull="true">
+				<reportElement uuid="a291298e-652b-495d-a34c-0b056dd82c5e" key="textField-4" x="652" y="0" width="86" height="40"/>
+				<box>
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.util.Date"><![CDATA[]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="738"
-						y="0"
-						width="64"
-						height="40"
-						key="textField-5"/>
-					<box>					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{BULAN} != null ? $F{BULAN} : "")]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement uuid="bc72537a-db65-4063-aece-93b8b69b8804" key="textField-5" x="738" y="0" width="64" height="40"/>
+				<box>
+					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
 					<bottomPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
-</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font size="7"/>
-					</textElement>
-				<textFieldExpression   class="java.util.Date"><![CDATA[]]></textFieldExpression>
-				</textField>
-			</band>
-		</detail>
-		<columnFooter>
-			<band height="0"  isSplitAllowed="true" >
-			</band>
-		</columnFooter>
-		<pageFooter>
-			<band height="0"  isSplitAllowed="true" >
-			</band>
-		</pageFooter>
-		<summary>
-			<band height="0"  isSplitAllowed="true" >
-			</band>
-		</summary>
-		<noData>
-			<band height="20"  isSplitAllowed="true" >
-				<staticText>
-					<reportElement
-						x="0"
-						y="0"
-						width="802"
-						height="20"
-						key="staticText-2"/>
-					<box></box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font pdfFontName="Helvetica-Bold" size="14" isBold="true"/>
-					</textElement>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TUNGGAKAN}!= null ? $F{TUNGGAKAN} : "")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="c9ce9c45-0f2b-41b6-a46e-705c052306f3" key="staticText-2" x="0" y="0" width="802" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
 				<text><![CDATA[TIADA REKOD]]></text>
-				</staticText>
-			</band>
-		</noData>
+			</staticText>
+		</band>
+	</noData>
 </jasperReport>
