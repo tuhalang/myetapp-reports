@@ -68,15 +68,21 @@
         WHEN TO_CHAR (TBLPHPNOTISHASIL.TARIKH_AKHIR_NOTIS, 'MM') = 11 THEN 'November' || ' ' || TO_CHAR (TBLPHPNOTISHASIL.TARIKH_AKHIR_NOTIS, 'YYYY')
         WHEN TO_CHAR (TBLPHPNOTISHASIL.TARIKH_AKHIR_NOTIS, 'MM') = 12 THEN 'Disember' || ' ' || TO_CHAR (TBLPHPNOTISHASIL.TARIKH_AKHIR_NOTIS, 'YYYY')
     END AS TARIKH_AKHIR_NOTIS,
-    INITCAP(TBLPHPPEMOHON.NAMA) AS NAMA, INITCAP(TBLPHPPEMOHON.ALAMAT1_TETAP) AS ALAMAT1, INITCAP(TBLPHPPEMOHON.ALAMAT2_TETAP) AS ALAMAT2, 
-    INITCAP(TBLPHPPEMOHON.ALAMAT3_TETAP) AS ALAMAT3, TBLPHPPEMOHON.POSKOD_TETAP AS POSKOD, INITCAP(TBLRUJBANDAR.KETERANGAN) AS BANDAR, INITCAP(TBLRUJNEGERI.NAMA_NEGERI) AS NEGERI,
+    REPLACE(INITCAP(REPLACE(TRIM(TBLPHPPEMOHON.NAMA), '&', '&#38;')), ',') AS NAMA,
+	REPLACE(INITCAP(REPLACE(TRIM(TBLPHPPEMOHON.ALAMAT1_TETAP), '&', '&#38;')), ',') AS ALAMAT1,
+	REPLACE(INITCAP(REPLACE(TRIM(TBLPHPPEMOHON.ALAMAT2_TETAP), '&', '&#38;')), ',') AS ALAMAT2,
+	REPLACE(INITCAP(REPLACE (TRIM(TBLPHPPEMOHON.ALAMAT3_TETAP), '&', '&#38;')), ',') AS ALAMAT3,
+	TBLPHPPEMOHON.POSKOD_TETAP AS POSKOD, INITCAP(TBLRUJBANDAR.KETERANGAN) AS BANDAR, INITCAP(TBLRUJNEGERI.NAMA_NEGERI) AS NEGERI,
     TBLPHPPEMOHON.NO_PENGENALAN,
     REPLACE (TBLPFDFAIL.TAJUK_FAIL, 'PERMOHONAN', '') AS TAJUK_FAIL,
     TBLPHPNOTISHASIL.JUMLAH_TUNGGAKAN, TBLPHPBAYARANPERLUDIBAYAR.DEPOSIT,
     TBLPHPHASIL.ID_HASIL, TBLPHPNOTISHASIL.BIL_PERINGATAN,
     TBLPHPHASIL.MAKLUMAT_LOT, TBLPHPHASIL.TUJUAN,
-    TBLPHPAKAUN.NO_RESIT,TBLPHPAKAUN.ID_BANK,TBLRUJBANK.NAMA_BANK,TBLPHPAKAUN.NO_RUJUKAN,
-    TO_CHAR (TBLPHPAKAUN.TARIKH, 'DD') || ' ' || 
+    NVL((SELECT TBLPHPAKAUN.NO_RESIT FROM TBLPHPAKAUN  WHERE ROWNUM <=1 ),NULL) AS NO_RESIT,
+    NVL((SELECT TBLPHPAKAUN.ID_BANK FROM TBLPHPAKAUN  WHERE ROWNUM <=1 ),NULL) AS ID_BANK,
+    NVL((SELECT TBLPHPAKAUN.NO_RUJUKAN FROM TBLPHPAKAUN  WHERE ROWNUM <=1 ),NULL) AS NO_RUJUKAN,
+    NVL((SELECT TBLRUJBANK.NAMA_BANK FROM TBLRUJBANK,TBLPHPAKAUN  WHERE TBLRUJBANK.ID_BANK = TBLPHPAKAUN.ID_BANK AND ROWNUM <=1 ),NULL) AS NAMA_BANK,
+    NVL((SELECT TO_CHAR (TBLPHPAKAUN.TARIKH, 'DD') || ' ' || 
     CASE
         WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 01 THEN 'Januari' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
         WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 02 THEN 'Februari' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
@@ -90,7 +96,7 @@
         WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 10 THEN 'Oktober' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
         WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 11 THEN 'November' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
         WHEN TO_CHAR (TBLPHPAKAUN.TARIKH, 'MM') = 12 THEN 'Disember' || ' ' || TO_CHAR (TBLPHPAKAUN.TARIKH, 'YYYY')
-    END AS TARIKH_TRANSAKSI
+    END AS TARIKH_TRANSAKSI FROM TBLPHPAKAUN  WHERE ROWNUM <=1 ),NULL) AS TARIKH_TRANSAKSI
   FROM TBLPHPNOTISHASIL,
        TBLPHPHASIL,
        TBLPFDFAIL,
@@ -132,8 +138,8 @@
 	<field name="TUJUAN" class="java.lang.String"/>
 	<field name="NO_RESIT" class="java.lang.String"/>
 	<field name="ID_BANK" class="java.lang.String"/>
-	<field name="NAMA_BANK" class="java.lang.String"/>
 	<field name="NO_RUJUKAN" class="java.lang.String"/>
+	<field name="NAMA_BANK" class="java.lang.String"/>
 	<field name="TARIKH_TRANSAKSI" class="java.lang.String"/>
 
 		<background>
@@ -233,18 +239,18 @@
 					<bottomPen lineWidth="0.25"/>
 					<rightPen lineWidth="0.25"/>
 </box>
-					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+					<textElement textAlignment="Left" verticalAlignment="Top" markup="styled" lineSpacing="Single">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["PERMOHONAN UNTUK MENDAPATKAN SEMULA WANG BAYARAN HASIL:-\n\n"+
 "NAMA PENYEWA : "+$F{NAMA}.toUpperCase()+"\n"+
 "JENIS PENYEWAAN : TANAH\n"+
 "ALAMAT : "+
-($F{ALAMAT1}!=null ? $F{ALAMAT1}+",":"").toUpperCase()
-+($F{ALAMAT2}!=null ? $F{ALAMAT2}+",":"").toUpperCase()
-+($F{ALAMAT3}!=null ? $F{ALAMAT3}+",":"").toUpperCase()
+($F{ALAMAT1}!=null ? $F{ALAMAT1}+", ":"").toUpperCase()
++($F{ALAMAT2}!=null ? $F{ALAMAT2}+", ":"").toUpperCase()
++($F{ALAMAT3}!=null ? $F{ALAMAT3}+", ":"").toUpperCase()
 +($F{POSKOD}!=null ? $F{POSKOD}+" ":"").toUpperCase()
-+($F{BANDAR}!=null ? $F{BANDAR}+",":"").toUpperCase()
++($F{BANDAR}!=null ? $F{BANDAR}+", ":"").toUpperCase()
 +($F{NEGERI} !=null ? $F{NEGERI}:"").toUpperCase()]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
