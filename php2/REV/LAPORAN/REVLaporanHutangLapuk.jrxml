@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="REVLaporanHutangLapuk" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="3aeefae7-a608-4d85-9728-3184d4db9e34">
 	<property name="ireport.zoom" value="1.4641000000000006"/>
-	<property name="ireport.x" value="381"/>
+	<property name="ireport.x" value="478"/>
 	<property name="ireport.y" value="0"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
@@ -12,8 +12,11 @@
 	<queryString>
 		<![CDATA[SELECT DISTINCT TBLPHPHASIL.ID_HASIL, TBLPHPPEMOHON.NAMA AS NAMA_PEMOHON, TBLBULAN.BULAN, TBLABT.USIAABT,
 TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA) AS TARIKH_MULA, TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT) AS TARIKH_TAMAT,
-TBLRUJKEMENTERIAN.NAMA_KEMENTERIAN, TBLPHPHASIL.TUJUAN, TBLPHPBAYARANPERLUDIBAYAR.BAYARAN, TBLBULAN.TUNGGAKAN, TBLPHPHASIL.MAKLUMAT_LOT
+TBLRUJKEMENTERIAN.NAMA_KEMENTERIAN, TBLPHPHASIL.TUJUAN, TBLPHPBAYARANPERLUDIBAYAR.BAYARAN, TBLBULAN.TUNGGAKAN, TBLPHPHASIL.MAKLUMAT_LOT,
+ABT.USIAABT AS USIA
 FROM TBLPFDFAIL, TBLPHPHASIL, TBLPHPPEMOHON, TBLPHPBAYARANPERLUDIBAYAR, TBLRUJKEMENTERIAN, TBLPHPAKAUN,
+(SELECT MONTHS_BETWEEN(SYSDATE,MAX(TARIKH)) AS USIAABT, ID_HASIL FROM TBLPHPAKAUN WHERE ID_JENISBAYARAN = 10 AND FLAG_AKTIF = 'Y'
+AND ID_JENISTRANSAKSI = 2 GROUP BY ID_HASIL) ABT,
 (SELECT TBLPHPHASIL.ID_HASIL, TBLPHPBAYARANPERLUDIBAYAR.BAYARAN,
 TO_NUMBER (CEIL((SUM (NVL (DEBIT, 0)) - SUM (NVL (KREDIT, 0))) / TBLPHPBAYARANPERLUDIBAYAR.BAYARAN), '999,999,990.99') AS BULAN,
 TO_CHAR ((SUM (NVL (DEBIT, 0)) - SUM (NVL (KREDIT, 0))),'999,999,990.99') AS TUNGGAKAN
@@ -44,6 +47,7 @@ WHERE TBLPFDFAIL.ID_FAIL = TBLPHPHASIL.ID_FAIL
 AND TBLPHPHASIL.ID_PEMOHON = TBLPHPPEMOHON.ID_PEMOHON(+)
 AND TBLPHPHASIL.ID_HASIL = TBLBULAN.ID_HASIL(+)
 AND TBLPHPHASIL.ID_HASIL = TBLABT.ID_HASIL(+)
+AND TBLPHPHASIL.ID_HASIL = ABT.ID_HASIL
 AND TBLPFDFAIL.ID_KEMENTERIAN = TBLRUJKEMENTERIAN.ID_KEMENTERIAN(+)
 AND TBLPHPHASIL.ID_HASIL = TBLPHPBAYARANPERLUDIBAYAR.ID_HASIL(+)
 AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_PERJANJIAN = 'U'
@@ -63,6 +67,7 @@ AND TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT,'YYYY') = $P{TAHUN}]]>
 	<field name="BAYARAN" class="java.math.BigDecimal"/>
 	<field name="TUNGGAKAN" class="java.lang.String"/>
 	<field name="MAKLUMAT_LOT" class="java.lang.String"/>
+	<field name="USIA" class="java.math.BigDecimal"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -313,7 +318,7 @@ AND TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT,'YYYY') = $P{TAHUN}]]>
 				<textFieldExpression><![CDATA[($F{TUJUAN} != null ? $F{TUJUAN} : "")]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00" isBlankWhenNull="true">
-				<reportElement uuid="b55c64f5-8a51-45e5-9355-dd5fd5565103" key="textField-2" x="497" y="0" width="79" height="40"/>
+				<reportElement uuid="b55c64f5-8a51-45e5-9355-dd5fd5565103" key="textField-2" x="498" y="0" width="78" height="40"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -327,7 +332,7 @@ AND TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT,'YYYY') = $P{TAHUN}]]>
 				<textFieldExpression><![CDATA[($F{BAYARAN} != null ? $F{BAYARAN} : "")]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0" isBlankWhenNull="true">
-				<reportElement uuid="18a6460f-7f60-47d8-8463-be73ea317315" key="textField-3" x="576" y="0" width="76" height="40"/>
+				<reportElement uuid="18a6460f-7f60-47d8-8463-be73ea317315" key="textField-3" x="652" y="0" width="85" height="40"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -338,10 +343,10 @@ AND TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT,'YYYY') = $P{TAHUN}]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="7"/>
 				</textElement>
-				<textFieldExpression><![CDATA[($F{BULAN} != null ? $F{BULAN} : "")]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{USIA} != null ? $F{USIA} : "")]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0" isBlankWhenNull="true">
-				<reportElement uuid="a291298e-652b-495d-a34c-0b056dd82c5e" key="textField-4" x="652" y="0" width="86" height="40"/>
+				<reportElement uuid="a291298e-652b-495d-a34c-0b056dd82c5e" key="textField-4" x="576" y="0" width="76" height="40"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -355,7 +360,7 @@ AND TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT,'YYYY') = $P{TAHUN}]]>
 				<textFieldExpression><![CDATA[($F{USIAABT} != null ? $F{USIAABT} : "")]]></textFieldExpression>
 			</textField>
 			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
-				<reportElement uuid="bc72537a-db65-4063-aece-93b8b69b8804" key="textField-5" x="738" y="0" width="64" height="40"/>
+				<reportElement uuid="bc72537a-db65-4063-aece-93b8b69b8804" key="textField-5" x="737" y="0" width="65" height="40"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
