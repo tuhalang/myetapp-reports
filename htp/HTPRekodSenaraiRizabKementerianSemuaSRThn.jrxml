@@ -23,12 +23,14 @@ SELECT LOT.KETERANGAN AS JENIS_LOT,TPH.NO_LOT,TO_CHAR(TPH.TARIKH_TERIMA,'dd/mm/y
 ,RK.NAMA_KEMENTERIAN
 ,RM.NAMA_MUKIM,RD.NAMA_DAERAH,RN.NAMA_NEGERI
 ,NVL(SEK.NAMA_SEKSYENUPI,'TIADA') NAMA_SEKSYEN
+,RA.NAMA_AGENSI
 FROM TBLHTPHAKMILIK TPH
 ,TBLRUJLOT LOT,TBLRUJJENISHAKMILIK RJH
 ,TBLRUJNEGERI RN,TBLRUJDAERAH RD,TBLRUJMUKIM RM
 ,TBLHTPHAKMILIKAGENSI TPHA
 ,TBLRUJKEMENTERIAN RK,TBLRUJKEMENTERIANMAPPING RKME
 ,TBLRUJSEKSYENUPI SEK
+,TBLRUJAGENSI RA
 WHERE TPH.ID_HAKMILIK = TPHA.ID_HAKMILIK
 AND TPHA.STATUS ='Y'
 AND TPHA.ID_KEMENTERIAN=RKME.ID_KEMENTERIANLAMA
@@ -39,16 +41,15 @@ AND TPH.ID_DAERAH = RD.ID_DAERAH
 AND TPH.ID_NEGERI = RN.ID_NEGERI
 AND TPH.ID_JENISHAKMILIK = RJH.ID_JENISHAKMILIK
 AND TPH.ID_LOT = LOT. ID_LOT
-AND TPH.ID_SEKSYENUPI = SEK.ID_SEKSYENUPI(+)
+AND TPHA.ID_AGENSI = RA.ID_AGENSI
 AND NVL(TPH.NO_WARTA,' ') <> ' '
 AND TPH.STATUS_SAH IN (
-    SELECT STATUS_SAH FROM TBLHTPRUJSTATUSAH
-   	WHERE AKTIF=1
+    SELECT STATUS_SAH FROM TBLHTPRUJSTATUSAH WHERE AKTIF=1
 )
+AND TPH.ID_SEKSYENUPI = SEK.ID_SEKSYENUPI(+)
 --AND RK.ID_KEMENTERIAN =2
 AND RK.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
-AND TO_CHAR(NVL(TPH.TARIKH_TERIMA,SYSDATE),'YYYY') = '$P!{TAHUN}'
---AND TO_CHAR(NVL(TPH.TARIKH_TERIMA,SYSDATE),'MM') BETWEEN '$P!{BULANMM}' AND '$P!{BULANTAMAT}
+--AND TO_CHAR(NVL(TPH.TARIKH_TERIMA,SYSDATE),'YYYY') = '$P!{TAHUN}'
 ORDER BY TPH.ID_NEGERI,TPH.ID_DAERAH,TPH.ID_MUKIM]]>
 	</queryString>
 	<field name="JENIS_LOT" class="java.lang.String"/>
@@ -66,6 +67,7 @@ ORDER BY TPH.ID_NEGERI,TPH.ID_DAERAH,TPH.ID_MUKIM]]>
 	<field name="NAMA_DAERAH" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
 	<field name="NAMA_SEKSYEN" class="java.lang.String"/>
+	<field name="NAMA_AGENSI" class="java.lang.String"/>
 	<variable name="JUMLAH_LUAS" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{LUAS}]]></variableExpression>
 		<initialValueExpression><![CDATA[0]]></initialValueExpression>
@@ -143,7 +145,7 @@ ORDER BY TPH.ID_NEGERI,TPH.ID_DAERAH,TPH.ID_MUKIM]]>
 				<text><![CDATA[TARIKH TERIMA]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="02d08203-52d5-4c50-90e6-755021d26599" key="staticText-209" mode="Opaque" x="430" y="0" width="303" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="02d08203-52d5-4c50-90e6-755021d26599" key="staticText-209" mode="Opaque" x="530" y="0" width="203" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -229,6 +231,34 @@ SEKSYEN]]></text>
 				</textElement>
 				<text><![CDATA[NEGERI]]></text>
 			</staticText>
+			<staticText>
+				<reportElement uuid="3c5006c1-553c-4024-bacd-38ce5909e540" key="staticText-211" mode="Opaque" x="430" y="0" width="100" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[AGENSI]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3c5006c1-553c-4024-bacd-38ce5909e540" key="staticText-211" mode="Opaque" x="430" y="0" width="100" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[AGENSI]]></text>
+			</staticText>
 		</band>
 	</pageHeader>
 	<columnHeader>
@@ -261,19 +291,6 @@ SEKSYEN]]></text>
 					<font fontName="Arial" size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{NO_HAKMILIK}!=null?$F{NO_HAKMILIK}:"")]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="306f1544-dfbc-4d22-8bc0-a5ecc872ba4c" key="textField-5" positionType="Float" stretchType="RelativeToTallestObject" x="430" y="0" width="303" height="20"/>
-				<box topPadding="1" leftPadding="1" bottomPadding="1" rightPadding="1">
-					<topPen lineWidth="0.5"/>
-					<leftPen lineWidth="0.5"/>
-					<bottomPen lineWidth="0.5"/>
-					<rightPen lineWidth="0.5"/>
-				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Arial" size="7"/>
-				</textElement>
-				<textFieldExpression><![CDATA[($F{KEGUNAAN_TANAH}!=null?$F{KEGUNAAN_TANAH}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
 				<reportElement uuid="f7c04e21-2f43-490b-a8b6-3be145c0c1d6" key="textField-8" positionType="Float" stretchType="RelativeToTallestObject" x="150" y="0" width="60" height="20"/>
@@ -368,6 +385,32 @@ SEKSYEN]]></text>
 					<font fontName="Arial" size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{NAMA_NEGERI}!=null?$F{NAMA_NEGERI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="306f1544-dfbc-4d22-8bc0-a5ecc872ba4c" key="textField-5" positionType="Float" stretchType="RelativeToTallestObject" x="530" y="0" width="203" height="20"/>
+				<box topPadding="1" leftPadding="1" bottomPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{KEGUNAAN_TANAH}!=null?$F{KEGUNAAN_TANAH}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="c398ecff-61ab-4c85-94bf-e24312ef628b" key="textField-12" positionType="Float" stretchType="RelativeToTallestObject" x="430" y="0" width="100" height="20"/>
+				<box topPadding="1" leftPadding="1" bottomPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_AGENSI}!=null?$F{NAMA_AGENSI}:"")]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
