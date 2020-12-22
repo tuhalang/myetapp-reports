@@ -79,7 +79,9 @@
          D.ALAMAT3_TETAP AS ALAMAT3_PEMOHON, D.POSKOD_TETAP AS POSKOD_PEMOHON,
          UPPER (H.KETERANGAN) AS BANDAR_PEMOHON,
          I.NAMA_NEGERI AS NEGERI_PEMOHON, UPPER (E.USER_NAME) USER_NAME,
-         G.KETERANGAN, B.ID_JENISBAYARAN
+         G.KETERANGAN, B.ID_JENISBAYARAN, K.USER_NAME AS NAMA_PENYEDIA, J.TARIKH_PENYEDIA,
+         L.USER_NAME AS NAMA_PENYEMAK, J.TARIKH_PENYEMAK, M.USER_NAME AS NAMA_PELULUS, J.TARIKH_PELULUS,
+         O.KETERANGAN AS JAWATAN_PENYEDIA, Q.KETERANGAN AS JAWATAN_PENYEMAK ,S.KETERANGAN AS JAWATAN_PELULUS
     FROM TBLPHPHASIL A LEFT JOIN TBLPHPAKAUN B ON A.ID_HASIL = B.ID_HASIL
          LEFT JOIN TBLPFDFAIL C ON A.ID_FAIL = C.ID_FAIL
          LEFT JOIN TBLPHPPEMOHON D ON D.ID_PEMOHON = A.ID_PEMOHON
@@ -88,12 +90,21 @@
          LEFT JOIN TBLRUJJAWATAN G ON F.ID_JAWATAN = G.ID_JAWATAN
          LEFT OUTER JOIN TBLRUJBANDAR H ON D.ID_BANDARTETAP = H.ID_BANDAR
          LEFT OUTER JOIN TBLRUJNEGERI I ON H.ID_NEGERI = I.ID_NEGERI
+         LEFT JOIN TBLPHPLOGPENYERAHAN J ON A.ID_HASIL = J.ID_HASIL
+         LEFT JOIN USERS K ON J.ID_PENYEDIA = K.USER_ID
+         LEFT JOIN USERS_INTERNAL N ON K.USER_ID = N.USER_ID
+         LEFT JOIN TBLRUJJAWATAN O ON N.ID_JAWATAN = O.ID_JAWATAN
+         LEFT JOIN USERS L ON J.ID_PENYEMAK = L.USER_ID
+         LEFT JOIN USERS_INTERNAL P ON L.USER_ID = P.USER_ID
+         LEFT JOIN TBLRUJJAWATAN Q ON P.ID_JAWATAN = Q.ID_JAWATAN
+         LEFT JOIN USERS M ON J.ID_PELULUS = M.USER_ID
+         LEFT JOIN USERS_INTERNAL R ON M.USER_ID = R.USER_ID
+         LEFT JOIN TBLRUJJAWATAN S ON R.ID_JAWATAN = S.ID_JAWATAN
    WHERE B.ID_JENISBAYARAN IN (9, 10, 37)
      AND B.ID_CARABAYAR IN (1, 3, 4, 5, 9, 11)
      AND B.FLAG_AKTIF = 'Y'
      AND C.ID_URUSAN = '115'
      AND A.ID_HASIL = $P!{ID_HASIL}
-     AND B.ID_MASUK = $P!{ID_PEGAWAI}
      AND B.ID_MOD_BAYARAN = '$P!{ID_MOD_BAYARAN}'
      AND TO_DATE(B.TARIKH) BETWEEN TO_DATE('$P!{TARIKH_DARI}', 'dd/mm/yyyy') AND TO_DATE('$P!{TARIKH_HINGGA}','dd/mm/yyyy')
 ORDER BY B.TARIKH, B.ID_AKAUN ASC]]></queryString>
@@ -121,6 +132,15 @@ ORDER BY B.TARIKH, B.ID_AKAUN ASC]]></queryString>
 	<field name="USER_NAME" class="java.lang.String"/>
 	<field name="KETERANGAN" class="java.lang.String"/>
 	<field name="ID_JENISBAYARAN" class="java.math.BigDecimal"/>
+	<field name="NAMA_PENYEDIA" class="java.lang.String"/>
+	<field name="TARIKH_PENYEDIA" class="java.sql.Timestamp"/>
+	<field name="NAMA_PENYEMAK" class="java.lang.String"/>
+	<field name="TARIKH_PENYEMAK" class="java.sql.Timestamp"/>
+	<field name="NAMA_PELULUS" class="java.lang.String"/>
+	<field name="TARIKH_PELULUS" class="java.sql.Timestamp"/>
+	<field name="JAWATAN_PENYEDIA" class="java.lang.String"/>
+	<field name="JAWATAN_PENYEMAK" class="java.lang.String"/>
+	<field name="JAWATAN_PELULUS" class="java.lang.String"/>
 
 	<variable name="TOTAL_TANAH" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
 		<variableExpression><![CDATA[($F{ID_JENISBAYARAN}.intValue()==10 && $F{FLAG_SUBURUSAN}.equals("T") ? $F{KREDIT} : null)
@@ -1057,7 +1077,7 @@ Tandatangan
 					<textElement>
 						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{KETERANGAN} == null ? " " : $F{KETERANGAN}.trim())+ "\n"]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{JAWATAN_PENYEDIA} == null ? " " : $F{JAWATAN_PENYEDIA}.trim())+ "\n"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -1096,9 +1116,9 @@ Tandatangan
 					<textElement>
 						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{USER_NAME} == null ? " " : $F{USER_NAME}.trim())]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PENYEDIA} == null ? " " : $F{NAMA_PENYEDIA}.trim())]]></textFieldExpression>
 				</textField>
-				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="32"
 						y="45"
@@ -1109,7 +1129,7 @@ Tandatangan
 					<textElement>
 						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format(new Date())]]></textFieldExpression>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{TARIKH_PENYEDIA}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -1174,7 +1194,7 @@ Tandatangan
 					<textElement>
 						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($P{JAWATAN_PEGAWAI_PENYEMAK} == null ? " " : $P{JAWATAN_PEGAWAI_PENYEMAK}.trim())]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{JAWATAN_PENYEMAK} == null ? " " : $F{JAWATAN_PENYEMAK}.trim())]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -1213,9 +1233,9 @@ Tandatangan
 					<textElement>
 						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($P{NAMA_PEGAWAI_PENYEMAK} == null ? " " : $P{NAMA_PEGAWAI_PENYEMAK}.trim())]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PENYEMAK} == null ? " " : $F{NAMA_PENYEMAK}.trim())]]></textFieldExpression>
 				</textField>
-				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="229"
 						y="45"
@@ -1226,7 +1246,7 @@ Tandatangan
 					<textElement>
 						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format(new Date())]]></textFieldExpression>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{TARIKH_PENYEMAK}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -1291,7 +1311,7 @@ Tandatangan
 					<textElement>
 						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($P{JAWATAN_PEGAWAI_PENGESAH} == null ? " " : $P{JAWATAN_PEGAWAI_PENGESAH}.trim())]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{JAWATAN_PELULUS} == null ? " " : $F{JAWATAN_PELULUS}.trim())]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -1330,9 +1350,9 @@ Tandatangan
 					<textElement>
 						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($P{NAMA_PEGAWAI_PENGESAH} == null ? " " : $P{NAMA_PEGAWAI_PENGESAH}.trim())]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PELULUS} == null ? " " : $F{NAMA_PELULUS}.trim())]]></textFieldExpression>
 				</textField>
-				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="426"
 						y="45"
@@ -1343,7 +1363,7 @@ Tandatangan
 					<textElement>
 						<font pdfFontName="Helvetica-Bold" size="7" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format(new Date())]]></textFieldExpression>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{TARIKH_PELULUS}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
