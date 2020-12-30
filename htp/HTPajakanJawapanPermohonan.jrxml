@@ -11,10 +11,10 @@
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="idpermohonan" class="java.lang.String"/>
 	<parameter name="namaPegawai" class="java.lang.String"/>
-	<parameter name="NO_TELEFON" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="jawatanPegawai" class="java.lang.String"/>
 	<parameter name="emelPegawai" class="java.lang.String"/>
 	<parameter name="UP" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="noTelefon" class="java.lang.String" isForPrompting="false"/>
 	<queryString>
 		<![CDATA[SELECT   PP.NO_RUJUKAN_LAIN, A.NO_FAIL,
     TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
@@ -49,9 +49,13 @@
         END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM
 ,INITCAP(PM.NAMA_PEMOHON) AS NAMA_PEMOHON
 ,PM. POSKOD, INITCAP(BDR.KETERANGAN) AS NAMA_BANDAR
-,GETNEGERIWILAYAH(PRN.ID_NEGERI) NAMA_NEGERI,
-REPLACE(REPLACE(B.TUJUAN,'&','&#38;'),'@','&#64;') AS TAJUK_BWH
-,REPLACE(REPLACE(A.TAJUK_FAIL,'&','&#38;'),'@','&#64;') AS TAJUK_FAIL
+,CASE
+    WHEN PM.ID_NEGERI = 14 OR PM.ID_NEGERI = 15 OR PM.ID_NEGERI = 16 THEN GETNEGERIWILAYAH(PRN.ID_NEGERI)
+    WHEN PM.ID_NEGERI = 05 THEN 'NEGERI SEMBILAN'
+    ELSE CONCAT('NEGERI ' ,INITCAP(PRN.NAMA_NEGERI) )
+  END AS NAMA_NEGERI,
+REPLACE(REPLACE(INITCAP(B.TUJUAN),'&','&#38;'),'@','&#64;') AS TAJUK_BWH
+,REPLACE(REPLACE(INITCAP(A.TAJUK_FAIL),'&','&#38;'),'@','&#64;') AS TAJUK_FAIL
 ,INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON1,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON1
 ,INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON2,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON2
 ,INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON3,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON3
@@ -101,9 +105,8 @@ WHERE B.ID_FAIL = A.ID_FAIL
 +($F{ALAMAT_PEMOHON1}!=null?$F{ALAMAT_PEMOHON1}+"\n":"")
 +($F{ALAMAT_PEMOHON2}!=null?$F{ALAMAT_PEMOHON2}+"\n":"")
 +($F{ALAMAT_PEMOHON3}!=null?$F{ALAMAT_PEMOHON3}+"\n":"")
-+"<style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{POSKOD}!=null?$F{POSKOD}+" ":"")
-+($F{NAMA_NEGERI}!=null?$F{NAMA_NEGERI}.toUpperCase():"")+"</style>"
-+(!$P{UP}.equals("TIADA")? "\n(U/P. "+$P{UP}+")":"")]]></textFieldExpression>
++($F{POSKOD}!=null?$F{POSKOD}+" ":"") + ($F{NAMA_BANDAR}!=null?$F{NAMA_BANDAR}+"\n":"")
++"<style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NAMA_NEGERI}!=null?$F{NAMA_NEGERI}.toUpperCase():"")+"</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
 				<reportElement uuid="e132618d-65b4-414a-9bbf-78fa5be481ee" key="textField-58" positionType="Float" x="50" y="75" width="435" height="15"/>
@@ -205,14 +208,14 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				<subreportParameter name="emelPegawai">
 					<subreportParameterExpression><![CDATA[$P{emelPegawai}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="NO_TELEFON">
-					<subreportParameterExpression><![CDATA[$P{NO_TELEFON}]]></subreportParameterExpression>
-				</subreportParameter>
 				<subreportParameter name="ReportDir">
 					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="namaPegawai">
 					<subreportParameterExpression><![CDATA[$P{namaPegawai}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="noTelefon">
+					<subreportParameterExpression><![CDATA[$P{noTelefon}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="idpermohonan">
 					<subreportParameterExpression><![CDATA[$P{idpermohonan}]]></subreportParameterExpression>

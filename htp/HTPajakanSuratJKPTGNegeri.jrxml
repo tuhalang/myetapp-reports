@@ -10,15 +10,15 @@
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="idpermohonan" class="java.lang.String"/>
 	<parameter name="namaPegawai" class="java.lang.String"/>
-	<parameter name="NO_TELEFON" class="java.lang.String"/>
+	<parameter name="noTelefon" class="java.lang.String"/>
 	<parameter name="jawatanPegawai" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="emelPegawai" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="BaseDir" class="java.lang.String"/>
 	<parameter name="UP" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT   PP.NO_RUJUKAN_LAIN, A.NO_FAIL,PRN.ID_NEGERI
-    ,TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
+		<![CDATA[SELECT   PP.NO_RUJUKAN_LAIN, A.NO_FAIL,PRN.ID_NEGERI, INITCAP(JT.KETERANGAN) AS JENISTANAH,
+    TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
         CASE
            WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
            WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'Februari'
@@ -68,7 +68,8 @@ FROM TBLPFDFAIL A,
          --TBLHTPPEMOHON PM,
          TBLRUJPEJABATJKPTG PM,
          TBLRUJBANDAR BDR,
-         TBLRUJNEGERI PRN
+         TBLRUJNEGERI PRN,
+         TBLRUJJENISTANAH JT
 WHERE B.ID_FAIL = A.ID_FAIL
      AND B.ID_PERMOHONAN = PP.ID_PERMOHONAN
      AND (A.ID_STATUS <> 999 OR A.ID_STATUS IS NULL)
@@ -77,11 +78,13 @@ WHERE B.ID_FAIL = A.ID_FAIL
      AND A.ID_SEKSYEN = PM.ID_SEKSYEN
      AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
      AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
+     AND PP.ID_JENISTANAH = JT.ID_JENISTANAH(+)
      AND B.ID_PERMOHONAN = $P{idpermohonan}]]>
 	</queryString>
 	<field name="NO_RUJUKAN_LAIN" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
+	<field name="JENISTANAH" class="java.lang.String"/>
 	<field name="HARI_SURAT" class="java.lang.String"/>
 	<field name="BULAN_SURAT" class="java.lang.String"/>
 	<field name="TAHUN_SURAT" class="java.lang.String"/>
@@ -110,14 +113,13 @@ WHERE B.ID_FAIL = A.ID_FAIL
 					<paragraph lineSpacing="Single"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Pengarah,\n"
-+($F{NAMA_PEMOHON}!=null?$F{NAMA_PEMOHON}+"\n":"")
++($F{NAMA_PEMOHON}!=null ? $F{NAMA_PEMOHON} + "\n": "")
 +"Cawangan "+($F{NAMA_NEGERI_ASAL}!=null?$F{NAMA_NEGERI_ASAL}+"\n":"")
 +($F{ALAMAT_PEMOHON1}!=null?$F{ALAMAT_PEMOHON1}+"\n":"")
 +($F{ALAMAT_PEMOHON2}!=null?$F{ALAMAT_PEMOHON2}+"\n":"")
 +($F{ALAMAT_PEMOHON3}!=null?$F{ALAMAT_PEMOHON3}+"\n":"")
 +"<style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{POSKOD}!=null?$F{POSKOD}+" ":"")
-+($F{NAMA_NEGERI}!=null?$F{NAMA_NEGERI}.toUpperCase():"")+"</style>"
-+(!$P{UP}.equals("TIADA")? "\n(U/P. "+$P{UP}+")":"")]]></textFieldExpression>
++($F{NAMA_NEGERI}!=null?$F{NAMA_NEGERI}.toUpperCase():"")+"</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
 				<reportElement uuid="87ebc5ea-661a-4147-bf77-68d947fcde6a" key="textField-58" positionType="Float" x="50" y="75" width="435" height="15"/>
@@ -133,7 +135,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Dengan hormatnya saya merujuk kepada perkara di atas."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Saya dengan hormatnya diarah merujuk kepada perkara di atas."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
 				<reportElement uuid="83dcb4c6-7d05-4d1c-995b-ec747a62422d" key="textField-61" positionType="Float" x="50" y="165" width="435" height="15"/>
@@ -157,13 +159,13 @@ WHERE B.ID_FAIL = A.ID_FAIL
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n2.\t  Sukacita dimaklumkan bahawa Jabatan ini telah menerima "
-+($F{TAJUK_BWH}!=null?$F{TAJUK_BWH}:"")+"."
-+" Oleh itu, sukacita dipohon kerjasama tuan untuk membuat"
+				<textFieldExpression><![CDATA["\n2.\t  Adalah dimaklumkan bahawa Jabatan ini telah menerima permohonan pajakan tanah bagi "
++($F{TAJUK_BWH}!=null?$F{TAJUK_BWH}:"")
+
++" Oleh itu, sukacita dipohon kerjasama tuan untuk menyediakan"
 +" <style isBold='true' pdfFontName='Helvetica-Bold'>laporan tanah</style>"
-+" dan mendapatkan"
-+" <style isBold='true' pdfFontName='Helvetica-Bold'>sijil carian rasmi</style>"
-+" bagi tanah tersebut ke Seksyen ini."]]></textFieldExpression>
++" bagi tanah tersebut ke bahagian ini."
++" Bersama-sama ini dikemukakan<style isBold='true' pdfFontName='Helvetica-Bold'> salinan hakmilik, pelan pra-hitungan (jika permohonan sebahagian tanah) dan salinan pelan tapak </style>untuk rujukan dan tindakan tuan selanjutnya."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="8d40c9dd-9e83-42f4-bc36-eb3a9078a1e6" key="textField-67" positionType="Float" x="235" y="38" width="93" height="15"/>
@@ -245,14 +247,14 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				<subreportParameter name="emelPegawai">
 					<subreportParameterExpression><![CDATA[$P{emelPegawai}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="NO_TELEFON">
-					<subreportParameterExpression><![CDATA[$P{NO_TELEFON}]]></subreportParameterExpression>
-				</subreportParameter>
 				<subreportParameter name="ReportDir">
 					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="namaPegawai">
 					<subreportParameterExpression><![CDATA[$P{namaPegawai}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="noTelefon">
+					<subreportParameterExpression><![CDATA[$P{noTelefon}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="idpermohonan">
 					<subreportParameterExpression><![CDATA[$P{idpermohonan}]]></subreportParameterExpression>
@@ -269,11 +271,10 @@ WHERE B.ID_FAIL = A.ID_FAIL
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n3.\t  Bersama-sama ini dikemukakan "
-+" <style isBold='true' pdfFontName='Helvetica-Bold'>salinan hakmilik</style>"
-+" dan"
-+" <style isBold='true' pdfFontName='Helvetica-Bold'>salinan pelan tapak</style>"
-+" untuk tindakan tuan selanjutnya."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n3.\tOleh yang demikian, sukacita sekiranya pihak tuan dapat "
++"memberikan laporan tanah dalam tempoh <style isBold='true'>30 hari</style> dari tarikh surat "
++"ini. Segala kerjasama dan perhatian segera pihak tuan dalam "
++"perkara ini amatlah dihargai dan didahului dengan ucapan terima kasih."]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
 				<reportElement uuid="d0d0d508-37dd-4e5f-a0ed-270cdc097872" key="subreport-3" positionType="Float" x="50" y="210" width="435" height="15"/>
