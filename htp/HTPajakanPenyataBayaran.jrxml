@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.4641000000000024"/>
 	<property name="ireport.x" value="43"/>
-	<property name="ireport.y" value="225"/>
+	<property name="ireport.y" value="97"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -15,10 +15,10 @@
 	<parameter name="NO_TELEFON" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="idpermohonan" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT NVL(FL.NO_FAIL_LAIN, A.NO_FAIL) NO_FAIL, REPLACE(REPLACE(INITCAP(A.TAJUK_FAIL),'&','&#38;'),'@','&#64;') AS TAJUK_FAIL
---,REPLACE(REPLACE(A.TAJUK_FAIL,'&','&#38;'),'@','&#64;') AS TAJUK_FAIL
+		<![CDATA[SELECT NVL(FL.NO_FAIL_LAIN, A.NO_FAIL) NO_FAIL
+--, REPLACE(REPLACE(INITCAP(A.TAJUK_FAIL),'&','&#38;'),'@','&#64;') AS TAJUK_FAIL
+,REPLACE(REPLACE(B.TUJUAN,'&','&#38;'),'@','&#64;') AS TAJUK_FAIL
     ,INITCAP(PM.NAMA_PEMOHON)AS NAMA_PEMOHON,PM. POSKOD, INITCAP(PM. NAMA_BANDAR)AS NAMA_BANDAR, INITCAP(PM.NAMA_NEGERI) AS NAMA_NEGERI,
-    INITCAP (REPLACE(REPLACE(A.TAJUK_FAIL,'&','&#38;'),'@','&#64;')) AS TAJUK_FAIL,
     INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON1,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON1,
     INITCAP (REPLACE(PM.ALAMAT_PEMOHON2,'@','&#64;')) AS ALAMAT_PEMOHON2,
     INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON3,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON3
@@ -99,17 +99,23 @@ FROM TBLPFDFAIL A,
     WHERE AGEN.ID_NEGERI = N.ID_NEGERI
     ) AGEN
 ,(SELECT
-HTPU.ID_PERMOHONAN, RTRIM(XMLAGG(XMLELEMENT(E,RH.KOD_JENIS_HAKMILIK||HTPU.NO_HAKMILIK|| ', ')).EXTRACT('//text()'),',') TANAH
+HTPU.ID_PERMOHONAN
 , RTRIM(XMLAGG(XMLELEMENT(E,RL.KETERANGAN||HTPU.NO_LOT|| ', ')).EXTRACT('//text()'),',') LOT
-, RTRIM(XMLAGG(XMLELEMENT(E,HTPU.LUAS || ' ' || L.KETERANGAN|| ', ')).EXTRACT('//text()'),',') LUAS_PAJAK
-, RTRIM(XMLAGG(XMLELEMENT(E,H.LUAS || ' ' || LH.KETERANGAN || ', ')).EXTRACT('//text()'),',') LUAS_ASAL
-FROM TBLHTPHAKMILIKURUSAN HTPU,TBLRUJJENISHAKMILIK RH,TBLRUJLOT RL, TBLHTPHAKMILIK H, TBLRUJLUAS L, TBLRUJLUAS LH
-WHERE RH.ID_JENISHAKMILIK=HTPU.ID_JENISHAKMILIK
-AND RL.ID_LOT=HTPU.ID_LOT
-AND H.PEGANGAN_HAKMILIK = HTPU.PEGANGAN_HAKMILIK
-AND HTPU.ID_LUAS = L.ID_LUAS
-AND H.ID_LUAS = LH.ID_LUAS
-GROUP BY HTPU.ID_PERMOHONAN) MT
+	, RTRIM(XMLAGG(XMLELEMENT(E,HTPU.LUAS || ' ' || L.KETERANGAN|| ', ')).EXTRACT('//text()'),',') LUAS_PAJAK
+	, RTRIM(XMLAGG(XMLELEMENT(E,HTPU.LUAS_ASAL || ' ' || L.KETERANGAN || ', ')).EXTRACT('//text()'),',') LUAS_ASAL
+	,CASE
+		WHEN RH.KOD_JENIS_HAKMILIK ='00'
+			THEN
+				RTRIM(XMLAGG(XMLELEMENT(E,HTPU.NO_WARTA||', ')).EXTRACT('//text()'),',')
+			ELSE
+				RTRIM(XMLAGG(XMLELEMENT(E,RH.KOD_JENIS_HAKMILIK||HTPU.NO_HAKMILIK||', ')).EXTRACT('//text()'),',')
+	END TANAH
+	FROM TBLHTPHAKMILIKURUSAN HTPU,TBLRUJJENISHAKMILIK RH,TBLRUJLOT RL, TBLRUJLUAS L
+	WHERE RH.ID_JENISHAKMILIK=HTPU.ID_JENISHAKMILIK
+	AND RL.ID_LOT=HTPU.ID_LOT
+	AND HTPU.ID_LUAS = L.ID_LUAS(+)
+	GROUP BY HTPU.ID_PERMOHONAN,RH.KOD_JENIS_HAKMILIK
+) MT
     ,TBLHTPFAILLAIN FL
 WHERE A.ID_FAIL = B.ID_FAIL
     AND B.ID_PERMOHONAN = PP.ID_PERMOHONAN(+)
@@ -141,7 +147,7 @@ WHERE A.ID_FAIL = B.ID_FAIL
 	<field name="HARI_BULAN_BAYAR" class="java.lang.String"/>
 	<field name="TARIKH_PATUT_BAYAR" class="java.lang.String"/>
 	<field name="TAHUN_PATUT_BAYAR" class="java.lang.String"/>
-	<field name="DENDA" class="java.lang.Double"/>
+	<field name="DENDA" class="java.math.BigDecimal"/>
 	<field name="KADAR_PAJAKAN" class="java.lang.String"/>
 	<field name="KMJAWATAN" class="java.lang.String"/>
 	<field name="KMNAMAMENTERI" class="java.lang.String"/>
@@ -388,7 +394,7 @@ WHERE A.ID_FAIL = B.ID_FAIL
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["No. Hakmilik"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["No. Hakmilik/ Warta"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
 				<reportElement uuid="978132e6-1418-4237-ad60-3c047a58312e" key="textField-63" positionType="Float" isPrintRepeatedValues="false" x="1" y="57" width="129" height="15"/>
