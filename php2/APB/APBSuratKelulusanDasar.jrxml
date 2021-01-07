@@ -36,8 +36,8 @@
        REPLACE(INITCAP(REPLACE(TRIM(TBLPHPPEMOHON.ALAMAT1_TETAP),'&','&#38;')),',') as ALAMAT_1,
        REPLACE(INITCAP(REPLACE(TRIM(TBLPHPPEMOHON.ALAMAT2_TETAP),'&','&#38;')),',') as ALAMAT_2,
        REPLACE(INITCAP(REPLACE(TRIM(TBLPHPPEMOHON.ALAMAT3_TETAP),'&','&#38;')),',') as ALAMAT_3,
-       TBLPHPPEMOHON.POSKOD_TETAP,INITCAP(TBLRUJBANDAR.KETERANGAN) AS BANDAR_PEMOHON, INITCAP(TBLRUJNEGERI.NAMA_NEGERI) AS NEGERI_PEMOHON,
-       TBLPERMOHONAN.NO_RUJ_SURAT,
+       TBLPHPPEMOHON.POSKOD_TETAP,INITCAP(TBLRUJBANDAR.KETERANGAN) AS BANDAR_PEMOHON, (TBLRUJNEGERI.NAMA_NEGERI) AS NEGERI_PEMOHON,
+       TBLPERMOHONAN.NO_RUJ_SURAT,TBLPHPKERTASKERJAAPB.NAMA_PTP,
        TO_CHAR(TBLPERMOHONAN.TARIKH_SURAT,'DD') || ' ' ||
         CASE
             WHEN TO_CHAR(TBLPERMOHONAN.TARIKH_SURAT,'MM')=01 THEN 'Januari' ||' '|| TO_CHAR(TBLPERMOHONAN.TARIKH_SURAT,'YYYY')
@@ -54,7 +54,8 @@
             WHEN TO_CHAR(TBLPERMOHONAN.TARIKH_SURAT,'MM')=12 THEN 'Disember' ||' '|| TO_CHAR(TBLPERMOHONAN.TARIKH_SURAT,'YYYY')
        END AS TARIKH_SURAT_PEMOHON, TBLPHPBYRNSYRTKLLSNLESENAPB.LUAS_KAWASAN, TBLPHPBYRNSYRTKLLSNLESENAPB.TEMPOH_KELULUSAN_DASAR
 
-  FROM TBLPFDFAIL, TBLPERMOHONAN, TBLPHPPEMOHON, TBLRUJBANDAR, TBLRUJNEGERI, TBLPHPBYRNSYRTKLLSNLESENAPB, TBLPHPPMOHONNJDUALPERTAMA,TBLRUJNEGERI NEGERI_PERAIRAN
+  FROM TBLPFDFAIL, TBLPERMOHONAN, TBLPHPPEMOHON, TBLRUJBANDAR, TBLRUJNEGERI, TBLPHPBYRNSYRTKLLSNLESENAPB, TBLPHPPMOHONNJDUALPERTAMA,TBLRUJNEGERI NEGERI_PERAIRAN,
+  TBLPHPKERTASKERJAAPB
 
  WHERE  TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL
         AND TBLPERMOHONAN.ID_PEMOHON = TBLPHPPEMOHON.ID_PEMOHON
@@ -63,7 +64,9 @@
         AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPBYRNSYRTKLLSNLESENAPB.ID_PERMOHONAN
         AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPMOHONNJDUALPERTAMA.ID_PERMOHONAN
         AND TBLPHPPMOHONNJDUALPERTAMA.ID_NEGERI_PERAIRAN = NEGERI_PERAIRAN.ID_NEGERI(+)
+        AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPKERTASKERJAAPB.ID_PERMOHONAN
         AND TBLPHPBYRNSYRTKLLSNLESENAPB.FLAG_AKTIF = 'Y'
+        AND TBLPHPKERTASKERJAAPB.FLAG_KERTAS = 2
     AND  TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL} --9201200188]]>
 	</queryString>
 	<field name="ID_FAIL" class="java.math.BigDecimal"/>
@@ -79,6 +82,7 @@
 	<field name="BANDAR_PEMOHON" class="java.lang.String"/>
 	<field name="NEGERI_PEMOHON" class="java.lang.String"/>
 	<field name="NO_RUJ_SURAT" class="java.lang.String"/>
+	<field name="NAMA_PTP" class="java.lang.String"/>
 	<field name="TARIKH_SURAT_PEMOHON" class="java.lang.String"/>
 	<field name="LUAS_KAWASAN" class="java.math.BigDecimal"/>
 	<field name="TEMPOH_KELULUSAN_DASAR" class="java.math.BigDecimal"/>
@@ -107,40 +111,40 @@
 					<font fontName="Arial" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Dengan hormatnya saya merujuk perkara di atas dan surat permohonan YBhg.Dato’/Tuan/Puan, "
+				<textFieldExpression><![CDATA["Dengan hormatnya saya merujuk perkara di atas dan surat permohonan YBhg. Dato’ Seri, "
 + ($F{NO_RUJ_SURAT} == null ? "" : $F{NO_RUJ_SURAT}) + " bertarikh "
 + ($F{TARIKH_SURAT_PEMOHON} == null ? "" : $F{TARIKH_SURAT_PEMOHON})
 + " adalah berkaitan.\n"
 
 + "\n2. \tSukacita dimaklumkan bahawa YB. Menteri Tenaga dan Sumber Asli telah"
-+ " meluluskan secara dasar permohonan YBhg.Dato’/Tuan/Puan dan kelulusan ini adalah"
++ " meluluskan secara dasar permohonan YBhg. Dato’ Seri dan kelulusan ini adalah"
 + " <style isBold='true' pdfFontName='Helvetica-Bold'>tertakluk kepada pematuhan syarat-syarat yang dinyatakan di Lampiran A</style> bagi kawasan"
 + " seluas <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{LUAS_KAWASAN} == null ? "" : $F{LUAS_KAWASAN}) + " km persegi</style> di "
 + "<style isBold='true' pdfFontName='Helvetica-Bold'>kawasan luar perairan Negeri "+($F{NEGERI_PERAIRAN}== null ? "" : $F{NEGERI_PERAIRAN}) +"</style>" +" sebagaimana pelan di"
 + "<style isBold='true' pdfFontName='Helvetica-Bold'> Lampiran B.</style>\n"
 
-+"\n3. \tSehubungan dengan itu, pihak YBhg.Dato’/Tuan/Puan dikehendaki mematuhi syarat-syarat yang"
++"\n3. \tSehubungan dengan itu, pihak YBhg. Dato’ Seri dikehendaki mematuhi syarat-syarat yang"
 + " dinyatakan di Lampiran A dalam tempoh (" + ($F{TEMPOH_KELULUSAN_DASAR} == null ? "6" : $F{TEMPOH_KELULUSAN_DASAR}) + ") bulan dari tarikh surat ini dikeluarkan."
 + " Sebarang perlanjutan tempoh kelulusan dasar ini hendaklah dipohon secara bertulis"
 + " sekurang-kurangnya (1) bulan sebelum tamat tempoh kelulusan dasar tersebut"
-+ " berserta dokumen-dokumen yang menunjukkan bahawa pihak YBhg.Dato’/Tuan/Puan telah mengambil tindakan"
++ " berserta dokumen-dokumen yang menunjukkan bahawa pihak YBhg. Dato’ Seri telah mengambil tindakan"
 + " untuk memenuhi syarat-syarat seperti yang dinyatakan di Lampiran A. Kelulusan perlanjutan"
 + " tempoh masa ini adalah tertakluk kepada budi bicara YB. Menteri Tenaga dan Sumber Asli"
 + " serta muktamad dan tidak boleh dicabar."
 
-+"\n\n4. \tSekiranya pihak YBhg.Dato’/Tuan/Puan gagal mematuhi perenggan 3 di atas, maka <style isBold='true' pdfFontName='Helvetica-Bold'>kelulusan"
++"\n\n4. \tSekiranya pihak YBhg. Dato’ Seri gagal mematuhi perenggan 3 di atas, maka <style isBold='true' pdfFontName='Helvetica-Bold'>kelulusan"
 + " dasar</style> ini adalah terbatal dengan sendirinya."
 
-+"\n\n5. \t<style isBold='true' pdfFontName='Helvetica-Bold'>Kelulusan dasar ini TIDAK membolehkan pihak YBhg.Dato’/Tuan/Puan menjalankan operasi bagi"
++"\n\n5. \t<style isBold='true' pdfFontName='Helvetica-Bold'>Kelulusan dasar ini TIDAK membolehkan pihak YBhg. Dato’ Seri menjalankan operasi bagi"
 + " mendapatkan pasir dari dasar laut</style> dan tidak mengikat Menteri / Kerajaan / Pesuruhjaya Tanah Persekutuan"
 + " dengan apa-apa ikatan atau tanggungan <i>(liability)</i> atau apa-apa tuntutan sekiranya"
-+ " permohonan pihak YBhg.Dato’/Tuan/Puan untuk mendapatkan lesen terpaksa ditolak oleh kerana kegagalan pihak YBhg.Dato’/Tuan/Puan"
++ " permohonan pihak YBhg. Dato’ Seri untuk mendapatkan lesen terpaksa ditolak oleh kerana kegagalan pihak YBhg. Dato’ Seri"
 + " mendapatkan kelulusan daripada Jabatan-jabatan yang dinyatakan di Lampiran A."
 
-+"\n\n6. \tSekiranya pihak YBhg.Dato’/Tuan/Puan telah mematuhi syarat-syarat yang dinyatakan di"
++"\n\n6. \tSekiranya pihak YBhg. Dato’ Seri telah mematuhi syarat-syarat yang dinyatakan di"
 + " Lampiran A, satu lesen berserta syarat-syarat yang perlu dipatuhi akan dikeluarkan"
 + " sepertimana yang  diperuntukan di bawah Seksyen 4 Akta Pelantar Benua 1966 bagi"
-+ " membolehkan pihak YBhg.Dato’/Tuan/Puan menjalankan operasi bagi mendapatkan pasir."
++ " membolehkan pihak YBhg. Dato’ Seri menjalankan operasi bagi mendapatkan pasir."
 
 +"\n\n7. \tSukacita dapat mengemukakan penerimaan tawaran ini dalam tempoh 21 hari daripada tarikh surat ini berserta carta perbatuan <i>(gantt chart)</i>"
 + " bagi cadangan pelaksanaan kajian-kajian yang disyaratkan dalam kelulusan dasar untuk makluman dan rekod Jabatan ini."
@@ -200,16 +204,17 @@
 					<font fontName="Arial" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n\nPengerusi\n"
+				<textFieldExpression><![CDATA["YBhg. Dato’ Seri " +($F{NAMA_PTP} !=null && $F{NAMA_PTP}!=""?$F{NAMA_PTP}:"")
++ "\nPengerusi\n"
 +""+($F{NAMA}!=null && $F{NAMA}!=""?$F{NAMA}+"\n":"")
-+""+($F{ALAMAT_1}!=null && $F{ALAMAT_1}!=""?$F{ALAMAT_1}+"\n":"")
-+""+($F{ALAMAT_2}!=null && $F{ALAMAT_2}!=""?$F{ALAMAT_2}+"\n":"")
-+""+($F{ALAMAT_3}!=null && $F{ALAMAT_3}!=""?$F{ALAMAT_3}+"\n":"")
++""+($F{ALAMAT_1}!=null && $F{ALAMAT_1}!=""?$F{ALAMAT_1}+"\n":"")+""
++($F{ALAMAT_2}!=null && $F{ALAMAT_2}!=""?$F{ALAMAT_2}+"\n":"")+""
++($F{ALAMAT_3}!=null && $F{ALAMAT_3}!=""?$F{ALAMAT_3}+"\n":"")
 +""+($F{BANDAR_PEMOHON}!=null && $F{BANDAR_PEMOHON}!=""?$F{BANDAR_PEMOHON}+"\n":"")
 +"<style isBold='true' pdfFontName='Helvetica-Bold'>"
 +(($F{POSKOD_TETAP}!=null && $F{NEGERI_PEMOHON}!=null) ? $F{POSKOD_TETAP}+" "+$F{NEGERI_PEMOHON}+"\n":($F{POSKOD_TETAP}==null && $F{NEGERI_PEMOHON}!=null) ? $F{NEGERI_PEMOHON}+"\n":($F{POSKOD_TETAP}!=null && $F{NEGERI_PEMOHON}==null) ? $F{POSKOD_TETAP}+"\n":"")
 +"</style>"
-+"\nYBhg.Dato’/Tuan/Puan,\n\n"]]></textFieldExpression>
++"\nYBhg. Dato’ Seri,\n\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="47e24e42-994c-41e7-a53b-5b7b6639accc" key="textField-30" positionType="Float" x="195" y="5" width="97" height="14"/>
