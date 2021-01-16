@@ -16,8 +16,8 @@
 	<parameter name="UP" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="noTelefon" class="java.lang.String" isForPrompting="false"/>
 	<queryString>
-		<![CDATA[SELECT   PP.NO_RUJUKAN_LAIN, A.NO_FAIL,
-    TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
+		<![CDATA[SELECT  B.ID_PERMOHONAN, A.NO_FAIL
+,TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
         CASE
            WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
            WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'Februari'
@@ -48,32 +48,48 @@
             WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 12 THEN 'Zulhijjah'
         END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM
 ,INITCAP(PM.NAMA_PEMOHON) AS NAMA_PEMOHON
-,PM. POSKOD, INITCAP(BDR.KETERANGAN) AS NAMA_BANDAR
-,CASE
-    WHEN PM.ID_NEGERI = 14 OR PM.ID_NEGERI = 15 OR PM.ID_NEGERI = 16 THEN GETNEGERIWILAYAH(PRN.ID_NEGERI)
-    WHEN PM.ID_NEGERI = 05 THEN 'NEGERI SEMBILAN'
-    ELSE CONCAT('NEGERI ' ,INITCAP(PRN.NAMA_NEGERI) )
-  END AS NAMA_NEGERI,
-REPLACE(REPLACE(INITCAP(B.TUJUAN),'&','&#38;'),'@','&#64;') AS TAJUK_BWH
-,REPLACE(REPLACE(INITCAP(A.TAJUK_FAIL),'&','&#38;'),'@','&#64;') AS TAJUK_FAIL
-,INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON1,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON1
-,INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON2,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON2
-,INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON3,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON3
+,PM. POSKOD
+,INITCAP(BDR.KETERANGAN) AS NAMA_BANDAR
+,GETNEGERIWILAYAH(PRN.ID_NEGERI) NAMA_NEGERI
+--
+,REPLACE(REPLACE(PM.ALAMAT_PEMOHON1,'&','&#38;'),'@','&#64;') AS ALAMAT_PEMOHON1
+,REPLACE(REPLACE(PM.ALAMAT_PEMOHON2,'&','&#38;'),'@','&#64;') AS ALAMAT_PEMOHON2
+,REPLACE(REPLACE(PM.ALAMAT_PEMOHON3,'&','&#38;'),'@','&#64;') AS ALAMAT_PEMOHON3
+,REPLACE(REPLACE(B.TUJUAN,'&','&#38;'),'@','&#64;') TUJUAN
+,NVL(MT.JENIS_TANAH,'') JENIS_TANAH
+,NVL(MT.JENIS_PAJAKAN,'') JENIS_PAJAKAN
+,NVL(PA.TEMPOH_PAJAKAN,0) TEMPOH
+--
 FROM TBLPFDFAIL A,
-         TBLPERMOHONAN B,
-         TBLHTPPERMOHONAN PP,
-         TBLHTPPEMOHON PM,
-         TBLRUJBANDAR BDR,
-         TBLRUJNEGERI PRN
+	TBLPERMOHONAN B,
+	TBLHTPPAJAKAN PA,
+  	TBLHTPPEMOHON PM,
+  	TBLRUJBANDAR BDR,
+ 	TBLRUJNEGERI PRN
+ 	,( SELECT MT.ID_PERMOHONAN
+ 	,CASE
+ 		WHEN MT.NO_HAKMILIK IS NOT NULL
+ 			THEN 'Tanah Milik'
+ 		ELSE 'Tanah Rizab'
+ 	END JENIS_TANAH
+ 	,CASE
+ 		WHEN NVL(MT.LUAS_BERSAMAAN,0) < NVL(MTR.LUAS_BERSAMAAN,0)
+ 			THEN 'sebahagian'
+ 		ELSE
+ 		'keseluruhan'
+ 	END JENIS_PAJAKAN
+ 	FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
+ 	WHERE MT.PEGANGAN_HAKMILIK = MTR.PEGANGAN_HAKMILIK(+)
+ 	) MT
 WHERE B.ID_FAIL = A.ID_FAIL
-     AND B.ID_PERMOHONAN = PP.ID_PERMOHONAN
-     AND (A.ID_STATUS <> 999 OR A.ID_STATUS IS NULL)
-     AND B.ID_PERMOHONAN = PM.ID_PERMOHONAN(+)
-     AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
-     AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
+	AND B.ID_PERMOHONAN = PA.ID_PERMOHONAN(+)
+  	AND B.ID_PERMOHONAN = PM.ID_PERMOHONAN(+)
+  	AND B.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
+	AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
+  	AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
      AND B.ID_PERMOHONAN = $P{idpermohonan}]]>
 	</queryString>
-	<field name="NO_RUJUKAN_LAIN" class="java.lang.String"/>
+	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="HARI_SURAT" class="java.lang.String"/>
 	<field name="BULAN_SURAT" class="java.lang.String"/>
@@ -85,11 +101,13 @@ WHERE B.ID_FAIL = A.ID_FAIL
 	<field name="POSKOD" class="java.lang.String"/>
 	<field name="NAMA_BANDAR" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
-	<field name="TAJUK_BWH" class="java.lang.String"/>
-	<field name="TAJUK_FAIL" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON1" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON2" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON3" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="JENIS_TANAH" class="java.lang.String"/>
+	<field name="JENIS_PAJAKAN" class="java.lang.String"/>
+	<field name="TEMPOH" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -138,7 +156,12 @@ WHERE B.ID_FAIL = A.ID_FAIL
 					<font fontName="Bookman Old Style" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{TAJUK_FAIL}!=null?$F{TAJUK_FAIL}.toUpperCase():"")+"</style>\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n<style isBold='true' pdfFontName='Helvetica-Bold'>PERMOHONAN PAJAKAN "
++$F{JENIS_PAJAKAN}.toUpperCase()
++" "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN BAGI TUJUAN"
++" "+$F{TUJUAN}.toUpperCase()+" OLEH "
++$F{NAMA_PEMOHON}.toUpperCase()+ " BAGI TEMPOH "
++$F{TEMPOH}+" TAHUN</style>\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
 				<reportElement uuid="b61d6127-e672-4ba1-81ca-cf157f4d529b" key="textField-66" positionType="Float" x="50" y="135" width="435" height="15"/>
@@ -146,7 +169,11 @@ WHERE B.ID_FAIL = A.ID_FAIL
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n2.\t  Adalah dimaklumkan bahawa surat daripada pihak tuan berkaitan "+($F{TAJUK_BWH}!=null?$F{TAJUK_BWH}:"")
+				<textFieldExpression><![CDATA["\n2.\t  Adalah dimaklumkan bahawa surat daripada pihak tuan berkaitan permohonan pajakan "
++$F{JENIS_TANAH}+" Persekutuan "
++$F{JENIS_PAJAKAN}+" selama "
++$F{TEMPOH}+" tahun bagi tujuan "
++$F{TUJUAN}
 +" beserta dokumen telah diterima dan permohonan tuan sedang dalam tindakan Jabatan ini."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
