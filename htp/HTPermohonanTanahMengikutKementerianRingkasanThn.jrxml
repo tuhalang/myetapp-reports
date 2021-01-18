@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPermohonanTanahRingkasanMengikutNegeriThnRange" pageWidth="595" pageHeight="842" columnWidth="523" leftMargin="42" rightMargin="30" topMargin="28" bottomMargin="28" uuid="ce4f119b-3534-4312-8285-e77f85d667ee">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPermohonanTanahRingkasanMengikutKementerianThnRange" pageWidth="595" pageHeight="842" columnWidth="523" leftMargin="42" rightMargin="30" topMargin="28" bottomMargin="28" uuid="ee4c1e4b-f308-47ec-8cd6-ca4665c35da8">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
@@ -8,35 +8,22 @@
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="isSubReport" class="java.lang.String" isForPrompting="false">
-		<defaultValueExpression><![CDATA["N"]]></defaultValueExpression>
-	</parameter>
 	<parameter name="TAHUN" class="java.lang.String"/>
-	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
-	<parameter name="BULANMM" class="java.lang.String"/>
-	<parameter name="BULANTAMAT" class="java.lang.String"/>
-	<parameter name="BULANSEMASA" class="java.lang.String"/>
-	<parameter name="BULANHINGGA" class="java.lang.String"/>
+	<parameter name="TAHUN_TAMAT" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT DISTINCT RN.ID_NEGERI
-,CASE
-    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 14
-	THEN 'W.P KUALA LUMPUR'
-    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 15
-	THEN 'W.P LABUAN'
-    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 16
-	THEN 'W.P PUTRAJAYA'
-    ELSE UPPER(TRIM(RN.NAMA_NEGERI))
-END NAMA
-,RN.KOD_MAMPU
-,RAM.BIL BIL_MILIK,RAR.BIL BIL_RIZAB
-FROM TBLRUJNEGERI RN
+		<![CDATA[SELECT DISTINCT RK.ID_KEMENTERIAN,RK.NAMA_KEMENTERIAN
+,RKM.BIL BIL_MILIK,RKR.BIL BIL_RIZAB
+FROM TBLRUJKEMENTERIANMAPPING RKM,TBLRUJKEMENTERIAN RK
 ,(
-    SELECT COUNT(*) BIL,F.ID_NEGERI
+ SELECT COUNT(*) BIL,RKI.ID_KEMENTERIAN
     FROM
-        TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
+        TBLRUJKEMENTERIAN RKI
+        ,TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
         ,TBLRUJSUBURUSANSTATUSFAIL SF,TBLRUJSUBURUSANSTATUS US,TBLRUJSTATUS S
-    WHERE P.ID_FAIL = F.ID_FAIL
+        ,TBLRUJKEMENTERIANMAPPING RKM
+    WHERE RKM.ID_KEMENTERIANLAMA = F.ID_KEMENTERIAN
+        AND RKM.ID_KEMENTERIANBARU = RKI.ID_KEMENTERIAN
+        AND P.ID_FAIL = F.ID_FAIL
         AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
         AND P.ID_PERMOHONAN = SF.ID_PERMOHONAN
         AND SF.ID_SUBURUSANSTATUS = US.ID_SUBURUSANSTATUS
@@ -44,17 +31,20 @@ FROM TBLRUJNEGERI RN
         AND SF.AKTIF = '1'
         AND ( F.ID_STATUS <> '999' OR F.ID_STATUS IS NULL)
         AND F.ID_URUSAN =1
-	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') BETWEEN '$P!{BULANMM}' AND '$P!{BULANTAMAT}'
-    	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') BETWEEN '$P!{TAHUN}' AND '$P!{TAHUNTAMAT}'
-        --AND RAM.ID_AGENSIBARU=2
-        GROUP BY F.ID_NEGERI
-) RAM
+	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
+    --	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') BETWEEN '$P!{TAHUN}' AND '$P!{TAHUN_TAMAT}'
+        GROUP BY RKI.ID_KEMENTERIAN
+) RKM
 ,(
-    SELECT COUNT(*) BIL,F.ID_NEGERI
+ SELECT COUNT(*) BIL,RKI.ID_KEMENTERIAN
     FROM
-        TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
+        TBLRUJKEMENTERIAN RKI
+        ,TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
         ,TBLRUJSUBURUSANSTATUSFAIL SF,TBLRUJSUBURUSANSTATUS US,TBLRUJSTATUS S
-    WHERE P.ID_FAIL = F.ID_FAIL
+        ,TBLRUJKEMENTERIANMAPPING RKM
+    WHERE RKM.ID_KEMENTERIANLAMA = F.ID_KEMENTERIAN
+        AND RKM.ID_KEMENTERIANBARU = RKI.ID_KEMENTERIAN
+        AND P.ID_FAIL = F.ID_FAIL
         AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
         AND P.ID_PERMOHONAN = SF.ID_PERMOHONAN
         AND SF.ID_SUBURUSANSTATUS = US.ID_SUBURUSANSTATUS
@@ -62,19 +52,18 @@ FROM TBLRUJNEGERI RN
         AND SF.AKTIF = '1'
         AND ( F.ID_STATUS <> '999' OR F.ID_STATUS IS NULL)
         AND F.ID_URUSAN =10
-        --AND RAM.ID_AGENSIBARU=2
-	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') BETWEEN '$P!{BULANMM}' AND '$P!{BULANTAMAT}'
-    	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') BETWEEN '$P!{TAHUN}' AND '$P!{TAHUNTAMAT}'
-        GROUP BY F.ID_NEGERI
-) RAR
-WHERE RN.ID_NEGERI = RAM.ID_NEGERI(+)
-    AND RN.ID_NEGERI = RAR.ID_NEGERI(+)
-    AND RN.ID_NEGERI NOT IN (17,0)
-ORDER BY RN.KOD_MAMPU]]>
+ 	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
+   	-- AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') BETWEEN '$P!{TAHUN}' AND '$P!{TAHUN_TAMAT}'
+        GROUP BY RKI.ID_KEMENTERIAN
+) RKR
+WHERE RKM.ID_KEMENTERIANBARU = RK.ID_KEMENTERIAN
+    AND RKM.STATUS = 'A'
+    AND RK.ID_KEMENTERIAN = RKM.ID_KEMENTERIAN(+)
+    AND RK.ID_KEMENTERIAN = RKR.ID_KEMENTERIAN(+)
+ORDER BY RK.NAMA_KEMENTERIAN]]>
 	</queryString>
-	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
-	<field name="NAMA" class="java.lang.String"/>
-	<field name="KOD_MAMPU" class="java.lang.String"/>
+	<field name="ID_KEMENTERIAN" class="java.math.BigDecimal"/>
+	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
 	<field name="BIL_MILIK" class="java.math.BigDecimal"/>
 	<field name="BIL_RIZAB" class="java.math.BigDecimal"/>
 	<variable name="BIL_MILIK_SELURUH" class="java.math.BigDecimal" calculation="Sum">
@@ -89,13 +78,12 @@ ORDER BY RN.KOD_MAMPU]]>
 	<title>
 		<band height="34" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="3f74f655-d8ed-4eea-b59c-05345e8e3a36" key="textField-14" x="0" y="0" width="523" height="24"/>
+				<reportElement uuid="a9be7321-8980-4eeb-92b9-291140cfd4d9" key="textField-13" x="0" y="0" width="523" height="24"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["SRINGKASAN PERMOHONAN PEMBERIMILIKAN/ PERIZAPAN MENGIKUT NEGERI"
-+"\n DARI "+$P{BULANSEMASA}+ " " +$P{TAHUN}
-+" HINGGA "+$P{BULANHINGGA}+ " " +$P{TAHUNTAMAT}]]></textFieldExpression>
+				<textFieldExpression><![CDATA["RINGKASAN PERMOHONAN PEMBERIMILIKAN/ PERIZAPAN MENGIKUT KEMENTERIAN"
++"\n TAHUN "+$P{TAHUN}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -105,7 +93,7 @@ ORDER BY RN.KOD_MAMPU]]>
 	<columnHeader>
 		<band height="24" splitType="Stretch">
 			<staticText>
-				<reportElement uuid="fcaaf524-94cb-42ab-8255-8605906fc137" key="staticText-4" mode="Opaque" x="5" y="0" width="30" height="24" backcolor="#CCCCCC"/>
+				<reportElement uuid="e5a4f8d8-bde2-4359-a280-469bbed3324c" key="staticText-4" mode="Opaque" x="5" y="0" width="30" height="24" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -119,7 +107,7 @@ ORDER BY RN.KOD_MAMPU]]>
 				<text><![CDATA[BIL.]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="57c66aa9-9c9b-4b70-b304-2c22e9776879" key="staticText-5" mode="Opaque" x="35" y="0" width="310" height="24" backcolor="#CCCCCC"/>
+				<reportElement uuid="bab81254-2ca5-4f47-ba8a-8b75db9fd0d3" key="staticText-5" mode="Opaque" x="35" y="0" width="310" height="24" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -130,10 +118,10 @@ ORDER BY RN.KOD_MAMPU]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[NEGERI]]></text>
+				<text><![CDATA[KEMENTERIAN]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="5272d9c2-03fe-4f2a-8561-6743c002123b" key="staticText-6" mode="Opaque" x="345" y="0" width="80" height="24" backcolor="#CCCCCC"/>
+				<reportElement uuid="6c649519-ff2f-4808-8aca-df44b66814f5" key="staticText-6" mode="Opaque" x="345" y="0" width="80" height="24" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -147,8 +135,8 @@ ORDER BY RN.KOD_MAMPU]]>
 				<text><![CDATA[PEMBERIMILIKAN]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="bc6482b6-85b3-441b-9474-256b77448c51" key="staticText-16" mode="Opaque" x="425" y="0" width="80" height="24" backcolor="#CCCCCC"/>
-				<box>
+				<reportElement uuid="a0a78610-5781-4c2b-a488-2ac86bac04ff" key="staticText-7" mode="Opaque" x="425" y="0" width="80" height="24" backcolor="#CCCCCC"/>
+				<box rightPadding="10">
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -165,7 +153,7 @@ ORDER BY RN.KOD_MAMPU]]>
 	<detail>
 		<band height="24" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="10a1802b-8bb8-44da-9c8d-31c8926244f0" key="textField-1" positionType="Float" stretchType="RelativeToBandHeight" x="35" y="0" width="310" height="24"/>
+				<reportElement uuid="ae50bff8-011f-4fac-b0fb-934f4b423ad0" key="textField-1" positionType="Float" stretchType="RelativeToBandHeight" x="35" y="0" width="310" height="24"/>
 				<box leftPadding="1" rightPadding="1">
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -175,10 +163,10 @@ ORDER BY RN.KOD_MAMPU]]>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{NAMA}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{NAMA_KEMENTERIAN}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="false">
-				<reportElement uuid="50ef7891-8ec0-4130-82e0-771683006e15" key="textField-2" positionType="Float" stretchType="RelativeToBandHeight" x="345" y="0" width="80" height="24"/>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="bbe94821-5354-4376-8bd0-db233bc2f9ea" key="textField-2" positionType="Float" stretchType="RelativeToBandHeight" x="345" y="0" width="80" height="24"/>
 				<box leftPadding="1" rightPadding="1">
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -191,7 +179,7 @@ ORDER BY RN.KOD_MAMPU]]>
 				<textFieldExpression><![CDATA[String.valueOf($F{BIL_MILIK}).equals("null")?new BigDecimal(0):$F{BIL_MILIK}]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
-				<reportElement uuid="f1c9dab4-f07f-420e-a2b2-daad0807111d" key="textField-3" positionType="Float" stretchType="RelativeToBandHeight" x="425" y="0" width="80" height="24"/>
+				<reportElement uuid="393084f2-3bd7-40dd-a7ef-6d0020af64f5" key="textField-3" positionType="Float" stretchType="RelativeToBandHeight" x="425" y="0" width="80" height="24"/>
 				<box leftPadding="1" rightPadding="1">
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -204,7 +192,7 @@ ORDER BY RN.KOD_MAMPU]]>
 				<textFieldExpression><![CDATA[String.valueOf($F{BIL_RIZAB}).equals("null")?new BigDecimal(0):$F{BIL_RIZAB}]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="58ccc9c9-2247-46b3-b56e-239c9056ae3c" key="textField-6" positionType="Float" stretchType="RelativeToBandHeight" x="5" y="0" width="30" height="24"/>
+				<reportElement uuid="c05d33e9-51ef-4ab1-b180-4d91bba3d743" key="textField-6" positionType="Float" stretchType="RelativeToBandHeight" x="5" y="0" width="30" height="24"/>
 				<box leftPadding="1" rightPadding="1">
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -224,36 +212,28 @@ ORDER BY RN.KOD_MAMPU]]>
 	<pageFooter>
 		<band height="18" splitType="Stretch">
 			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
-				<reportElement uuid="b3d2ccef-a20a-48f6-b537-018e9b0995c1" key="textField-9" x="60" y="0" width="100" height="18">
-					<printWhenExpression><![CDATA[new Boolean($P{isSubReport}.equals("N")?true:false)]]></printWhenExpression>
-				</reportElement>
+				<reportElement uuid="8e4350a6-27be-4f4f-bc63-2a738e6d7c95" key="textField-9" x="60" y="0" width="100" height="18"/>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement uuid="370b24bc-c083-4864-b03e-3cb3d78260b9" key="staticText-15" x="5" y="0" width="53" height="18">
-					<printWhenExpression><![CDATA[new Boolean($P{isSubReport}.equals("N")?true:false)]]></printWhenExpression>
-				</reportElement>
+				<reportElement uuid="4e2bcbe6-4a5a-4c0d-ac5c-50994e516e16" key="staticText-15" x="5" y="0" width="53" height="18"/>
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<text><![CDATA[Tarikh Cetak :]]></text>
 			</staticText>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="37fde8f8-a431-4828-a2f5-346fe485654d" key="textField-10" x="397" y="0" width="89" height="18">
-					<printWhenExpression><![CDATA[new Boolean($P{isSubReport}.equals("N")?true:false)]]></printWhenExpression>
-				</reportElement>
+				<reportElement uuid="04b11cdd-c351-4dc5-bbcb-360b258a7573" key="textField-10" x="397" y="0" width="89" height="18"/>
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[" Mukasurat " + $V{PAGE_NUMBER} + " dari "]]></textFieldExpression>
 			</textField>
 			<textField evaluationTime="Report" isBlankWhenNull="false">
-				<reportElement uuid="726aa2ab-2d7d-4d29-8447-d7bcbecd9a61" key="textField-11" x="485" y="0" width="23" height="18">
-					<printWhenExpression><![CDATA[new Boolean($P{isSubReport}.equals("N")?true:false)]]></printWhenExpression>
-				</reportElement>
+				<reportElement uuid="bd50f271-3ceb-4cba-ae1a-5fc1e650b96c" key="textField-11" x="485" y="0" width="23" height="18"/>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
 				</textElement>
@@ -264,7 +244,7 @@ ORDER BY RN.KOD_MAMPU]]>
 	<summary>
 		<band height="24" splitType="Stretch">
 			<staticText>
-				<reportElement uuid="8eb30e7b-7c69-4b17-8e80-2b60359a83f9" key="staticText-13" mode="Opaque" x="35" y="0" width="310" height="24" backcolor="#FFFFFF"/>
+				<reportElement uuid="b68e7dd3-674a-41dd-ad88-1b369404adc1" key="staticText-13" mode="Opaque" x="35" y="0" width="310" height="24" backcolor="#FFFFFF"/>
 				<box rightPadding="2">
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -278,7 +258,7 @@ ORDER BY RN.KOD_MAMPU]]>
 				<text><![CDATA[JUMLAH]]></text>
 			</staticText>
 			<textField pattern="" isBlankWhenNull="false">
-				<reportElement uuid="3935d153-e287-40be-98ee-eda950280971" key="textField-4" x="345" y="0" width="80" height="24"/>
+				<reportElement uuid="16300184-90fc-4338-80bf-30d301382b75" key="textField-4" x="345" y="0" width="80" height="24"/>
 				<box rightPadding="2">
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -291,7 +271,7 @@ ORDER BY RN.KOD_MAMPU]]>
 				<textFieldExpression><![CDATA[String.valueOf($V{BIL_MILIK_SELURUH}).equals("null")?new BigDecimal(0):$V{BIL_MILIK_SELURUH}]]></textFieldExpression>
 			</textField>
 			<textField pattern="" isBlankWhenNull="false">
-				<reportElement uuid="374ba1ca-0a83-4fa4-a05f-6d20895a2b4d" key="textField-5" x="425" y="0" width="80" height="24"/>
+				<reportElement uuid="34f7233d-0812-4d7b-b875-fff2d8d08671" key="textField-5" x="425" y="0" width="80" height="24"/>
 				<box rightPadding="2">
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -304,7 +284,7 @@ ORDER BY RN.KOD_MAMPU]]>
 				<textFieldExpression><![CDATA[String.valueOf($V{BIL_RIZAB_SELURUH}).equals("null")?new BigDecimal(0):$V{BIL_RIZAB_SELURUH}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="25ef9b20-264c-48b1-b9ee-d734b5d88b3d" key="textField-12" x="5" y="0" width="30" height="24"/>
+				<reportElement uuid="9d7b77dd-e678-4bea-b542-e0887da28eb7" key="textField-12" x="5" y="0" width="30" height="24"/>
 				<box rightPadding="2">
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
