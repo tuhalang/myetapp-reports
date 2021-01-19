@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPermohonanRingkasanNotis5AMengikutKementerianTahun" pageWidth="595" pageHeight="842" columnWidth="581" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="5fd82854-39bd-48a5-acbb-d59a52a31b4c">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="idfail" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="idperbicaraan" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="TAHUN" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT distinct RK.NAMA_KEMENTERIAN
+	,NVL(NOTIS.BIL_NOTIS,0) BIL_NOTIS
+	,NVL(LUAS.JUMLAH_LUAS,0) JUMLAH_LUAS
+    	,NVL(JUMLAH.JUMLAH_NOTIS,0) JUMLAH_NOTIS
+        ,NVL(BAYAR.JUMLAH_DIBAYAR,0) JUMLAH_DIBAYAR
+FROM TBLRUJKEMENTERIANMAPPING RKM,TBLRUJKEMENTERIAN RK
+,(   SELECT count(NVL(NA.bayar_notis,0)) BIL_NOTIS,RKM.ID_KEMENTERIANBARU ID_KEMENTERIAN
+    FROM TBLHTPNOTIS5A NA,TBLPERMOHONAN P,TBLPFDFAIL F,TBLRUJKEMENTERIANMAPPING RKM
+    WHERE P.ID_FAIL=F.ID_FAIL
+            AND P.ID_PERMOHONAN=NA.ID_PERMOHONAN
+            AND RKM.ID_KEMENTERIANLAMA = F.ID_KEMENTERIAN
+            AND RKM.STATUS = 'A'
+            AND TO_CHAR(NA.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}'
+    GROUP BY RKM.ID_KEMENTERIANBARU
+) NOTIS
+,(   SELECT SUM(NVL(HU.LUAS_BERSAMAAN,0)) JUMLAH_LUAS
+        ,RKM.ID_KEMENTERIANBARU ID_KEMENTERIAN
+    FROM TBLHTPHAKMILIKURUSAN HU,TBLPERMOHONAN P,TBLPFDFAIL F,TBLHTPNOTIS5A NA
+    ,TBLRUJKEMENTERIANMAPPING RKM
+    WHERE P.ID_FAIL=F.ID_FAIL
+    AND P.ID_PERMOHONAN=HU.ID_PERMOHONAN
+    AND P.ID_PERMOHONAN=NA.ID_PERMOHONAN
+    AND F.ID_KEMENTERIAN=RKM.ID_KEMENTERIANLAMA
+    AND RKM.STATUS = 'A'
+    AND F.ID_URUSAN=1
+    AND TO_CHAR(NA.TARIKH_TERIMA,'yyyy')='$P!{TAHUN}'
+    GROUP BY RKM.ID_KEMENTERIANBARU
+) LUAS
+,(  SELECT SUM(NVL(NA.JUMLAH_BAYARAN,0)) JUMLAH_NOTIS
+        ,RKM.ID_KEMENTERIANBARU ID_KEMENTERIAN
+    FROM TBLHTPNOTIS5A NA,TBLPERMOHONAN P,TBLPFDFAIL F
+        ,TBLRUJKEMENTERIANMAPPING RKM
+    WHERE P.ID_FAIL=F.ID_FAIL
+    AND P.ID_PERMOHONAN=NA.ID_PERMOHONAN
+    AND F.ID_KEMENTERIAN=RKM.ID_KEMENTERIANLAMA
+    AND RKM.STATUS = 'A'
+    AND TO_CHAR(NA.TARIKH_TERIMA,'yyyy')='$P!{TAHUN}'
+    GROUP BY RKM.ID_KEMENTERIANBARU
+) JUMLAH
+,(  SELECT SUM(NVL(HP.JUMLAH_BAYARAN,0)) JUMLAH_DIBAYAR
+        ,RKM.ID_KEMENTERIANBARU ID_KEMENTERIAN
+    FROM TBLHTPBAYARAN HP,TBLPERMOHONAN P,TBLPFDFAIL F
+        ,TBLRUJKEMENTERIANMAPPING RKM
+    WHERE P.ID_FAIL=F.ID_FAIL
+        AND P.ID_PERMOHONAN=HP.ID_PERMOHONAN
+        AND F.ID_KEMENTERIAN=RKM.ID_KEMENTERIANLAMA
+        AND RKM.STATUS = 'A'
+        AND HP.ID_JENISBAYARAN=23
+        AND (TO_CHAR(HP.TARIKH_RESIT,'yyyy')='$P!{TAHUN}'
+OR TO_CHAR(HP.TARIKH_BAUCER,'yyyy')='$P!{TAHUN}')
+    GROUP BY RKM.ID_KEMENTERIANBARU
+) BAYAR
+WHERE RKM.ID_KEMENTERIANBARU = RK.ID_KEMENTERIAN
+    AND RKM.STATUS = 'A'
+    AND RK.ID_KEMENTERIAN = NOTIS.ID_KEMENTERIAN(+)
+    AND RK.ID_KEMENTERIAN = LUAS.ID_KEMENTERIAN(+)
+    AND RK.ID_KEMENTERIAN = JUMLAH.ID_KEMENTERIAN(+)
+    AND RK.ID_KEMENTERIAN = BAYAR.ID_KEMENTERIAN(+)
+ORDER BY RK.NAMA_KEMENTERIAN]]>
+	</queryString>
+	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
+	<field name="BIL_NOTIS" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_LUAS" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_NOTIS" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_DIBAYAR" class="java.math.BigDecimal"/>
+	<variable name="JUMLAH_NOTIS_ALL" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{JUMLAH_NOTIS}]]></variableExpression>
+	</variable>
+	<variable name="JUMLAH_BIL_NOTIS_ALL" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{BIL_NOTIS}]]></variableExpression>
+	</variable>
+	<variable name="JUMLAH_LUAS_ALL" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{JUMLAH_LUAS}]]></variableExpression>
+	</variable>
+	<variable name="JUMLAH_DIBAYAR_ALL" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{JUMLAH_DIBAYAR}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="50" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="33727463-5851-489a-8c9f-5fa206563368" key="textField-31" x="0" y="10" width="581" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["RINGKASAN JUMLAH NOTIS 5A MENGIKUT KEMENTERIAN"
++" BAGI TAHUN "+$P{TAHUN}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="36" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="b9940e35-41ec-43a9-824f-83802e6c0fc1" key="staticText-4" mode="Opaque" x="0" y="0" width="20" height="36" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[BIL.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1a4e58e6-2459-4db5-8434-24f214a52331" key="staticText-5" mode="Opaque" x="20" y="0" width="211" height="36" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[KEMENTERIAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b5bc7f8f-e70c-4901-ae34-5e0f100321b6" key="staticText-6" mode="Opaque" x="362" y="0" width="73" height="36" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[JUMLAH
+(RM)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7ebdeec3-71b9-4e9a-909f-7b6f6bffaff2" key="staticText-7" mode="Opaque" x="435" y="0" width="73" height="36" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[JUMLAH DIBAYAR
+(RM)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2d81454a-98d9-4bb6-b07b-e3992d4272ef" key="staticText-11" mode="Opaque" x="508" y="0" width="73" height="36" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[BELUM DIBAYAR
+(RM)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="02ba5897-e619-40b7-9917-ee70fd13526f" key="staticText-17" mode="Opaque" x="231" y="0" width="61" height="36" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[BIL. NOTIS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="60036b3a-c0f6-4678-a0c3-c8b396f5efcc" key="staticText-18" mode="Opaque" x="292" y="0" width="70" height="36" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[JUMLAH LUAS(H)]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="24" splitType="Stretch">
+			<textField pattern="###,###,##0.00" isBlankWhenNull="false">
+				<reportElement uuid="a27d4da7-d9fb-4562-b3a8-4ff1a47c81c6" key="textField-1" x="435" y="0" width="73" height="24"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{JUMLAH_DIBAYAR}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###,###,##0.00" isBlankWhenNull="false">
+				<reportElement uuid="2c6959d0-dbf6-41ab-afd1-42a4005dac7a" key="textField-2" x="362" y="0" width="73" height="24"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{JUMLAH_NOTIS}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="641d35f3-14e8-4c39-bd7f-a85b58869c62" key="textField-3" x="20" y="0" width="211" height="24"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NAMA_KEMENTERIAN}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="292a1c41-b1c8-453d-a5a7-a1eb3025859c" key="textField-7" x="0" y="0" width="20" height="24"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "+$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField pattern="##,###,##0.00" isBlankWhenNull="false">
+				<reportElement uuid="f5030ba3-d0b5-41e6-91ba-2f3ba3e1810f" key="textField-12" x="508" y="0" width="73" height="24"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Double($F{JUMLAH_NOTIS}.doubleValue()- $F{JUMLAH_DIBAYAR}.doubleValue())]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="574a6b28-b9ee-4bad-b162-5f23645d4972" key="textField-27" x="231" y="0" width="61" height="24"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""+$F{BIL_NOTIS}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.0000" isBlankWhenNull="false">
+				<reportElement uuid="0cfdaa10-68b3-4378-be3a-af98a546bf8e" key="textField-28" x="292" y="0" width="70" height="24"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{JUMLAH_LUAS}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="18" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="02220cf6-302c-4f39-9ba8-422fdf8cd17a" key="staticText-16" x="1" y="0" width="53" height="18"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Tarikh Cetak :]]></text>
+			</staticText>
+			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
+				<reportElement uuid="5ce3866b-b46c-4021-98c5-fb4a48fefb0c" key="textField-24" x="55" y="0" width="100" height="18"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="96d1e9be-db0e-40e4-87ca-ff9759f3e3b3" key="textField-25" x="464" y="0" width="89" height="18"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" Mukasurat " + $V{PAGE_NUMBER} + " dari "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" isBlankWhenNull="false">
+				<reportElement uuid="28dd573c-7fae-482f-bbe1-a1faef7346ee" key="textField-26" x="557" y="0" width="23" height="18"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "+$V{PAGE_NUMBER}+""]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="24" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="470ff90a-c108-47ef-8bcf-1ad28539d20d" key="staticText-10" mode="Transparent" x="0" y="0" width="231" height="24" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[JUMLAH KESELURUHAN]]></text>
+			</staticText>
+			<textField pattern="###,###,##0.00" isBlankWhenNull="false">
+				<reportElement uuid="aefd5c06-7bce-4a62-bf59-3e651379147b" key="textField-4" x="362" y="0" width="73" height="24" forecolor="#000000"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{JUMLAH_NOTIS_ALL}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###,###,##0.00" isBlankWhenNull="false">
+				<reportElement uuid="833e6528-2d61-4ea2-a977-a7901a14910c" key="textField-5" x="435" y="0" width="73" height="24" forecolor="#000000"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{JUMLAH_DIBAYAR_ALL}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###,###,##0.00" isBlankWhenNull="false">
+				<reportElement uuid="ebea59b6-1448-43eb-8d7d-cdc4048687f3" key="textField-16" x="508" y="0" width="73" height="24" forecolor="#000000"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Double($V{JUMLAH_NOTIS_ALL}.doubleValue()- $V{JUMLAH_DIBAYAR_ALL}.doubleValue())]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="17bddfe1-69f2-45ea-9a29-8d2654f9ae53" key="textField-29" x="231" y="0" width="61" height="24"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""+$V{JUMLAH_BIL_NOTIS_ALL}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.0000" isBlankWhenNull="false">
+				<reportElement uuid="ec4651c1-135e-43ac-8422-cb56fbc633dd" key="textField-30" x="292" y="0" width="70" height="24"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{JUMLAH_LUAS_ALL}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>
