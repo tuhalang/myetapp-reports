@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPajakanSuratJKPTGNegeri" pageWidth="595" pageHeight="842" columnWidth="537" leftMargin="29" rightMargin="29" topMargin="20" bottomMargin="20" uuid="c6a04bb6-40dc-4c76-8952-cb9738a5a2ef">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPajakanSuratUlasanKJP" pageWidth="595" pageHeight="842" columnWidth="537" leftMargin="29" rightMargin="29" topMargin="20" bottomMargin="20" uuid="dc756693-e635-42e1-b5c8-538ae578f21d">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
@@ -14,10 +14,11 @@
 	<parameter name="jawatanPegawai" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="emelPegawai" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="BaseDir" class="java.lang.String"/>
 	<parameter name="UP" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT  B.ID_PERMOHONAN, A.NO_FAIL
-,TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
+		<![CDATA[SELECT   PP.NO_RUJUKAN_LAIN, A.NO_FAIL,
+    TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
         CASE
            WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
            WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'Februari'
@@ -47,51 +48,42 @@
             WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 11 THEN 'Zulkaedah'
             WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 12 THEN 'Zulhijjah'
         END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM
-,INITCAP(PM.NAMA_PEJABAT) AS NAMA_PEMOHON
+,INITCAP(PM.NAMA_KEMENTERIAN) AS NAMA_PEMOHON
+,INITCAP(RA.NAMA_AGENSI) AS NAMA_AGENSI
 ,PM. POSKOD
-,INITCAP(BDR.KETERANGAN) AS NAMA_BANDAR
-,GETNEGERIWILAYAH(PRN.ID_NEGERI) NAMA_NEGERI
---
-,REPLACE(REPLACE(PM.ALAMAT1,'&','&#38;'),'@','&#64;') AS ALAMAT_PEMOHON1
-,REPLACE(REPLACE(PM.ALAMAT2,'&','&#38;'),'@','&#64;') AS ALAMAT_PEMOHON2
-,REPLACE(REPLACE(PM.ALAMAT3,'&','&#38;'),'@','&#64;') AS ALAMAT_PEMOHON3
-,REPLACE(REPLACE(B.TUJUAN,'&','&#38;'),'@','&#64;') TUJUAN
-,NVL(MT.JENIS_TANAH,'') JENIS_TANAH
-,NVL(MT.JENIS_PAJAKAN,'') JENIS_PAJAKAN
-,NVL(PA.TEMPOH_PAJAKAN,0) TEMPOH
---
+--, INITCAP(BDR.KETERANGAN) AS NAMA_BANDAR
+,PRN.ID_NEGERI
+,CASE
+    WHEN A.ID_NEGERI IN (14,15,16)
+        THEN GETNEGERIWILAYAH(A.ID_NEGERI)
+    ELSE
+        PRN.NAMA_NEGERI
+END NAMA_NEGERI
+,INITCAP(PRN.NAMA_NEGERI) NAMA_NEGERI_ASAL
+,REPLACE(REPLACE(INITCAP(A.TAJUK_FAIL),'&','&#38;'),'@','&#64;') AS TAJUK_FAIL
+,INITCAP (REPLACE(REPLACE(PM.ALAMAT1,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON1
+,INITCAP (REPLACE(REPLACE(PM.ALAMAT2,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON2
+,INITCAP (REPLACE(REPLACE(PM.ALAMAT3,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON3
 FROM TBLPFDFAIL A,
-	TBLPERMOHONAN B,
-	TBLHTPPAJAKAN PA,
-  	--TBLHTPPEMOHON PM,
-  	TBLRUJPEJABATJKPTG PM,
- 	TBLRUJBANDAR BDR,
- 	TBLRUJNEGERI PRN
- 	,( SELECT MT.ID_PERMOHONAN
- 	,CASE
- 		WHEN MT.NO_HAKMILIK IS NOT NULL
- 			THEN 'Tanah Milik'
- 		ELSE 'Tanah Rizab'
- 	END JENIS_TANAH
- 	,CASE
- 		WHEN NVL(MT.LUAS_BERSAMAAN,0) < NVL(MTR.LUAS_BERSAMAAN,0)
- 			THEN 'sebahagian'
- 		ELSE
- 		'keseluruhan'
- 	END JENIS_PAJAKAN
- 	FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
- 	WHERE MT.PEGANGAN_HAKMILIK = MTR.PEGANGAN_HAKMILIK(+)
- 	) MT
+         TBLPERMOHONAN B,
+         TBLHTPPERMOHONAN PP,
+         --TBLHTPPEMOHON PM,
+         TBLRUJKEMENTERIAN PM,
+         TBLRUJAGENSI RA,
+         --TBLRUJBANDAR BDR,
+         TBLRUJNEGERI PRN
 WHERE B.ID_FAIL = A.ID_FAIL
-	AND B.ID_PERMOHONAN = PA.ID_PERMOHONAN(+)
-  	--AND B.ID_PERMOHONAN = PM.ID_PERMOHONAN(+)
-  	AND A.ID_SEKSYEN = PM.ID_SEKSYEN
-  	AND B.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
-	AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
-  	AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
-     AND B.ID_PERMOHONAN = $P{idpermohonan}]]>
+     AND B.ID_PERMOHONAN = PP.ID_PERMOHONAN
+     AND (A.ID_STATUS <> 999 OR A.ID_STATUS IS NULL)
+     --AND B.ID_PERMOHONAN = PM.ID_PERMOHONAN(+)
+     AND A.ID_KEMENTERIAN = PM.ID_KEMENTERIAN
+     AND PP.ID_AGENSI = RA.ID_AGENSI
+     --AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
+     AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
+     --AND B.ID_PERMOHONAN =1615146767
+     AND B.ID_PERMOHONAN = $P!{idpermohonan}]]>
 	</queryString>
-	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
+	<field name="NO_RUJUKAN_LAIN" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="HARI_SURAT" class="java.lang.String"/>
 	<field name="BULAN_SURAT" class="java.lang.String"/>
@@ -100,37 +92,37 @@ WHERE B.ID_FAIL = A.ID_FAIL
 	<field name="BULAN_ISLAM" class="java.lang.String"/>
 	<field name="TAHUN_ISLAM" class="java.lang.String"/>
 	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="NAMA_AGENSI" class="java.lang.String"/>
 	<field name="POSKOD" class="java.lang.String"/>
-	<field name="NAMA_BANDAR" class="java.lang.String"/>
+	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="NAMA_NEGERI_ASAL" class="java.lang.String"/>
+	<field name="TAJUK_FAIL" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON1" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON2" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON3" class="java.lang.String"/>
-	<field name="TUJUAN" class="java.lang.String"/>
-	<field name="JENIS_TANAH" class="java.lang.String"/>
-	<field name="JENIS_PAJAKAN" class="java.lang.String"/>
-	<field name="TEMPOH" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
 		<band height="245" splitType="Stretch">
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="01c89758-5ea6-43a1-aab0-e2650c25dcad" key="textField-19" positionType="Float" x="50" y="60" width="435" height="15"/>
+				<reportElement uuid="22e8b57e-d7a5-4292-810f-a6ad0721e8e0" key="textField-19" positionType="Float" x="50" y="60" width="435" height="15"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Pengarah,\n"
-+($F{NAMA_PEMOHON}!=null ? $F{NAMA_PEMOHON} + "\n": "")
+				<textFieldExpression><![CDATA["Ketua Setiausaha,\n"
++($F{NAMA_PEMOHON}!=null?$F{NAMA_PEMOHON}+"\n":"")
 +($F{ALAMAT_PEMOHON1}!=null?$F{ALAMAT_PEMOHON1}+"\n":"")
 +($F{ALAMAT_PEMOHON2}!=null?$F{ALAMAT_PEMOHON2}+"\n":"")
 +($F{ALAMAT_PEMOHON3}!=null?$F{ALAMAT_PEMOHON3}+"\n":"")
 +"<style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{POSKOD}!=null?$F{POSKOD}+" ":"")
-+($F{NAMA_NEGERI}!=null?$F{NAMA_NEGERI}.toUpperCase():"")+"</style>"]]></textFieldExpression>
++($F{NAMA_NEGERI}!=null?$F{NAMA_NEGERI}.toUpperCase():"")+"</style>"
++"\n(u.p.: Setiausaha Bahagian Pembangunan)"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="87ebc5ea-661a-4147-bf77-68d947fcde6a" key="textField-58" positionType="Float" x="50" y="75" width="435" height="15"/>
+				<reportElement uuid="472ca0ad-0994-4029-a9fe-4493595a3e43" key="textField-58" positionType="Float" x="50" y="75" width="435" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Middle" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
@@ -138,128 +130,121 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				<textFieldExpression><![CDATA["\nTuan,"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="7599ea45-a118-4522-861c-abcb6a41d3df" key="textField-59" positionType="Float" x="50" y="120" width="435" height="15"/>
+				<reportElement uuid="778a9491-6d02-4df4-a2da-7a479a728677" key="textField-59" positionType="Float" x="50" y="120" width="435" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Middle" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Saya dengan hormatnya diarah merujuk kepada perkara di atas."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Dengan segala hormatnya saya diarah merujuk kepada perkara tersebut di atas."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="83dcb4c6-7d05-4d1c-995b-ec747a62422d" key="textField-61" positionType="Float" x="50" y="165" width="435" height="15"/>
+				<reportElement uuid="37dff92e-1e33-447c-b3cf-126be3f55aea" key="textField-61" positionType="Float" x="50" y="165" width="435" height="15"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\nSekian,terima kasih.\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\nSekian,\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="8b7a7081-6f1d-4880-81eb-04adf7f7b1cf" key="textField-63" positionType="Float" x="50" y="90" width="435" height="11"/>
+				<reportElement uuid="c84accfc-a771-4cfc-8b08-7f94f4caf732" key="textField-63" positionType="Float" x="50" y="90" width="435" height="11"/>
 				<textElement textAlignment="Justified" verticalAlignment="Middle" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n<style isBold='true' pdfFontName='Helvetica-Bold'>PERMOHONAN PAJAKAN "
-+$F{JENIS_PAJAKAN}.toUpperCase()
-+" "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN BAGI TUJUAN"
-+" "+$F{TUJUAN}.toUpperCase()+" OLEH "
-+$F{NAMA_PEMOHON}.toUpperCase()+ " BAGI TEMPOH "
-+$F{TEMPOH}+" TAHUN</style>\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n<style isBold='true'>"+($F{TAJUK_FAIL}!=null?$F{TAJUK_FAIL}.toUpperCase():"")+"</style>\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="7920b909-b5e1-4342-94a5-757c8007ca74" key="textField-66" positionType="Float" x="50" y="135" width="435" height="15"/>
+				<reportElement uuid="94e6b875-09af-417f-b6ec-8c30d530aec8" key="textField-66" positionType="Float" x="50" y="135" width="435" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Middle" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n2.\t  Adalah dimaklumkan bahawa Jabatan ini telah menerima permohonan pajakan tanah bagi "
-+$F{JENIS_PAJAKAN} +" "
-+$F{JENIS_TANAH}+" Pesuruhjaya Tanah Persekutuan bagi tujuan"
-+$F{TUJUAN}+" untuk tempoh "
-+$F{TEMPOH}+" tahun."+" Oleh itu, sukacita dipohon kerjasama tuan untuk menyediakan"
-+" <style isBold='true' pdfFontName='Helvetica-Bold'>laporan tanah</style>"
-+" bagi tanah tersebut ke bahagian ini."
-+" Bersama-sama ini dikemukakan<style isBold='true' pdfFontName='Helvetica-Bold'> salinan hakmilik, pelan pra-hitungan (jika permohonan sebahagian tanah) dan salinan pelan tapak </style>untuk rujukan dan tindakan tuan selanjutnya."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n2.\tAdalah dimaklumkan bahawa Jabatan ini telah menerima permohonan pajakan di atas "
++($F{TAJUK_FAIL}!=null?$F{TAJUK_FAIL}:"")
++" Bersama-sama ini dikemukakan <style isBold='true'>salinan hakmilik</style> dan <style isBold='true'>salinan pelan tapak</style> untuk rujukan dan tindakan tuan selanjutnya."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="8d40c9dd-9e83-42f4-bc36-eb3a9078a1e6" key="textField-67" positionType="Float" x="235" y="38" width="93" height="15"/>
-				<textElement textAlignment="Right">
+				<reportElement uuid="e46742a1-4204-492f-93aa-09084a755b37" key="textField-67" positionType="Float" x="235" y="38" width="93" height="15"/>
+				<textElement textAlignment="Right" markup="styled">
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Tarikh "]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Tarikh"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="3df8bca7-9f36-48d1-8936-e14e0fc585d4" key="textField-68" positionType="Float" x="328" y="38" width="14" height="15"/>
+				<reportElement uuid="917a3d11-1152-4311-8e35-3b03e21bcafb" key="textField-68" positionType="Float" x="328" y="38" width="14" height="15"/>
 				<textElement textAlignment="Center">
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA[":"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="false">
-				<reportElement uuid="e9cc60c7-e7d4-445e-b85e-38de96500a93" key="textField-69" positionType="Float" x="342" y="38" width="150" height="15"/>
+				<reportElement uuid="5379883a-f470-4db2-89c4-5d87ee7289ac" key="textField-69" positionType="Float" x="342" y="38" width="150" height="15"/>
 				<textElement textAlignment="Left">
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{HARI_SURAT}!=null?$F{HARI_SURAT}:"")+" "+($F{BULAN_SURAT}!=null?$F{BULAN_SURAT}:"")+" "+($F{TAHUN_SURAT}!=null?$F{TAHUN_SURAT}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="af7295b4-9754-4ebc-8687-27c8db433d68" key="textField-70" positionType="Float" x="235" y="23" width="93" height="15"/>
+				<reportElement uuid="a571d4dc-bc05-4666-9c14-1d884feebc00" key="textField-70" positionType="Float" x="235" y="23" width="93" height="15"/>
 				<textElement textAlignment="Right">
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Rujukan Kami "]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="44d1822d-aa20-431c-bdd0-4bcca0f5d0cb" key="textField-71" positionType="Float" x="328" y="23" width="14" height="15"/>
+				<reportElement uuid="db3d7b8d-3639-43ce-95e9-535aaa036794" key="textField-71" positionType="Float" x="328" y="23" width="14" height="15"/>
 				<textElement textAlignment="Center">
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA[":"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="67957252-15a0-440c-9f97-5ad03b221ca9" key="textField-72" positionType="Float" x="342" y="23" width="190" height="15"/>
+				<reportElement uuid="5961e83b-03b1-443f-be66-5cfa5e1af13c" key="textField-72" positionType="Float" x="342" y="23" width="190" height="15"/>
 				<textElement textAlignment="Left">
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{NO_FAIL} != null ? $F{NO_FAIL}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="e64b20d9-0381-4473-9000-72f97a0750de" key="textField-73" positionType="Float" x="235" y="8" width="93" height="15"/>
+				<reportElement uuid="740a93b5-d287-4d00-9dad-362efbaf188d" key="textField-73" positionType="Float" x="235" y="8" width="93" height="15"/>
 				<textElement textAlignment="Right">
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Rujukan Tuan "]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="4e2f8a3c-7134-4e2a-837c-7bb1ac2f0d51" key="textField-74" positionType="Float" x="328" y="8" width="14" height="15"/>
+				<reportElement uuid="ecbdf724-a636-43fb-9583-16a02bd53dcf" key="textField-74" positionType="Float" x="328" y="8" width="14" height="15"/>
 				<textElement textAlignment="Center">
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA[":"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="8747a175-3d74-4755-ab62-d0477f4d7ca5" key="textField-75" positionType="Float" x="342" y="8" width="190" height="15"/>
+				<reportElement uuid="7cf924ef-36d8-4761-9f35-1256cdaa9dd5" key="textField-75" positionType="Float" x="342" y="8" width="190" height="15"/>
 				<textElement textAlignment="Left">
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{NO_RUJUKAN_LAIN} != null ? $F{NO_RUJUKAN_LAIN}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="0ea594ff-60b7-4de6-a874-c14e26b9b812" key="textField-76" positionType="Float" x="0" y="5" width="537" height="1"/>
+				<reportElement uuid="d4123685-d987-418e-aab7-f22af00cd9df" key="textField-76" positionType="Float" x="0" y="5" width="537" height="1"/>
 				<textElement textAlignment="Right">
 					<font fontName="Bookman Old Style" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA["\n\n\n"]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
-				<reportElement uuid="c05a105b-7699-44ea-b3d8-94dc0d04f190" key="subreport-1" positionType="Float" x="50" y="180" width="435" height="15"/>
+				<reportElement uuid="d7b9460b-5c35-4aea-927b-966a03af6c3c" key="subreport-1" positionType="Float" x="50" y="180" width="435" height="15"/>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPFooterBerkhidmat.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport isUsingCache="true">
-				<reportElement uuid="2727c40a-b2be-4bb5-b69a-c39b7e9f796d" key="subreport-2" positionType="Float" x="50" y="230" width="435" height="15"/>
+				<reportElement uuid="f030c018-bd90-4bf2-a859-59f9d24db87c" key="subreport-2" positionType="Float" x="50" y="230" width="435" height="15"/>
 				<subreportParameter name="emelPegawai">
 					<subreportParameterExpression><![CDATA[$P{emelPegawai}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="namaPegawai">
 					<subreportParameterExpression><![CDATA[$P{namaPegawai}]]></subreportParameterExpression>
@@ -267,28 +252,32 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				<subreportParameter name="noTelefon">
 					<subreportParameterExpression><![CDATA[$P{noTelefon}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="BaseDir">
-					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				<subreportParameter name="idpermohonan">
+					<subreportParameterExpression><![CDATA[$P{idpermohonan}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPRujukanSuratNPegawaiXJKPTG.jasper"]]></subreportExpression>
 			</subreport>
 			<line>
-				<reportElement uuid="7736549e-d193-487c-8aed-01a07ad8ae22" key="line-1" positionType="Float" mode="Opaque" x="50" y="101" width="435" height="1"/>
+				<reportElement uuid="cec56736-3eac-44bb-9e23-8ce06592f788" key="line-1" positionType="Float" mode="Opaque" x="50" y="101" width="435" height="1"/>
 			</line>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
-				<reportElement uuid="455fb31e-1950-458d-8385-e1ce4f27e2ad" key="textField-77" positionType="Float" x="50" y="150" width="435" height="15"/>
+				<reportElement uuid="6d2055bb-e6ba-4837-9b3b-fbf4455d0901" key="textField-77" positionType="Float" x="50" y="150" width="435" height="15"/>
 				<textElement textAlignment="Justified" verticalAlignment="Middle" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n3.\tOleh yang demikian, sukacita sekiranya pihak tuan dapat "
-+"memberikan laporan tanah dalam tempoh <style isBold='true'>30 hari</style> dari tarikh surat "
-+"ini. Segala kerjasama dan perhatian segera pihak tuan dalam "
-+"perkara ini amatlah dihargai dan didahului dengan ucapan terima kasih."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n3.\tOleh yang demikian, Jabatan ini ingin mendapatkan"
++" <style isBold='true'>pandangan dan ulasan</style>"
++" berkaitan permohonan pajakan ini."
++" Pandangan dan ulasan tersebut hendaklah dikembalikan kepada Jabatan ini selewat-lewatnya "
++" <style isBold='true'>30 hari bekerja</style>"
++" dari tarikh surat ini. Kerjasama"
++" dan perhatian segera dari pihak tuan amatlah dihargai dan didahului dengan ucapan ribuan"
++" terima kasih."]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
-				<reportElement uuid="d0d0d508-37dd-4e5f-a0ed-270cdc097872" key="subreport-3" positionType="Float" x="50" y="210" width="435" height="15"/>
+				<reportElement uuid="795163a8-0926-483b-a43b-4b5832fe7a15" key="subreport-3" positionType="Float" x="50" y="210" width="435" height="15"/>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPFooterSaya.jasper"]]></subreportExpression>
 			</subreport>
