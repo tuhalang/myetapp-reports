@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPPajakanDerafPerjanjian" pageWidth="595" pageHeight="842" columnWidth="453" leftMargin="60" rightMargin="60" topMargin="50" bottomMargin="50" uuid="18fe1a3b-39a6-43e3-8ec5-b05f0ba52b97">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPPajakanDerafPerjanjian" pageWidth="595" pageHeight="842" columnWidth="475" leftMargin="60" rightMargin="60" topMargin="60" bottomMargin="50" uuid="18fe1a3b-39a6-43e3-8ec5-b05f0ba52b97">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.1269722013523666"/>
@@ -16,7 +16,7 @@
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
 	<queryString>
-		<![CDATA[SELECT INITCAP(PM.NAMA_PEMOHON)AS NAMA_PEMOHON,
+		<![CDATA[SELECT DISTINCT INITCAP(PM.NAMA_PEMOHON)AS NAMA_PEMOHON,
 PM. POSKOD AS POSKOD_TETAP, INITCAP(RB.KETERANGAN)AS BANDAR_PEMOHON,
 INITCAP(RN.NAMA_NEGERI) AS NEGERI_PEMOHON,
 INITCAP (REPLACE(REPLACE(B.TUJUAN,'&','&#38;'),'@','&#64;')) AS TUJUAN,
@@ -25,7 +25,7 @@ INITCAP (REPLACE(PM.ALAMAT_PEMOHON2,'@','&#64;')) AS ALAMAT_2,
 INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON3,'&','&#38;'),'@','&#64;')) AS ALAMAT_3
 ,PAJ.TEMPOH_PAJAKAN,TO_CHAR(PAJ.TARIKH_MULA_PAJAKAN,'DD.MM.YYYY') AS TARIKH_MULA_PAJAKAN,
 TO_CHAR(PAJ.TARIKH_TAMATPAJAKAN,'DD.MM.YYYY') AS TARIKH_TAMATPAJAKAN,
-PM.NO_PEMOHON, HM.LUAS_HEKTAR, HM.LUAS_EKAR
+PM.NO_PEMOHON, HM.LUAS_HEKTAR, HM.LUAS_EKAR, MT.JENIS_PAJAKAN
 FROM TBLHTPPEMOHON PM, TBLHTPPAJAKAN PAJ,
 TBLPFDFAIL A, TBLPERMOHONAN B, TBLHTPPERMOHONAN PP,
 TBLRUJNEGERI RN, TBLRUJBANDAR RB,
@@ -33,11 +33,22 @@ TBLRUJNEGERI RN, TBLRUJBANDAR RB,
  SUM(ROUND((HMU.LUAS_BERSAMAAN * 2.471),3)) AS LUAS_EKAR
  FROM TBLPERMOHONAN B, TBLHTPHAKMILIKURUSAN HMU
  WHERE B.ID_PERMOHONAN = HMU.ID_PERMOHONAN GROUP BY HMU.ID_PERMOHONAN) HM
+ ,( SELECT DISTINCT MT.ID_PERMOHONAN
+     ,CASE
+         WHEN NVL(MT.LUAS_BERSAMAAN,0) < NVL(MTR.LUAS_BERSAMAAN,0)
+             THEN 'part'
+         ELSE
+         'whole'
+     END JENIS_PAJAKAN
+     FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
+     WHERE MT.PEGANGAN_HAKMILIK = MTR.PEGANGAN_HAKMILIK(+)
+     ) MT
 WHERE A.ID_FAIL = B.ID_FAIL
 AND B.ID_PERMOHONAN = PP.ID_PERMOHONAN
 AND B.ID_PERMOHONAN = PM.ID_PERMOHONAN(+)
 AND B.ID_PERMOHONAN = PAJ.ID_PERMOHONAN(+)
 AND B.ID_PERMOHONAN = HM.ID_PERMOHONAN(+)
+AND B.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
 AND PM.ID_NEGERI = RN.ID_NEGERI(+)
 AND PM.ID_BANDAR = RB.ID_BANDAR(+)
 AND B.ID_PERMOHONAN = $P!{ID_PERMOHONAN}]]>
@@ -54,14 +65,12 @@ AND B.ID_PERMOHONAN = $P!{ID_PERMOHONAN}]]>
 	<field name="TARIKH_MULA_PAJAKAN" class="java.lang.String"/>
 	<field name="TARIKH_TAMATPAJAKAN" class="java.lang.String"/>
 	<field name="NO_PEMOHON" class="java.lang.String"/>
-	<field name="LUAS_HEKTAR" class="java.lang.Double"/>
-	<field name="LUAS_EKAR" class="java.lang.Double"/>
+	<field name="LUAS_HEKTAR" class="java.math.BigDecimal"/>
+	<field name="LUAS_EKAR" class="java.math.BigDecimal"/>
+	<field name="JENIS_PAJAKAN" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
-	<pageHeader>
-		<band splitType="Stretch"/>
-	</pageHeader>
 	<columnHeader>
 		<band splitType="Stretch"/>
 	</columnHeader>
@@ -155,7 +164,7 @@ AND B.ID_PERMOHONAN = $P!{ID_PERMOHONAN}]]>
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["The Lessor has agreed to grant to the Lessee and the Lessee has agreed to accept the lease of whole of the * land/ part of the land measuring approximately "+ ($F{LUAS_EKAR}!=null?$F{LUAS_EKAR}:"..........") + " acres (hereinafter referred to as the “Lease”) being the area more particularly delineated in red on the plan annexed hereto as Schedule B."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["The Lessor has agreed to grant to the Lessee and the Lessee has agreed to accept the lease of "+($F{JENIS_PAJAKAN}!=null?$F{JENIS_PAJAKAN}:"..................")+" of the land measuring approximately "+ ($F{LUAS_EKAR}!=null?$F{LUAS_EKAR}:"..........") + " acres (hereinafter referred to as the “Lease”) being the area more particularly delineated in red on the plan annexed hereto as Schedule B."]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="ff89a14d-f8c3-48dd-9181-b4ab058b5a97" key="textField-92" positionType="Float" x="29" y="121" width="413" height="3"/>
