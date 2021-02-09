@@ -1,27 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPermohonanTanahStatusMengikutKementerian" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="bd89fc93-110a-4ddf-9abc-1023739f279e">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPPermohonanTanahMengikutNegeriSemua" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="df22b864-4ef5-4065-8737-f66a45f4cca2">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
-	<property name="ireport.x" value="17"/>
+	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="ID_URUSAN" class="java.lang.String"/>
-	<parameter name="ID_NEGERI" class="java.lang.String"/>
-	<parameter name="ID_KEMENTERIAN" class="java.lang.String" isForPrompting="false"/>
-	<parameter name="STATUS" class="java.lang.String"/>
+	<parameter name="ID_NEGERI" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ID_KEMENTERIAN" class="java.lang.Integer" isForPrompting="false"/>
 	<parameter name="TAHUN" class="java.lang.String"/>
 	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
 	<parameter name="BULANMM" class="java.lang.String"/>
 	<parameter name="BULANTAMAT" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
-	<parameter name="BULANSEMASA" class="java.lang.String"/>
 	<parameter name="BULANHINGGA" class="java.lang.String"/>
+	<parameter name="BULANSEMASA" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT
-	DISTINCT RK.ID_KEMENTERIAN,RK.NAMA_KEMENTERIAN
+		<![CDATA[SELECT DISTINCT RN.ID_NEGERI,RN.NAMA_NEGERI,RN.KOD_MAMPU
 ,CASE
         WHEN TO_CHAR(TARIKH_MIN.bulanx,'mm')='01' THEN 'JANUARI'
         WHEN TO_CHAR(TARIKH_MIN.bulanx,'mm')='02' THEN 'FEBRUARI'
@@ -59,45 +57,26 @@ END AS BULAN_SEMASA
         THEN (select NAMA_URUSAN from tblrujurusan where id_urusan IN ($P!{ID_URUSAN}))
     ELSE 'PERMOHONAN & PERIZAPAN TANAH'
 END) URUSAN
-FROM TBLRUJKEMENTERIANMAPPING RKM,TBLRUJKEMENTERIAN RK
-,TBLPFDFAIL F
-,( SELECT MIN(FI.TARIKH_DAFTAR_FAIL) bulanx
-	FROM TBLPFDFAIL FI,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
-	--,TBLRUJNEGERI RN,TBLRUJKEMENTERIAN RK
-	WHERE FI.ID_FAIL = P.ID_FAIL
-	AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
-	AND FI.ID_URUSAN IN ($P!{ID_URUSAN})
-	--AND FI.ID_NEGERI = RN.ID_NEGERI
-	--AND FI.ID_KEMENTERIAN = RK.ID_KEMENTERIAN
-	AND FI.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
-	AND P.ID_PERMOHONAN IN (
-		SELECT ID_PERMOHONAN FROM TBLHTPKEPUTUSANMOHON WHERE STATUS IN ('$P!{STATUS}')
-	)
+FROM TBLRUJNEGERI RN
+,( SELECT MIN(FI.TARIKH_DAFTAR_FAIL) bulanx FROM
+	tblpfdfail FI WHERE FI.ID_URUSAN IN ($P!{ID_URUSAN})
+	--AND FI.ID_NEGERI = $P!{ID_NEGERI}
+	--AND FI.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
 	AND (FI.ID_STATUS <> 999 OR FI.ID_STATUS IS NULL)
 ) TARIKH_MIN
-,( SELECT MAX(FI.TARIKH_DAFTAR_FAIL) bulanx
-	FROM TBLPFDFAIL FI,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
-	--,TBLRUJNEGERI RN,TBLRUJKEMENTERIAN RK
-	WHERE FI.ID_FAIL = P.ID_FAIL
-	AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
-	AND FI.ID_URUSAN IN ($P!{ID_URUSAN})
-	--AND FI.ID_NEGERI = RN.ID_NEGERI
-	--AND FI.ID_KEMENTERIAN = RK.ID_KEMENTERIAN
-	AND FI.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
-	AND P.ID_PERMOHONAN IN (
-		SELECT ID_PERMOHONAN FROM TBLHTPKEPUTUSANMOHON
-		WHERE STATUS = '$P!{STATUS}'
-	)
+,( SELECT MAX(FI.TARIKH_DAFTAR_FAIL) bulanx FROM
+	tblpfdfail FI WHERE FI.ID_URUSAN IN ($P!{ID_URUSAN})
+	--AND FI.ID_NEGERI = $P!{ID_NEGERI}
+	--AND FI.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
 	AND (FI.ID_STATUS <> 999 OR FI.ID_STATUS IS NULL)
 ) TARIKH_MAX
-WHERE RKM.ID_KEMENTERIANBARU = RK.ID_KEMENTERIAN
-    AND RKM.STATUS = 'A'
-    AND RK.ID_KEMENTERIAN = F.ID_KEMENTERIAN
-    AND F.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
-ORDER BY RK.NAMA_KEMENTERIAN]]>
+WHERE RN.ID_NEGERI NOT IN (0,17)
+AND RN.ID_NEGERI = $P!{ID_NEGERI}
+ORDER BY RN.KOD_MAMPU]]>
 	</queryString>
-	<field name="ID_KEMENTERIAN" class="java.math.BigDecimal"/>
-	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
+	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="KOD_MAMPU" class="java.lang.String"/>
 	<field name="BULAN_SEBELUM" class="java.lang.String"/>
 	<field name="BULAN_SEMASA" class="java.lang.String"/>
 	<field name="TAHUN" class="java.lang.String"/>
@@ -109,7 +88,7 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 	<title>
 		<band height="50" splitType="Stretch">
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="46d7a53c-bcdf-47af-9973-fc1607570498" key="textField-21" positionType="Float" x="0" y="30" width="828" height="20"/>
+				<reportElement uuid="fdd329a6-2f25-4b7e-ad04-4b44d22f691e" key="textField-21" positionType="Float" x="0" y="30" width="828" height="20"/>
 				<textElement textAlignment="Center">
 					<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
@@ -123,11 +102,11 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 )]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="439a43e8-dfdb-4d38-bc0c-f781374d7e34" key="textField-22" positionType="Float" x="0" y="10" width="828" height="20"/>
+				<reportElement uuid="40181908-53e6-450b-b632-aa31397e1c84" key="textField-22" positionType="Float" x="0" y="10" width="828" height="20"/>
 				<textElement textAlignment="Center">
 					<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<textFieldExpression><![CDATA["SENARAI "+$F{URUSAN}+" MENGIKUT KEMENTERIAN DAN STATUS"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["SENARAI STATUS BAYARAN NOTIS 5A MENGIKUT NEGERI"]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -140,11 +119,11 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 	<detail>
 		<band height="36" splitType="Stretch">
 			<subreport isUsingCache="true">
-				<reportElement uuid="d9300ba4-fff5-4837-8067-430f87eaef64" key="subreport-1" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
+				<reportElement uuid="4cf3d293-e8b6-4b04-8980-0bb95ab71c7d" key="subreport-1" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
 					<printWhenExpression><![CDATA[new Boolean( $P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00") )]]></printWhenExpression>
 				</reportElement>
-				<subreportParameter name="ID_KEMENTERIAN">
-					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_KEMENTERIAN})]]></subreportParameterExpression>
+				<subreportParameter name="ID_NEGERI">
+					<subreportParameterExpression><![CDATA[""+$F{ID_NEGERI}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="TAHUN">
 					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
@@ -152,58 +131,52 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<subreportParameter name="ID_URUSAN">
 					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="STATUS">
-					<subreportParameterExpression><![CDATA[$P{STATUS}]]></subreportParameterExpression>
-				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutKementerianStatusThnSR.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahNotis5AMengikutNegeriThnSR.jasper"]]></subreportExpression>
 			</subreport>
 			<break>
-				<reportElement uuid="365622c4-dbe0-4e07-9eb8-5c1e76f0ff80" key="element-1" positionType="Float" x="0" y="35" width="828" height="1"/>
+				<reportElement uuid="5b81072d-3e9f-4dbb-9e35-2d3ae98c3775" key="element-1" positionType="Float" x="0" y="35" width="828" height="1"/>
 			</break>
 			<subreport isUsingCache="true">
-				<reportElement uuid="afcbd384-92b1-40aa-bb2d-4db1ff37ce44" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
-					<printWhenExpression><![CDATA[new Boolean( !$P{BULANMM}.equals("00") || !$P{BULANTAMAT}.equals("00") )]]></printWhenExpression>
+				<reportElement uuid="c3115625-4017-4fdf-abb9-9c6845d4d517" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[new Boolean( !$P{BULANMM}.equals("00") && !$P{BULANTAMAT}.equals("00") )]]></printWhenExpression>
 				</reportElement>
-				<subreportParameter name="BULAN">
-					<subreportParameterExpression><![CDATA[$P{BULANMM}]]></subreportParameterExpression>
+				<subreportParameter name="ID_NEGERI">
+					<subreportParameterExpression><![CDATA[""+$F{ID_NEGERI}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="BULANTAMAT">
 					<subreportParameterExpression><![CDATA[$P{BULANTAMAT}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="ID_KEMENTERIAN">
-					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_KEMENTERIAN})]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="TAHUN">
-					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="ID_URUSAN">
-					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="STATUS">
-					<subreportParameterExpression><![CDATA[$P{STATUS}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="TAHUNTAMAT">
-					<subreportParameterExpression><![CDATA[$P{TAHUNTAMAT}]]></subreportParameterExpression>
-				</subreportParameter>
-				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutKementerianStatusSelangSR.jasper"]]></subreportExpression>
-			</subreport>
-			<subreport isUsingCache="true">
-				<reportElement uuid="4da349b5-c4a0-4292-a533-6b67d1015ca6" key="subreport-1" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
-					<printWhenExpression><![CDATA[new Boolean( !$P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00") )]]></printWhenExpression>
-				</reportElement>
 				<subreportParameter name="TAHUN">
 					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="BULANMM">
 					<subreportParameterExpression><![CDATA[$P{BULANMM}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="STATUS">
-					<subreportParameterExpression><![CDATA[$P{STATUS}]]></subreportParameterExpression>
+				<subreportParameter name="ID_URUSAN">
+					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TAHUNTAMAT">
+					<subreportParameterExpression><![CDATA[$P{TAHUNTAMAT}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutKementerianStatusBlnThnSR.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahNotis5AMengikutNegeriBlnThnRangeSR.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="c3115625-4017-4fdf-abb9-9c6845d4d517" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[new Boolean( !$P{BULANMM}.equals("00") && !$P{BULANTAMAT}.equals("00") )]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="ID_NEGERI">
+					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_NEGERI})]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TAHUN">
+					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BULANMM">
+					<subreportParameterExpression><![CDATA[$P{BULANMM}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahNotis5AMengikutNegeriBlnThnSR.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</detail>
@@ -213,28 +186,28 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 	<pageFooter>
 		<band height="19" splitType="Prevent">
 			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
-				<reportElement uuid="04edee42-5c77-4663-b17a-1db6b2c0fad8" key="textField-14" x="84" y="1" width="100" height="18"/>
+				<reportElement uuid="c26ba24d-a608-471a-9a84-882a5cb15147" key="textField-14" x="84" y="1" width="100" height="18"/>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement uuid="4de06e4c-1bc2-44b7-a4e0-48779d82a479" key="staticText-25" x="30" y="1" width="53" height="18"/>
+				<reportElement uuid="4e314902-4ed6-4a55-9426-2d4f93bcacd0" key="staticText-25" x="30" y="1" width="53" height="18"/>
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<text><![CDATA[Tarikh Cetak :]]></text>
 			</staticText>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="0b55412a-6f3a-4e0a-bf70-41a0bdd21bf3" key="textField-15" x="702" y="1" width="89" height="18"/>
+				<reportElement uuid="2d3241eb-9acd-4cb4-a687-56c57525f512" key="textField-15" x="702" y="1" width="89" height="18"/>
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[" Mukasurat " + $V{PAGE_NUMBER} + " dari "]]></textFieldExpression>
 			</textField>
 			<textField evaluationTime="Report" isBlankWhenNull="false">
-				<reportElement uuid="f86da1b5-6b58-4590-91bd-249c453258cb" key="textField-16" x="790" y="1" width="23" height="18"/>
+				<reportElement uuid="df278690-f51e-4497-9540-a1d87c54f4b4" key="textField-16" x="790" y="1" width="23" height="18"/>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
 				</textElement>
@@ -248,7 +221,7 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 	<noData>
 		<band height="114" splitType="Stretch">
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="43bc11a8-8958-45c0-b75c-b6b830b85667" key="textField-17" x="0" y="86" width="828" height="20"/>
+				<reportElement uuid="7b6ede6d-e111-401f-9b03-18e057430ba9" key="textField-17" x="0" y="86" width="828" height="20"/>
 				<box>
 					<topPen lineWidth="0.25"/>
 					<leftPen lineWidth="0.25"/>
@@ -261,15 +234,15 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<textFieldExpression><![CDATA["TIADA"]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement uuid="6e406915-5697-4f42-9b4a-45fb664f7ac9" key="staticText-41" x="0" y="10" width="828" height="20"/>
+				<reportElement uuid="f0f794a8-c329-4b64-98dd-e99e4ac2d720" key="staticText-41" x="0" y="10" width="828" height="20"/>
 				<textElement textAlignment="Center">
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<text><![CDATA[SENARAI PERMOHONAN TANAH MILIK MENGIKUT KEMENTERIAN DAN STATUS]]></text>
+				<text><![CDATA[SENARAI PERMOHONAN TANAH MILIK MENGIKUT NEGERI]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="f60d0f60-598e-4fa6-ac25-9d1f68d635f1" key="staticText-42" mode="Opaque" x="85" y="50" width="100" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="e749797c-35fd-4e42-ad98-5f8868af1528" key="staticText-42" mode="Opaque" x="85" y="50" width="100" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -285,7 +258,7 @@ DAERAH
 MUKIM]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="462c0608-fa29-44c7-8a2e-a94e6377c756" key="staticText-43" mode="Opaque" x="0" y="50" width="30" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="8b9e4299-5b04-4fce-b2aa-a40c6c8f1c7d" key="staticText-43" mode="Opaque" x="0" y="50" width="30" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -299,7 +272,7 @@ MUKIM]]></text>
 				<text><![CDATA[BIL.]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="cfb4f1c1-c983-4757-a2fb-b890b3bf5969" key="staticText-44" mode="Opaque" x="305" y="50" width="150" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="16fb589b-ffd8-46ac-9002-620ff52b3e49" key="staticText-44" mode="Opaque" x="305" y="50" width="150" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -313,7 +286,7 @@ MUKIM]]></text>
 				<text><![CDATA[KEGUNAAN TANAH]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="cd9bd7be-a248-4b46-8b19-6b6421b2fe6c" key="staticText-45" mode="Opaque" x="185" y="50" width="120" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="05c63355-3f70-4536-94e6-fd0d075068a5" key="staticText-45" mode="Opaque" x="185" y="50" width="120" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -327,7 +300,7 @@ MUKIM]]></text>
 				<text><![CDATA[ AGENSI]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="e829afd7-6b98-47e2-8e4d-58a9c0d08918" key="staticText-46" mode="Opaque" x="550" y="50" width="90" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="9e8a357a-a957-41cb-8e54-f36a50e4154d" key="staticText-46" mode="Opaque" x="550" y="50" width="90" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -342,7 +315,7 @@ MUKIM]]></text>
 NO. FAIL PTG]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="f003add4-d498-4a67-82ee-dc68f62e46a0" key="staticText-47" mode="Opaque" x="640" y="50" width="70" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="4747a1e7-1ca6-44b9-bfbd-78584a5b7471" key="staticText-47" mode="Opaque" x="640" y="50" width="70" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -356,7 +329,7 @@ NO. FAIL PTG]]></text>
 				<text><![CDATA[JENIS TANAH]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="edb614ea-830f-4c08-a0d0-d13dc58fc3ef" key="staticText-48" mode="Opaque" x="710" y="50" width="118" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="f6018c39-7065-4936-ac18-507672ac8ae4" key="staticText-48" mode="Opaque" x="710" y="50" width="118" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -370,7 +343,7 @@ NO. FAIL PTG]]></text>
 				<text><![CDATA[CATATAN]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="7e9ae0ad-8b40-4bdd-9334-e6c357b1cc65" key="staticText-49" mode="Opaque" x="30" y="50" width="55" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="911904f5-bab0-4632-95ba-98380f5e6802" key="staticText-49" mode="Opaque" x="30" y="50" width="55" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -384,7 +357,7 @@ NO. FAIL PTG]]></text>
 				<text><![CDATA[TARIKH MOHON/ PROSES]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="1e6a2bc1-f9d4-4596-bd12-38d1a3232419" key="staticText-50" mode="Opaque" x="455" y="50" width="95" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="e33ec9c4-d337-473e-b0ac-d50e88356555" key="staticText-50" mode="Opaque" x="455" y="50" width="95" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
