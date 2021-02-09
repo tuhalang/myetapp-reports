@@ -2,9 +2,9 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPPajakanDerafPerjanjian_1" pageWidth="595" pageHeight="818" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="0ec8abb2-86ac-47f7-849f-8c400165835e">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
-	<property name="ireport.zoom" value="1.9965000000000006"/>
+	<property name="ireport.zoom" value="1.1269722013523666"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="1042"/>
+	<property name="ireport.y" value="0"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -12,10 +12,39 @@
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="WANG_CAGARAN" class="java.lang.String"/>
 	<parameter name="KADAR_SEWA" class="java.lang.String"/>
+	<parameter name="ID_PERMOHONAN" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
 	<queryString>
-		<![CDATA[select * from dual]]>
+		<![CDATA[SELECT DISTINCT HM.LUAS_HEKTAR, HM.LUAS_EKAR, MT.JENIS_PAJAKAN
+FROM TBLHTPPEMOHON PM, TBLHTPPAJAKAN PAJ,
+TBLPFDFAIL A, TBLPERMOHONAN B, TBLHTPPERMOHONAN PP,
+(SELECT DISTINCT HMU.ID_PERMOHONAN, SUM(HMU.LUAS_BERSAMAAN) AS LUAS_HEKTAR,
+ SUM(ROUND((HMU.LUAS_BERSAMAAN * 2.471),3)) AS LUAS_EKAR
+ FROM TBLPERMOHONAN B, TBLHTPHAKMILIKURUSAN HMU
+ WHERE B.ID_PERMOHONAN = HMU.ID_PERMOHONAN GROUP BY HMU.ID_PERMOHONAN) HM
+ ,( SELECT MT.ID_PERMOHONAN
+ 	,CASE
+ 		WHEN NVL(MT.LUAS_BERSAMAAN,0) < NVL(MTR.LUAS_BERSAMAAN,0)
+ 			THEN 'part'
+ 		ELSE
+ 		'whole'
+ 	END JENIS_PAJAKAN
+ 	FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
+ 	WHERE MT.PEGANGAN_HAKMILIK = MTR.PEGANGAN_HAKMILIK(+)
+    and MT.ID_PERMOHONAN = 1617155673
+ 	) MT
+WHERE A.ID_FAIL = B.ID_FAIL
+AND B.ID_PERMOHONAN = PP.ID_PERMOHONAN
+AND B.ID_PERMOHONAN = PM.ID_PERMOHONAN(+)
+AND B.ID_PERMOHONAN = PAJ.ID_PERMOHONAN(+)
+AND B.ID_PERMOHONAN = HM.ID_PERMOHONAN(+)
+AND B.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
+AND B.ID_PERMOHONAN = $P!{ID_PERMOHONAN}]]>
 	</queryString>
-	<field name="DUMMY" class="java.lang.String"/>
+	<field name="LUAS_HEKTAR" class="java.lang.Double"/>
+	<field name="LUAS_EKAR" class="java.lang.Double"/>
+	<field name="JENIS_PAJAKAN" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -145,7 +174,9 @@
 +"“Lease Period” means the period as stated in clause 2.1 of this Agreement;\n\n"
 +"“Lease Rental” means the sum as stated in clause 3 of this Agreement;\n\n"
 +"*“Relevant Authority” means any authority competent to issue the relevant approval, direction, order, requirement and instruction under any applicable law;\n\n"
-+"“Said Land” means the whole of the *land/part of the land leased to the Lessee under this Agreement measuring approximately …… acres being the area more particularly delineated in red on the plan annexed hereto as Schedule B;\n"
++"“Said Land” means the "+($F{JENIS_PAJAKAN}!=null?$F{JENIS_PAJAKAN}:"*whole/part.")+" of the land leased to the Lessee under this Agreement measuring approximately "
++($F{LUAS_HEKTAR}!=null?$F{LUAS_EKAR}:"...........")
++" acres being the area more particularly delineated in red on the plan annexed hereto as Schedule B;\n"
 +"\n*delete as appropriate\n"
 +"\n“Utilities” includes public utilities, the supply of electricity, gas, water, drainage, sewerage system, telecommunications system, underground amenities, transportation system and other utilities;\n"]]></textFieldExpression>
 			</textField>
