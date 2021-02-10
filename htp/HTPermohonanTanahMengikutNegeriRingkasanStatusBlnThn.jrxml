@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPermohonanTanahRingkasanStatusMengikutKementerian" pageWidth="595" pageHeight="842" columnWidth="581" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="c955984a-60c7-4e21-9a50-f1f3031af84f">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPermohonanTanahRingkasanStatusMengikutNegeri" pageWidth="595" pageHeight="842" columnWidth="581" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="03e6509f-4422-459f-934e-29d0e050854e">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
@@ -11,8 +11,19 @@
 	<parameter name="ID_URUSAN" class="java.lang.String"/>
 	<parameter name="TAHUN" class="java.lang.String"/>
 	<parameter name="BULANMM" class="java.lang.String"/>
+	<parameter name="BULANSEMASA" class="java.lang.String"/>
+	<parameter name="ID_NEGERI" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT DISTINCT RK.ID_KEMENTERIAN,RK.NAMA_KEMENTERIAN NAMA
+		<![CDATA[SELECT RN.ID_NEGERI,RN.NAMA_NEGERI XNAMA_NEGERI
+,CASE
+    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 14
+	THEN 'W.P KUALA LUMPUR'
+    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 15
+	THEN 'W.P LABUAN'
+    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 16
+	THEN 'W.P PUTRAJAYA'
+    ELSE UPPER(TRIM(RN.NAMA_NEGERI))
+END NAMA_NEGERI
 ,NVL(JUMPERMOHONAN.JUMLAH,0) PERMOHONAN
 ,NVL(JUMLULUS.JUMLAH,0) LULUS
 ,NVL(JUMBELUMLULUS.JUMLAH,0) BELUM_LULUS
@@ -30,101 +41,102 @@
         THEN (select NAMA_URUSAN from tblrujurusan where id_urusan IN ($P!{ID_URUSAN}))
     ELSE 'PERMOHONAN & PERIZAPAN TANAH'
 END) URUSAN
-FROM TBLRUJKEMENTERIANMAPPING RKM,TBLRUJKEMENTERIAN RK
-,(  SELECT RKEM.ID_KEMENTERIAN,COUNT (*) JUMLAH
-    FROM TBLPFDFAIL F,TBLPERMOHONAN P
-	,TBLRUJKEMENTERIAN RKEM,TBLRUJKEMENTERIANMAPPING RKM
+FROM TBLRUJNEGERI RN
+,(  SELECT RNI.ID_NEGERI,COUNT (*) JUMLAH
+    FROM TBLPFDFAIL F, TBLPERMOHONAN P, TBLHTPPERMOHONAN PP,TBLRUJNEGERI RNI, TBLRUJKEMENTERIAN RKEM
     WHERE F.ID_URUSAN IN ($P!{ID_URUSAN})
     AND (F.ID_STATUS <> '999' OR F.ID_STATUS IS NULL)
     AND F.ID_FAIL = P.ID_FAIL
-    AND RKM.ID_KEMENTERIANLAMA = F.ID_KEMENTERIAN
-    AND RKM.ID_KEMENTERIANBARU = RKEM.ID_KEMENTERIAN
+    AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
+    AND F.ID_KEMENTERIAN = RKEM.ID_KEMENTERIAN
+    AND F.ID_NEGERI = RNI.ID_NEGERI
     AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
-	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
-    GROUP BY RKEM.ID_KEMENTERIAN
+    AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
+  GROUP BY RNI.ID_NEGERI
 ) JUMPERMOHONAN
-,(  SELECT RKEM.ID_KEMENTERIAN,COUNT (*) JUMLAH
-    FROM TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPKEPUTUSANMOHON KM
-	,TBLRUJKEMENTERIAN RKEM,TBLRUJKEMENTERIANMAPPING RKM
+,(  SELECT RNI.ID_NEGERI,COUNT (*) JUMLAH
+    FROM TBLPFDFAIL F,TBLPERMOHONAN P, TBLHTPPERMOHONAN PP,TBLRUJNEGERI RNI, TBLRUJKEMENTERIAN RKEM,TBLHTPKEPUTUSANMOHON KM
     WHERE F.ID_URUSAN IN ($P!{ID_URUSAN})
     AND (F.ID_STATUS <> '999' OR F.ID_STATUS IS NULL)
     AND F.ID_FAIL = P.ID_FAIL
+    AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
+    AND F.ID_KEMENTERIAN = RKEM.ID_KEMENTERIAN
+    AND F.ID_NEGERI = RNI.ID_NEGERI
     AND P.ID_PERMOHONAN = KM.ID_PERMOHONAN
-    AND RKM.ID_KEMENTERIANLAMA = F.ID_KEMENTERIAN
-    AND RKM.ID_KEMENTERIANBARU = RKEM.ID_KEMENTERIAN
     AND KM.STATUS= '01'
-    AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
-	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
-    GROUP BY RKEM.ID_KEMENTERIAN
+    	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
+    AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
+    GROUP BY RNI.ID_NEGERI
 ) JUMLULUS
-,(  SELECT RKEM.ID_KEMENTERIAN,COUNT (*) JUMLAH
-    FROM TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPKEPUTUSANMOHON KM
-	,TBLRUJKEMENTERIAN RKEM,TBLRUJKEMENTERIANMAPPING RKM
+,(  SELECT RNI.ID_NEGERI,COUNT (*) JUMLAH
+    FROM TBLPFDFAIL F,TBLPERMOHONAN P, TBLHTPPERMOHONAN PP,TBLRUJNEGERI RNI, TBLRUJKEMENTERIAN RKEM,TBLHTPKEPUTUSANMOHON KM
     WHERE F.ID_URUSAN IN ($P!{ID_URUSAN})
     AND (F.ID_STATUS <> '999' OR F.ID_STATUS IS NULL)
     AND F.ID_FAIL = P.ID_FAIL
+    AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
+    AND F.ID_KEMENTERIAN = RKEM.ID_KEMENTERIAN
+    AND F.ID_NEGERI = RNI.ID_NEGERI
     AND P.ID_PERMOHONAN = KM.ID_PERMOHONAN
-    AND RKM.ID_KEMENTERIANLAMA = F.ID_KEMENTERIAN
-    AND RKM.ID_KEMENTERIANBARU = RKEM.ID_KEMENTERIAN
     AND KM.STATUS= '00'
-    AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
-	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
-    GROUP BY RKEM.ID_KEMENTERIAN
+    	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
+      AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
+      GROUP BY RNI.ID_NEGERI
 ) JUMBELUMLULUS
-,(  SELECT RKEM.ID_KEMENTERIAN,COUNT (*) JUMLAH
-    FROM TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPKEPUTUSANMOHON KM
-	,TBLRUJKEMENTERIAN RKEM,TBLRUJKEMENTERIANMAPPING RKM
+,(  SELECT RNI.ID_NEGERI,COUNT (*) JUMLAH
+    FROM TBLPFDFAIL F,TBLPERMOHONAN P, TBLHTPPERMOHONAN PP,TBLRUJNEGERI RNI, TBLRUJKEMENTERIAN RKEM,TBLHTPKEPUTUSANMOHON KM
     WHERE F.ID_URUSAN IN ($P!{ID_URUSAN})
     AND (F.ID_STATUS <> '999' OR F.ID_STATUS IS NULL)
     AND F.ID_FAIL = P.ID_FAIL
+    AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
+    AND F.ID_KEMENTERIAN = RKEM.ID_KEMENTERIAN
+    AND F.ID_NEGERI = RNI.ID_NEGERI
     AND P.ID_PERMOHONAN = KM.ID_PERMOHONAN
-    AND RKM.ID_KEMENTERIANLAMA = F.ID_KEMENTERIAN
-    AND RKM.ID_KEMENTERIANBARU = RKEM.ID_KEMENTERIAN
     AND KM.STATUS= '04'
-    AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
-	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
-    GROUP BY RKEM.ID_KEMENTERIAN
+    	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
+    AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
+    GROUP BY RNI.ID_NEGERI
 ) JUMTARIKBALIK
-,(SELECT RKEM.ID_KEMENTERIAN,COUNT (*) JUMLAH
-    FROM TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPKEPUTUSANMOHON KM
-	,TBLRUJKEMENTERIAN RKEM,TBLRUJKEMENTERIANMAPPING RKM
+,(SELECT RNI.ID_NEGERI,COUNT (*) JUMLAH
+    FROM TBLPFDFAIL F,TBLPERMOHONAN P, TBLHTPPERMOHONAN PP,TBLRUJNEGERI RNI, TBLRUJKEMENTERIAN RKEM,TBLHTPKEPUTUSANMOHON KM
     WHERE F.ID_URUSAN IN ($P!{ID_URUSAN})
     AND (F.ID_STATUS <> '999' OR F.ID_STATUS IS NULL)
     AND F.ID_FAIL = P.ID_FAIL
+    AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
+    AND F.ID_KEMENTERIAN = RKEM.ID_KEMENTERIAN
+    AND F.ID_NEGERI = RNI.ID_NEGERI
     AND P.ID_PERMOHONAN = KM.ID_PERMOHONAN
-    AND RKM.ID_KEMENTERIANLAMA = F.ID_KEMENTERIAN
-    AND RKM.ID_KEMENTERIANBARU = RKEM.ID_KEMENTERIAN
     AND KM.STATUS= '03'
-    AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
-	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
-    GROUP BY RKEM.ID_KEMENTERIAN
+    	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
+    AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
+    GROUP BY RNI.ID_NEGERI
 ) JUMBATAL
-,(SELECT RKEM.ID_KEMENTERIAN,COUNT (*) JUMLAH
-    FROM TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPKEPUTUSANMOHON KM
-	,TBLRUJKEMENTERIAN RKEM,TBLRUJKEMENTERIANMAPPING RKM
+,(SELECT RNI.ID_NEGERI,COUNT (*) JUMLAH
+    FROM TBLPFDFAIL F,TBLPERMOHONAN P, TBLHTPPERMOHONAN PP,TBLRUJNEGERI RNI, TBLRUJKEMENTERIAN RKEM,TBLHTPKEPUTUSANMOHON KM
     WHERE F.ID_URUSAN IN ($P!{ID_URUSAN})
     AND (F.ID_STATUS <> '999' OR F.ID_STATUS IS NULL)
     AND F.ID_FAIL = P.ID_FAIL
+    AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
+    AND F.ID_KEMENTERIAN = RKEM.ID_KEMENTERIAN
+    AND F.ID_NEGERI = RNI.ID_NEGERI
     AND P.ID_PERMOHONAN = KM.ID_PERMOHONAN
-    AND RKM.ID_KEMENTERIANLAMA = F.ID_KEMENTERIAN
-    AND RKM.ID_KEMENTERIANBARU = RKEM.ID_KEMENTERIAN
     AND KM.STATUS= '02'
-    AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
-	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
-    GROUP BY RKEM.ID_KEMENTERIAN
+    	AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
+     AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
+   GROUP BY RNI.ID_NEGERI
 ) JUMTOLAK
-WHERE RKM.ID_KEMENTERIANBARU = RK.ID_KEMENTERIAN
-    AND RKM.STATUS = 'A'
-    AND RK.ID_KEMENTERIAN = JUMPERMOHONAN.ID_KEMENTERIAN(+)
-    AND RK.ID_KEMENTERIAN = JUMLULUS.ID_KEMENTERIAN(+)
-    AND RK.ID_KEMENTERIAN = JUMBELUMLULUS.ID_KEMENTERIAN(+)
-    AND RK.ID_KEMENTERIAN = JUMTARIKBALIK.ID_KEMENTERIAN(+)
-    AND RK.ID_KEMENTERIAN = JUMBATAL.ID_KEMENTERIAN(+)
-    AND RK.ID_KEMENTERIAN = JUMTOLAK.ID_KEMENTERIAN(+)
-ORDER BY RK.NAMA_KEMENTERIAN]]>
+WHERE
+RN.ID_NEGERI NOT IN (17,0)
+AND JUMPERMOHONAN.ID_NEGERI(+) = RN.ID_NEGERI
+AND JUMLULUS.ID_NEGERI(+) = RN.ID_NEGERI
+AND JUMBELUMLULUS.ID_NEGERI(+) = RN.ID_NEGERI
+AND JUMTARIKBALIK.ID_NEGERI(+) = RN.ID_NEGERI
+AND JUMBATAL.ID_NEGERI(+) = RN.ID_NEGERI
+AND JUMTOLAK.ID_NEGERI(+) = RN.ID_NEGERI
+ORDER BY RN.KOD_MAMPU]]>
 	</queryString>
-	<field name="ID_KEMENTERIAN" class="java.math.BigDecimal"/>
-	<field name="NAMA" class="java.lang.String"/>
+	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
+	<field name="XNAMA_NEGERI" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
 	<field name="PERMOHONAN" class="java.math.BigDecimal"/>
 	<field name="LULUS" class="java.math.BigDecimal"/>
 	<field name="BELUM_LULUS" class="java.math.BigDecimal"/>
@@ -163,11 +175,13 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 	<title>
 		<band height="50" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="584c54fc-afe0-46e8-b866-705ff2e9bbb9" key="textField-25" x="0" y="10" width="581" height="20" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="6a31e790-c9e3-41a5-967d-68dfffee94d5" key="textField-25" x="0" y="10" width="581" height="20"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<textFieldExpression><![CDATA["RINGKASAN SENARAI "+$F{URUSAN}]]></textFieldExpression>
+				<textFieldExpression><![CDATA["RINGKASAN SENARAI "+$F{URUSAN}
++"\n BULAN "
++$P{BULANSEMASA}+" TAHUN "+$P{TAHUN}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -177,7 +191,7 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 	<columnHeader>
 		<band height="36" splitType="Stretch">
 			<staticText>
-				<reportElement uuid="18bf9ceb-ca1c-464f-8384-650684f26a08" key="staticText-4" mode="Opaque" x="0" y="0" width="20" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="5f230934-5f5a-483f-8056-a72d903d8539" key="staticText-4" mode="Opaque" x="0" y="0" width="20" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -191,7 +205,7 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<text><![CDATA[BIL.]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="8898ed39-9415-4ad6-b939-88c2e9095bc2" key="staticText-5" mode="Opaque" x="20" y="0" width="201" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="41cbd86f-6f32-4265-b6e6-1c01c1000e99" key="staticText-5" mode="Opaque" x="20" y="0" width="201" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -202,10 +216,10 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[KEMENTERIAN]]></text>
+				<text><![CDATA[NEGERI]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="dc42ee0b-519a-4bbc-b3da-73fda83689e0" key="staticText-6" mode="Opaque" x="221" y="0" width="60" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="0860a8d7-ea06-44c3-b37c-7275c1b32be0" key="staticText-6" mode="Opaque" x="221" y="0" width="60" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -219,7 +233,7 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<text><![CDATA[JUMLAH]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="9efff760-3798-48e5-af2f-c367d4073d49" key="staticText-7" mode="Opaque" x="281" y="0" width="60" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="261b7767-137b-48ee-b3cb-1f8a333fedd0" key="staticText-7" mode="Opaque" x="281" y="0" width="60" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -233,7 +247,7 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<text><![CDATA[LULUS]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="a33c2775-7384-4e3d-86e3-337f517cdddb" key="staticText-11" mode="Opaque" x="341" y="0" width="60" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="d9879883-0f6e-4220-9347-734cf66e2bc8" key="staticText-11" mode="Opaque" x="341" y="0" width="60" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -247,7 +261,7 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<text><![CDATA[TOLAK]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="6f7b05e9-8162-4fa5-9e33-e43cb84848a9" key="staticText-12" mode="Opaque" x="401" y="0" width="60" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="83a79c35-662c-4468-a8ea-30b6f2870c07" key="staticText-12" mode="Opaque" x="401" y="0" width="60" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -261,7 +275,7 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<text><![CDATA[BELUM ADA KEPUTUSAN]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="e6adb4ed-7019-410f-8655-8b28043509d9" key="staticText-13" mode="Opaque" x="461" y="0" width="60" height="36" backcolor="#CCCCCC"/>
+				<reportElement uuid="72eb2842-6aad-40eb-9c59-8bed6b7ac3b3" key="staticText-13" mode="Opaque" x="461" y="0" width="60" height="36" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -280,7 +294,7 @@ BATAL]]></text>
 	<detail>
 		<band height="36" splitType="Stretch">
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="05844b96-3244-46f6-aeb5-ec405e320a8d" key="textField-1" x="281" y="0" width="60" height="36"/>
+				<reportElement uuid="5c30f1e0-f0b1-497c-8d94-96cf8a8c6fe0" key="textField-1" x="281" y="0" width="60" height="36"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -293,7 +307,7 @@ BATAL]]></text>
 				<textFieldExpression><![CDATA[new Integer($F{LULUS}.intValue())]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="bbdf50f9-c282-4e85-89c4-8ef7c606fcb4" key="textField-2" x="221" y="0" width="60" height="36"/>
+				<reportElement uuid="9414c8ed-7356-4ba8-a30f-2a1bd9ab2e5d" key="textField-2" x="221" y="0" width="60" height="36"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -306,7 +320,7 @@ BATAL]]></text>
 				<textFieldExpression><![CDATA[new Integer($F{PERMOHONAN}.intValue())]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="ede0b805-3249-4f97-b2b8-4cf4427a5b56" key="textField-3" x="20" y="0" width="201" height="36"/>
+				<reportElement uuid="471f0ee6-4872-40eb-9d17-276bd751b974" key="textField-3" x="20" y="0" width="201" height="36"/>
 				<box leftPadding="3">
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -316,10 +330,10 @@ BATAL]]></text>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{NAMA}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{NAMA_NEGERI}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="db60d52e-190a-4710-a186-1514c6a06036" key="textField-7" x="0" y="0" width="20" height="36"/>
+				<reportElement uuid="8780feb3-638e-42ef-a30c-b05664a0200e" key="textField-7" x="0" y="0" width="20" height="36"/>
 				<box>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -332,7 +346,7 @@ BATAL]]></text>
 				<textFieldExpression><![CDATA[" "+$V{REPORT_COUNT}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="f46f75a1-eee6-4ff9-928f-381fcf51709a" key="textField-12" x="341" y="0" width="60" height="36"/>
+				<reportElement uuid="9e944be4-5725-46d6-830b-53384a6021c4" key="textField-12" x="341" y="0" width="60" height="36"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -345,7 +359,7 @@ BATAL]]></text>
 				<textFieldExpression><![CDATA[new Integer($F{TOLAK}.intValue())]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="702e24d3-d487-4a14-a293-02245259da34" key="textField-13" x="401" y="0" width="60" height="36"/>
+				<reportElement uuid="694de77f-3ec6-4f31-bcd7-6b7cc473c46f" key="textField-13" x="401" y="0" width="60" height="36"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -358,7 +372,7 @@ BATAL]]></text>
 				<textFieldExpression><![CDATA[new Integer($F{BELUM_LULUS}.intValue()+$F{BELUM_ADA_KEPUTUSAN}.intValue())]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="1ba0c3e9-ab59-4048-a744-89a447ee2922" key="textField-14" x="461" y="0" width="60" height="36"/>
+				<reportElement uuid="5a47e670-bb79-4c3c-b4ff-e1d40d1e1958" key="textField-14" x="461" y="0" width="60" height="36"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -378,14 +392,14 @@ BATAL]]></text>
 	<pageFooter>
 		<band height="18" splitType="Stretch">
 			<staticText>
-				<reportElement uuid="004f3d0b-d922-463a-8e18-5bedc6233a14" key="staticText-16" x="1" y="0" width="53" height="18"/>
+				<reportElement uuid="783c869d-fa8f-47fc-8998-5d51b96455b4" key="staticText-16" x="1" y="0" width="53" height="18"/>
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<text><![CDATA[Tarikh Cetak :]]></text>
 			</staticText>
 			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
-				<reportElement uuid="8bec6769-ddd2-4ecc-bd80-d2d744706827" key="textField-24" x="55" y="0" width="100" height="18"/>
+				<reportElement uuid="19f39930-631f-4441-bb6c-3ded989184b8" key="textField-24" x="55" y="0" width="100" height="18"/>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
 				</textElement>
@@ -396,7 +410,7 @@ BATAL]]></text>
 	<summary>
 		<band height="36" splitType="Stretch">
 			<staticText>
-				<reportElement uuid="ccde5484-3df6-423c-be0c-2b3aab6475e0" key="staticText-10" mode="Transparent" x="0" y="0" width="221" height="36" forecolor="#000000" backcolor="#FFFFFF"/>
+				<reportElement uuid="063375f3-a912-4996-88da-6bdd008d04c5" key="staticText-10" mode="Transparent" x="0" y="0" width="221" height="36" forecolor="#000000" backcolor="#FFFFFF"/>
 				<box>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
@@ -410,7 +424,7 @@ BATAL]]></text>
 				<text><![CDATA[JUMLAH KESELURUHAN]]></text>
 			</staticText>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="a12bd1e8-791a-4c24-a161-8330be07db4c" key="textField-4" x="221" y="0" width="60" height="36" forecolor="#000000"/>
+				<reportElement uuid="991213b4-29bd-4f59-b879-aa07c07c16c8" key="textField-4" x="221" y="0" width="60" height="36" forecolor="#000000"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -423,7 +437,7 @@ BATAL]]></text>
 				<textFieldExpression><![CDATA[new Integer($V{JUMLAH_PERMOHONAN}.intValue())]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="8210d2c0-be1e-4bbb-8bb5-708f3dee14c3" key="textField-5" x="281" y="0" width="60" height="36" forecolor="#000000"/>
+				<reportElement uuid="1d0be425-ab03-4298-8fcf-37cfcedf1a45" key="textField-5" x="281" y="0" width="60" height="36" forecolor="#000000"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -436,7 +450,7 @@ BATAL]]></text>
 				<textFieldExpression><![CDATA[new Integer($V{JUMLAH_LULUS}.intValue())]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="529d6da8-c649-400d-92f0-cf20cab7972d" key="textField-16" x="341" y="0" width="60" height="36" forecolor="#000000"/>
+				<reportElement uuid="f831da5f-068c-4404-a5dc-328935c5fbae" key="textField-16" x="341" y="0" width="60" height="36" forecolor="#000000"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -449,7 +463,7 @@ BATAL]]></text>
 				<textFieldExpression><![CDATA[new Integer($V{JUMLAH_TOLAK}.intValue())]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="00d5b755-650e-4ac6-bb05-3d7ee24324e2" key="textField-20" x="401" y="0" width="60" height="36" forecolor="#000000"/>
+				<reportElement uuid="9f41e847-0a48-4de7-b492-0180e3f200a3" key="textField-20" x="401" y="0" width="60" height="36" forecolor="#000000"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
@@ -462,7 +476,7 @@ BATAL]]></text>
 				<textFieldExpression><![CDATA[new Integer($V{JUMLAH_BELUM_LULUS}.intValue()+$V{JUMLAH_BELUM_ADA_KEPUTUSAN}.intValue())]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="47c8ee65-aa6f-4980-83ec-3dc9bd5c92e7" key="textField-21" x="461" y="0" width="60" height="36" forecolor="#000000"/>
+				<reportElement uuid="01c927c6-7fe5-4f91-bb29-38558e591aa2" key="textField-21" x="461" y="0" width="60" height="36" forecolor="#000000"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid"/>
