@@ -2,8 +2,8 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Borang C_lebihDrpdSatuHakmilik_jadual_mukim" pageWidth="535" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="535" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cb46f8ef-bd6a-41ee-806b-78c154bf96f0">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
-	<property name="ireport.zoom" value="1.6105100000000008"/>
-	<property name="ireport.x" value="18"/>
+	<property name="ireport.zoom" value="1.4641000000000006"/>
+	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
@@ -33,12 +33,24 @@ ROUND(H.LUAS_LOT,4) AS LUAS_LOT,
     case
     when h.ID_UNITLUASLOT_CONVERT = 1 then 'hektar'
     when h.ID_UNITLUASLOT_CONVERT = 2 then 'meter persegi'
-    end as unit_LOT
-FROM TBLPPTPERMOHONAN P,TBLPFDFAIL F,
+    end as unit_LOT,
+INITCAP(M.NAMA_MUKIM) AS NAMA_MUKIM,
+CASE
+    WHEN M.NAMA_MUKIM LIKE '%MUKIM%' THEN INITCAP(REPLACE(M.NAMA_MUKIM,'MUKIM',''))
+    WHEN M.NAMA_MUKIM LIKE '%PEKAN%' THEN INITCAP(REPLACE(M.NAMA_MUKIM,'PEKAN',''))
+    WHEN M.NAMA_MUKIM LIKE '%BANDAR%' THEN INITCAP(REPLACE(M.NAMA_MUKIM,'BANDAR',''))
+END AS MUKIM,
+CASE
+    WHEN M.NAMA_MUKIM LIKE '%MUKIM%' THEN '1'
+    WHEN M.NAMA_MUKIM LIKE '%PEKAN%' THEN '2'
+    WHEN M.NAMA_MUKIM LIKE '%BANDAR%' THEN '3'
+END AS SET_MUKIM, INITCAP(D.NAMA_DAERAH) AS NAMA_DAERAH
+FROM TBLPPTPERMOHONAN P,TBLPFDFAIL F, TBLRUJDAERAH D,
 TBLPPTHAKMILIK H,TBLRUJMUKIM M , TBLRUJJENISHAKMILIK HM, TBLRUJLOT JL
 WHERE P.ID_FAIL= F.ID_FAIL
 AND P.ID_PERMOHONAN = H.ID_PERMOHONAN
 AND H.ID_MUKIM = M.ID_MUKIM
+AND H.ID_DAERAH = D.ID_DAERAH(+)
 AND H.ID_JENISHAKMILIK = HM.ID_JENISHAKMILIK(+)
 AND H.ID_LOT = JL.ID_LOT(+)
 AND M.ID_MUKIM = $P!{id_mukim}
@@ -56,22 +68,186 @@ ORDER BY LPAD(H.no_lot,20) asc, LPAD(H.no_pt,20) asc, LPAD(NO_LOT,20) asc, LPAD(
 	<field name="UNIT_AMBIL" class="java.lang.String"/>
 	<field name="LUAS_LOT" class="java.math.BigDecimal"/>
 	<field name="UNIT_LOT" class="java.lang.String"/>
+	<field name="MUKIM" class="java.lang.String"/>
+	<field name="SET_MUKIM" class="java.lang.String"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band splitType="Stretch"/>
+		<band height="50" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="10" y="10" width="38" height="15" isPrintWhenDetailOverflows="true"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isItalic='true'>Daerah</style> "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="10" y="25" width="107" height="15" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "1" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" isStrikeThrough="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/Pekan/</style>Mukim"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="10" y="25" width="107" height="15" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Bandar<style isStrikeThrough='true'>/Pekan/Mukim</style> "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="117" y="25" width="262" height="15" isPrintWhenDetailOverflows="true"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{MUKIM} != null ? $F{MUKIM}:"-")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="48" y="10" width="331" height="15" isPrintWhenDetailOverflows="true"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" isItalic="true" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_DAERAH} != null ? $F{NAMA_DAERAH}:"-")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="4df09724-b95a-45f0-b2b1-60571a50bdd6" key="textField-5" positionType="Float" x="10" y="25" width="107" height="15" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[$F{SET_MUKIM}.equals( "2" )]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="Cambria" size="11" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isStrikeThrough='true'>Bandar/</style>Pekan<style isStrikeThrough='true'>/Mukim</style> "]]></textFieldExpression>
+			</textField>
+		</band>
 	</title>
 	<pageHeader>
 		<band splitType="Stretch"/>
 	</pageHeader>
 	<columnHeader>
-		<band splitType="Stretch"/>
+		<band height="62" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="79651cf0-e26a-46a3-baeb-12e12e64b411" key="textField-29" positionType="Float" stretchType="RelativeToTallestObject" x="73" y="4" width="70" height="53"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Hakmilik Atau Pendudukan"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="a27f13a1-c1a2-49d7-9cfb-8dc7dcec6c1c" key="textField-33" positionType="Float" stretchType="RelativeToTallestObject" x="388" y="0" width="117" height="62"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Bookman Old Style" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="c971f5c2-d8ea-43c6-8382-384e7648677e" key="textField-34" positionType="Float" stretchType="RelativeToTallestObject" x="325" y="0" width="63" height="62"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Bookman Old Style" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="914235fa-7c6b-4938-b421-06fe42a5a4e9" key="textField-31" positionType="Float" stretchType="RelativeToTallestObject" x="329" y="4" width="56" height="53"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Keluasan Lot/ Petak"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0de2e37a-0616-4a4f-84b7-0332c9594d49" key="textField-32" positionType="Float" stretchType="RelativeToTallestObject" x="145" y="3" width="178" height="53"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Tuan Punya Berdaftar atau Penduduk Yang Direkodkan"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="4873d685-65bc-47b6-b5b0-966383f08392" key="textField-36" positionType="Float" stretchType="RelativeToTallestObject" x="72" y="0" width="71" height="62"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Bookman Old Style" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="bb903e75-823d-4259-b6b8-8583d0308021" key="textField-28" positionType="Float" stretchType="RelativeToTallestObject" x="5" y="4" width="62" height="53"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA["No. Lot/\n*No. P.T."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="273638b5-5fef-4384-b0ba-99f147294b60" key="textField-35" positionType="Float" stretchType="RelativeToTallestObject" x="143" y="0" width="182" height="62"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Bookman Old Style" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="38470dad-4c14-4abc-bfdf-0fcd80015e02" key="textField-37" positionType="Float" stretchType="RelativeToTallestObject" x="0" y="0" width="72" height="62"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Bookman Old Style" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6a0c5534-f8ce-4205-8401-1522352c40d0" key="textField-30" positionType="Float" stretchType="RelativeToTallestObject" x="390" y="4" width="115" height="53"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Cambria" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA["**Anggaran Keluasan Yang Hendak Diambil/ Anggaran Keluasan/ Isipadu dan Had Tanah Bawah Tanah Yang Hendak Diambil"]]></textFieldExpression>
+			</textField>
+		</band>
 	</columnHeader>
 	<detail>
 		<band height="56" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="fb6890b4-2617-4684-a9c8-3527e71481ce" key="textField-58" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="72" height="56" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="fb6890b4-2617-4684-a9c8-3527e71481ce" key="textField-58" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="-4" width="72" height="59" isPrintWhenDetailOverflows="true"/>
 				<box>
 					<pen lineWidth="1.0"/>
 					<topPen lineWidth="0.0" lineStyle="Double"/>
@@ -85,7 +261,7 @@ ORDER BY LPAD(H.no_lot,20) asc, LPAD(H.no_pt,20) asc, LPAD(NO_LOT,20) asc, LPAD(
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="b3c9e002-c108-482d-8cf6-c5694e83430d" key="textField-57" positionType="Float" stretchType="RelativeToBandHeight" x="72" y="0" width="71" height="56" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="b3c9e002-c108-482d-8cf6-c5694e83430d" key="textField-57" positionType="Float" stretchType="RelativeToBandHeight" x="72" y="-4" width="71" height="59" isPrintWhenDetailOverflows="true"/>
 				<box>
 					<pen lineWidth="1.0"/>
 					<topPen lineWidth="0.0" lineStyle="Double"/>
@@ -99,7 +275,7 @@ ORDER BY LPAD(H.no_lot,20) asc, LPAD(H.no_pt,20) asc, LPAD(NO_LOT,20) asc, LPAD(
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="8071ab6b-dd3a-4cc1-87d8-7e2b5b1c1fe1" key="textField-56" positionType="Float" stretchType="RelativeToBandHeight" x="143" y="0" width="182" height="56" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="8071ab6b-dd3a-4cc1-87d8-7e2b5b1c1fe1" key="textField-56" positionType="Float" stretchType="RelativeToBandHeight" x="143" y="-4" width="182" height="59" isPrintWhenDetailOverflows="true"/>
 				<box>
 					<pen lineWidth="1.0"/>
 					<topPen lineWidth="0.0" lineStyle="Double"/>
@@ -113,7 +289,7 @@ ORDER BY LPAD(H.no_lot,20) asc, LPAD(H.no_pt,20) asc, LPAD(NO_LOT,20) asc, LPAD(
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="2a592632-3d22-4d87-b787-a09175f4e3b2" key="textField-55" positionType="Float" stretchType="RelativeToBandHeight" x="325" y="0" width="63" height="56" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="2a592632-3d22-4d87-b787-a09175f4e3b2" key="textField-55" positionType="Float" stretchType="RelativeToBandHeight" x="325" y="-4" width="63" height="59" isPrintWhenDetailOverflows="true"/>
 				<box>
 					<pen lineWidth="1.0"/>
 					<topPen lineWidth="0.0" lineStyle="Double"/>
@@ -127,7 +303,7 @@ ORDER BY LPAD(H.no_lot,20) asc, LPAD(H.no_pt,20) asc, LPAD(NO_LOT,20) asc, LPAD(
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
-				<reportElement uuid="9411f8e5-99cc-45df-8c4d-a99cf9803171" key="textField-54" positionType="Float" stretchType="RelativeToBandHeight" x="388" y="0" width="117" height="56" isPrintWhenDetailOverflows="true"/>
+				<reportElement uuid="9411f8e5-99cc-45df-8c4d-a99cf9803171" key="textField-54" positionType="Float" stretchType="RelativeToBandHeight" x="388" y="-4" width="117" height="59" isPrintWhenDetailOverflows="true"/>
 				<box>
 					<pen lineWidth="1.0"/>
 					<topPen lineWidth="0.0" lineStyle="Double"/>
