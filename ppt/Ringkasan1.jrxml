@@ -12,9 +12,67 @@
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="ID_FAIL" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select * from dual]]>
+		<![CDATA[/*select * from dual*/
+SELECT
+NVL(BRGG.BORANGG,0) AS BORANGG, NVL(BRGE.JUM_BRGE,0) AS JUM_BRGE,
+-- BRGE.JUM_BRGE - BRGG.BORANGG AS TDK,
+NVL(BRGI.BORANGI,0) as BorangI, NVL(BRGK.BORANGK,0) AS BORANGK, NVL(HMK.JUM_LOT,0) AS JUM_LOT,
+case
+   --when brgi.borangi = 0 OR brgi.borangi = null then BRGE.JUM_BRGE - BRGG.BORANGG
+   when brgi.borangi = hmk.jum_lot then 0
+   else BRGE.JUM_BRGE - BRGG.BORANGG
+end as lot_tdk
+FROM
+TBLPPTPERMOHONAN A,
+(SELECT COUNT(DISTINCT A.ID_BORANGG) AS BORANGG, D.ID_PERMOHONAN
+  FROM TBLPPTBORANGG A, TBLPPTSIASATAN B, TBLPPTHAKMILIK C, TBLPPTPERMOHONAN D, TBLPPTBORANGH E
+  WHERE A.ID_SIASATAN = B.ID_SIASATAN
+  AND B.ID_HAKMILIK = C.ID_HAKMILIK
+  AND A.ID_BORANGG = E.ID_BORANGG
+  AND C.ID_PERMOHONAN = D.ID_PERMOHONAN
+  --AND D.ID_FAIL = 1011525877
+  GROUP BY D.ID_PERMOHONAN
+)BRGG,
+(SELECT COUNT(B.ID_BORANGE) AS JUM_BRGE, D.ID_PERMOHONAN
+  FROM TBLPPTBORANGEHAKMILIK A, TBLPPTBORANGE B, TBLPPTHAKMILIK C, TBLPPTPERMOHONAN D
+  WHERE D.ID_PERMOHONAN = C.ID_PERMOHONAN
+  AND A.ID_BORANGE = B.ID_BORANGE
+  AND A.ID_HAKMILIK = C.ID_HAKMILIK
+  --AND D.ID_FAIL = 1011525877
+ --ORDER BY B.ID_BORANGE
+GROUP BY D.ID_PERMOHONAN) BRGE,
+(SELECT COUNT(TBLPPTHAKMILIK.ID_PERMOHONAN) AS BORANGI, TBLPPTBORANGI.ID_PERMOHONAN
+  FROM TBLPPTBORANGI, TBLPPTHAKMILIK
+  WHERE TBLPPTHAKMILIK.ID_PERMOHONAN = TBLPPTBORANGI.ID_PERMOHONAN
+  AND TBLPPTHAKMILIK.FLAG_AMBIL_SEGERA = 1
+  --AND TBLPPTHAKMILIK.ID_PERMOHONAN = 1011212
+  GROUP BY TBLPPTBORANGI.ID_PERMOHONAN
+) BRGI,
+(SELECT COUNT(A.TARIKH_BORANGK) AS BORANGK, A.ID_PERMOHONAN
+  FROM  TBLPPTBORANGK A, TBLPPTHAKMILIKBORANGK B
+  WHERE A.ID_BORANGK = B.ID_BORANGK
+  --AND A.ID_PERMOHONAN = 1011212
+  GROUP BY A.ID_PERMOHONAN
+) BRGK,
+(SELECT COUNT(HM.ID_HAKMILIK) AS JUM_LOT, HM.ID_PERMOHONAN
+  FROM TBLPPTHAKMILIK HM
+  GROUP BY HM.ID_PERMOHONAN) HMK
+WHERE
+A.ID_PERMOHONAN = BRGG.ID_PERMOHONAN(+)
+AND A.ID_PERMOHONAN = BRGE.ID_PERMOHONAN(+)
+AND A.ID_PERMOHONAN = BRGI.ID_PERMOHONAN(+)
+AND A.ID_PERMOHONAN = BRGK.ID_PERMOHONAN(+)
+AND A.ID_PERMOHONAN = HMK.ID_PERMOHONAN(+)
+AND A.ID_FAIL = $P{ID_FAIL}
+GROUP BY HMK.JUM_LOT, BRGG.BORANGG,BRGE.JUM_BRGE,
+BRGI.BORANGI,BRGK.BORANGK]]>
 	</queryString>
-	<field name="DUMMY" class="java.lang.String"/>
+	<field name="BORANGG" class="java.lang.String"/>
+	<field name="JUM_BRGE" class="java.lang.String"/>
+	<field name="BORANGI" class="java.lang.String"/>
+	<field name="BORANGK" class="java.lang.String"/>
+	<field name="JUM_LOT" class="java.lang.String"/>
+	<field name="LOT_TDK" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -41,7 +99,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 					<font fontName="SansSerif" size="6"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{BORANGG} != null ? $F{BORANGG} : "")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="57a68f73-c118-40e1-986d-3e5a2bc0ce3c" key="textField-7" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="0" y="0" width="47" height="15" isPrintWhenDetailOverflows="true"/>
@@ -55,21 +113,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 					<font fontName="SansSerif" size="6"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="2cbaebcc-4dbe-491f-a2d4-e8fb4de310d4" key="textField-6" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="94" y="0" width="47" height="15" isPrintWhenDetailOverflows="true"/>
-				<box>
-					<pen lineWidth="0.0"/>
-					<topPen lineWidth="0.0" lineStyle="Solid"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid"/>
-					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
-					<font fontName="SansSerif" size="6"/>
-				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{JUM_BRGE}!=null ? $F{JUM_BRGE}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="2cbaebcc-4dbe-491f-a2d4-e8fb4de310d4" key="textField-6" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="141" y="0" width="48" height="15" isPrintWhenDetailOverflows="true" backcolor="#CCCCCC"/>
@@ -83,7 +127,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 					<font fontName="SansSerif" size="6"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{BORANGI}!=null?$F{BORANGI}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="4716978f-e8a5-4b31-b38f-754d772f0b58" key="textField-8" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="189" y="0" width="47" height="15" isPrintWhenDetailOverflows="true" backcolor="#CCCCCC"/>
@@ -97,36 +141,36 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 					<font fontName="SansSerif" size="6"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{BORANGK} != null ? $F{BORANGK} : "")]]></textFieldExpression>
 			</textField>
-			<subreport isUsingCache="true">
-				<reportElement uuid="1556bd68-9db8-4d99-be0a-0dfab8762de7" key="subreport-1" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="0" y="0" width="141" height="15" isPrintWhenDetailOverflows="true"/>
-				<subreportParameter name="ReportDir">
-					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="ID_FAIL">
-					<subreportParameterExpression><![CDATA[$P{ID_FAIL}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="ID_PERMOHONAN">
-					<subreportParameterExpression><![CDATA[$P{ID_PERMOHONAN}]]></subreportParameterExpression>
-				</subreportParameter>
-				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir}+"//ppt//Ringkasan2.jasper"]]></subreportExpression>
-			</subreport>
-			<subreport isUsingCache="true">
-				<reportElement uuid="1556bd68-9db8-4d99-be0a-0dfab8762de7" key="subreport-1" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="141" y="0" width="95" height="15" isPrintWhenDetailOverflows="true"/>
-				<subreportParameter name="ReportDir">
-					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="ID_FAIL">
-					<subreportParameterExpression><![CDATA[$P{ID_FAIL}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="ID_PERMOHONAN">
-					<subreportParameterExpression><![CDATA[$P{ID_PERMOHONAN}]]></subreportParameterExpression>
-				</subreportParameter>
-				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir}+"//ppt//Ringkasan4.jasper"]]></subreportExpression>
-			</subreport>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="2cbaebcc-4dbe-491f-a2d4-e8fb4de310d4" key="textField-6" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="94" y="0" width="47" height="15" isPrintWhenDetailOverflows="true"/>
+				<box>
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="SansSerif" size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{BORANGG} != null ? $F{BORANGG} : "")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="4716978f-e8a5-4b31-b38f-754d772f0b58" key="textField-8" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="236" y="0" width="47" height="15" isPrintWhenDetailOverflows="true" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="SansSerif" size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{LOT_TDK} != null ? $F{LOT_TDK} : "")]]></textFieldExpression>
+			</textField>
 		</band>
 	</detail>
 	<columnFooter>
