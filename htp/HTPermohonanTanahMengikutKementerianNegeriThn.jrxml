@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPermohonanTanahMengikutKementerianSemua" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="3f162c13-c26a-468b-bbd7-64f39c72b681">
 	<property name="ireport.zoom" value="1.0"/>
-	<property name="ireport.x" value="17"/>
+	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
@@ -13,30 +13,38 @@
 	</parameter>
 	<parameter name="ID_KEMENTERIAN" class="java.lang.String"/>
 	<parameter name="TAHUN" class="java.lang.String"/>
-	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
-	<parameter name="BULANMM" class="java.lang.String"/>
-	<parameter name="BULANTAMAT" class="java.lang.String"/>
 	<parameter name="BULANSEMASA" class="java.lang.String"/>
+	<parameter name="BULANMM" class="java.lang.String"/>
+	<parameter name="BULAN_TAMAT" class="java.lang.String"/>
+	<parameter name="ID_NEGERI" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT	DISTINCT RK.ID_KEMENTERIAN,RK.NAMA_KEMENTERIAN
+		<![CDATA[SELECT
+	DISTINCT RK.ID_KEMENTERIAN,RK.NAMA_KEMENTERIAN
 ,(CASE
     WHEN (select COUNT(*) from tblrujurusan where id_urusan IN ($P!{ID_URUSAN}))=1
         THEN (select NAMA_URUSAN from tblrujurusan where id_urusan IN ($P!{ID_URUSAN}))
     ELSE 'PERMOHONAN & PERIZAPAN TANAH'
 END) URUSAN
-FROM TBLRUJKEMENTERIANMAPPING RKM,TBLRUJKEMENTERIAN RK,TBLPFDFAIL F
+,RN.NAMA_NEGERI
+FROM TBLRUJKEMENTERIANMAPPING RKM,TBLRUJKEMENTERIAN RK
+,TBLPFDFAIL F
+,TBLRUJNEGERI RN
 WHERE RKM.ID_KEMENTERIANBARU = RK.ID_KEMENTERIAN
     AND RKM.STATUS = 'A'
     AND RK.ID_KEMENTERIAN = F.ID_KEMENTERIAN
+AND F.ID_NEGERI=RN.ID_NEGERI
 AND F.ID_URUSAN IN ($P!{ID_URUSAN})
-	AND TO_CHAR(NVL(F.TARIKH_DAFTAR_FAIL,SYSDATE),'YYYY') = '$P!{TAHUN}'
-	AND TO_CHAR(NVL(F.TARIKH_DAFTAR_FAIL,SYSDATE),'MM') = '$P!{BULANMM}'
+AND F.ID_NEGERI=$P!{ID_NEGERI}
+AND F.ID_KEMENTERIAN=$P!{ID_KEMENTERIAN}
+AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
+--AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '$P!{BULANMM}'
 ORDER BY RK.NAMA_KEMENTERIAN]]>
 	</queryString>
 	<field name="ID_KEMENTERIAN" class="java.math.BigDecimal"/>
 	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
 	<field name="URUSAN" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -47,8 +55,10 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<textElement textAlignment="Center">
 					<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<textFieldExpression><![CDATA["SENARAI "+$F{URUSAN}+" MENGIKUT KEMENTERIAN"
-+"\nBULAN "+$P{BULANSEMASA} +" TAHUN "+$P{TAHUN}]]></textFieldExpression>
+				<textFieldExpression><![CDATA["SENARAI "+$F{URUSAN}+" BAGI "
++$F{NAMA_KEMENTERIAN}
++" DAN "+$F{NAMA_NEGERI}
++"\nBAGI TAHUN "+$P{TAHUN}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -67,21 +77,8 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<reportElement uuid="94d6d359-bc59-48cd-8319-fd335c54ebab" key="subreport-1" x="0" y="0" width="100" height="36">
 					<printWhenExpression><![CDATA[new Boolean( ($P{BULANMM}.equals("00")) )]]></printWhenExpression>
 				</reportElement>
-				<subreportParameter name="ID_URUSAN">
-					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="ID_KEMENTERIAN">
-					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_KEMENTERIAN})]]></subreportParameterExpression>
-				</subreportParameter>
-				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutKementerianSR.jasper"]]></subreportExpression>
-			</subreport>
-			<subreport isUsingCache="true">
-				<reportElement uuid="0038b21d-1f19-4fbb-8ec6-5a6826a68b78" key="subreport-3" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="50" height="35" isPrintWhenDetailOverflows="true">
-					<printWhenExpression><![CDATA[new Boolean( (!$P{BULANMM}.equals("00")) )]]></printWhenExpression>
-				</reportElement>
-				<subreportParameter name="BULAN">
-					<subreportParameterExpression><![CDATA[$P{BULANMM}]]></subreportParameterExpression>
+				<subreportParameter name="ID_NEGERI">
+					<subreportParameterExpression><![CDATA[$P{ID_NEGERI}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="ID_KEMENTERIAN">
 					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_KEMENTERIAN})]]></subreportParameterExpression>
@@ -89,17 +86,39 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 				<subreportParameter name="TAHUN">
 					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="BULAN_TAMAT">
-					<subreportParameterExpression><![CDATA[$P{BULANTAMAT}]]></subreportParameterExpression>
+				<subreportParameter name="PAPAR">
+					<subreportParameterExpression><![CDATA["T"]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="ID_URUSAN">
 					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="TAHUN_TAMAT">
-					<subreportParameterExpression><![CDATA[$P{TAHUNTAMAT}]]></subreportParameterExpression>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutKementerianNegeriThnSR.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="0038b21d-1f19-4fbb-8ec6-5a6826a68b78" key="subreport-3" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="50" height="35" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[new Boolean( (!$P{BULANMM}.equals("00")) )]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="ID_NEGERI">
+					<subreportParameterExpression><![CDATA[$P{ID_NEGERI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_KEMENTERIAN">
+					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_KEMENTERIAN})]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TAHUN">
+					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PAPAR">
+					<subreportParameterExpression><![CDATA["N"]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BULANMM">
+					<subreportParameterExpression><![CDATA[$P{BULANMM}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_URUSAN">
+					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutKementerianBlnThnSR.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutKementerianNegeriBlnThnSR.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</detail>
