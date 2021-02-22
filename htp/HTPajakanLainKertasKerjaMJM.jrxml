@@ -4,17 +4,39 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="101"/>
+	<property name="ireport.y" value="0"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="ID_PERMOHONAN" class="java.lang.String"/>
 	<parameter name="NILAIAN" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT INITCAP(CATATAN) AS TUJUAN, MAKLUMAT_TANAH AS LATAR_BELAKANG, MAKLUMAT_PEMOHON NAMA_PEMOHON,
-ASAS_PERTIMBANGAN, '' KADAR_PAJAKAN, 'Kesimpulan' KESIMPULAN
-FROM TBLHTPMEMOMENTERI
-WHERE ID_TBLHTPMEMOMENTERI = 99211000022]]>
+		<![CDATA[SELECT INITCAP( MM.CATATAN) AS TUJUAN,  MM.MAKLUMAT_TANAH AS LATAR_BELAKANG,  MM.MAKLUMAT_PEMOHON NAMA_PEMOHON,
+ MM.ASAS_PERTIMBANGAN, '' KADAR_PAJAKAN, 'Kesimpulan' KESIMPULAN
+,MT.JENIS_PAJAKAN,MT.JENIS_TANAH
+,NVL(PAJ.TEMPOH_PAJAKAN,0) TEMPOH
+,P.TUJUAN TAJUK
+FROM TBLHTPMEMOMENTERI MM
+,TBLPERMOHONAN P
+,TBLHTPPAJAKAN PAJ
+ 	,( SELECT MT.ID_PERMOHONAN
+ 	,CASE
+ 		WHEN MT.NO_HAKMILIK IS NOT NULL
+ 			THEN 'Tanah Milik'
+ 		ELSE 'Tanah Rizab'
+ 	END JENIS_TANAH
+ 	,CASE
+ 		WHEN NVL(MT.LUAS_BERSAMAAN,0) < NVL(MTR.LUAS_BERSAMAAN,0)
+ 			THEN 'sebahagian'
+ 		ELSE
+ 		'keseluruhan'
+ 	END JENIS_PAJAKAN
+ 	FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
+ 	WHERE MT.PEGANGAN_HAKMILIK = MTR.PEGANGAN_HAKMILIK(+)
+ 	) MT
+WHERE MM.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
+AND MM.ID_PERMOHONAN = PAJ.ID_PERMOHONAN(+)
+AND MM.ID_TBLHTPMEMOMENTERI = 99211000022]]>
 	</queryString>
 	<field name="TUJUAN" class="java.lang.String"/>
 	<field name="LATAR_BELAKANG" class="java.lang.String"/>
@@ -22,6 +44,10 @@ WHERE ID_TBLHTPMEMOMENTERI = 99211000022]]>
 	<field name="ASAS_PERTIMBANGAN" class="java.lang.String"/>
 	<field name="KADAR_PAJAKAN" class="java.lang.String"/>
 	<field name="KESIMPULAN" class="java.lang.String"/>
+	<field name="JENIS_PAJAKAN" class="java.lang.String"/>
+	<field name="JENIS_TANAH" class="java.lang.String"/>
+	<field name="TEMPOH" class="java.lang.String"/>
+	<field name="TAJUK" class="java.lang.String"/>
 	<variable name="BIL" class="java.lang.Integer" incrementType="Report" calculation="Count">
 		<variableExpression><![CDATA[new Integer($V{COUNT_VALUE}.intValue() + new Integer(1).intValue())]]></variableExpression>
 		<initialValueExpression><![CDATA[($V{COUNT_VALUE} == null ? new Integer(1) : $V{COUNT_VALUE})]]></initialValueExpression>
@@ -35,13 +61,20 @@ WHERE ID_TBLHTPMEMOMENTERI = 99211000022]]>
 	</background>
 	<title>
 		<band height="368" splitType="Stretch">
-			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="2491db5e-9120-413a-baec-f495903a37f6" key="textField-1" positionType="Float" x="1" y="31" width="451" height="18"/>
 				<textElement textAlignment="Center" markup="html">
 					<font fontName="Bookman Old Style" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["CADANGAN PAJAKAN *KESELURUHAN / SEBAHAGIAN \nTANAH MILIK PERSEKUTUAN\n............................................"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["CADANGAN PAJAKAN "
++$F{JENIS_PAJAKAN}.toUpperCase()
++"\n "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN "
++"UNTUK TUJUAN"
++" "+$F{TAJUK}.toUpperCase()+" OLEH "
++$F{NAMA_PEMOHON}.toUpperCase()+ " BAGI TEMPOH "
++$F{TEMPOH}+" TAHUN"
+]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="76ff61b1-c515-4c8a-9088-0aa3174a940a" key="textField-2" positionType="Float" x="0" y="2" width="451" height="18"/>
@@ -49,7 +82,7 @@ WHERE ID_TBLHTPMEMOMENTERI = 99211000022]]>
 					<font fontName="Bookman Old Style" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["KERTAS KERJA\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["KERTAS KERJA"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
 				<reportElement uuid="309adec8-6239-4760-a699-6047aaa6fe4e" key="textField-3" positionType="Float" x="39" y="69" width="412" height="18"/>
