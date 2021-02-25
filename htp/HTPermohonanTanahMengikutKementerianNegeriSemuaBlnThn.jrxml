@@ -3,7 +3,7 @@
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
-	<property name="ireport.x" value="17"/>
+	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
@@ -12,9 +12,11 @@
 	<parameter name="ID_NEGERI" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="ID_KEMENTERIAN" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="TAHUN" class="java.lang.String"/>
-	<parameter name="TAHUN_TAMAT" class="java.lang.String"/>
+	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
 	<parameter name="BULANMM" class="java.lang.String"/>
+	<parameter name="BULANTAMAT" class="java.lang.String"/>
 	<parameter name="BULANSEMASA" class="java.lang.String"/>
+	<parameter name="BULANHINGGA" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT DISTINCT RN.ID_NEGERI,RN.NAMA_NEGERI,RN.KOD_MAMPU
@@ -25,14 +27,13 @@
 END) URUSAN
 ,RK.NAMA_KEMENTERIAN
 FROM TBLRUJNEGERI RN,TBLPFDFAIL F,TBLRUJKEMENTERIAN RK
-WHERE RN.ID_NEGERI NOT IN (0,17)
-AND F.ID_NEGERI=RN.ID_NEGERI
-AND RK.ID_KEMENTERIAN = F.ID_KEMENTERIAN
-AND F.ID_KEMENTERIAN=$P!{ID_KEMENTERIAN}
-AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
-AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '$P!{BULANMM}'
-ORDER BY RN.KOD_MAMPU
-]]>
+WHERE F.ID_NEGERI=RN.ID_NEGERI
+AND F.ID_KEMENTERIAN =RK.ID_KEMENTERIAN
+AND F.ID_URUSAN IN ($P!{ID_URUSAN})
+AND F.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
+AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'YYYY') = '$P!{TAHUN}'
+AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'MM') = '$P!{BULANMM}'
+ORDER BY RN.KOD_MAMPU]]>
 	</queryString>
 	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
@@ -49,14 +50,22 @@ ORDER BY RN.KOD_MAMPU
 				<textElement textAlignment="Center">
 					<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<textFieldExpression><![CDATA["BULAN "+$P{BULANSEMASA} +" TAHUN "+ $P{TAHUN}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00")?
+    "TAHUN "+$P{TAHUN}
+    :(!$P{BULANMM}.equals("00") && !$P{BULANTAMAT}.equals("00")?
+     "DARI BULAN "+$P{BULANSEMASA}+" TAHUN "+$P{TAHUN}
+         +" SEHINGGA BULAN "+$P{BULANHINGGA}+" TAHUN "+$P{TAHUNTAMAT}
+         : " BULAN "+$P{BULANSEMASA}+" TAHUN "+$P{TAHUN}
+    )
+)]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
 				<reportElement uuid="d50300c8-be28-4309-a4a1-67651bad2f9e" key="textField-22" positionType="Float" x="0" y="0" width="828" height="20"/>
 				<textElement textAlignment="Center">
 					<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<textFieldExpression><![CDATA["SENARAI "+$F{URUSAN}+" MENGIKUT SEMUA NEGERI BAGI "+$F{NAMA_KEMENTERIAN}]]></textFieldExpression>
+				<textFieldExpression><![CDATA["SENARAI "+$F{URUSAN}+" MENGIKUT SEMUA NEGERI BAGI "
++$F{NAMA_KEMENTERIAN}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -70,23 +79,7 @@ ORDER BY RN.KOD_MAMPU
 		<band height="36" splitType="Stretch">
 			<subreport isUsingCache="true">
 				<reportElement uuid="77cf981a-73a5-40af-af39-4c38f33a228c" key="subreport-1" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
-					<printWhenExpression><![CDATA[new Boolean( ($P{BULANMM}.equals("00")) )]]></printWhenExpression>
-				</reportElement>
-				<subreportParameter name="ID_NEGERI">
-					<subreportParameterExpression><![CDATA[""+$F{ID_NEGERI}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="ID_URUSAN">
-					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
-				</subreportParameter>
-				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPPermohonanTanahMengikutNegeriSR.jasper"]]></subreportExpression>
-			</subreport>
-			<break>
-				<reportElement uuid="c8f1920e-02dc-4437-967f-1e845e21ac9a" key="element-1" positionType="Float" x="0" y="35" width="828" height="1"/>
-			</break>
-			<subreport isUsingCache="true">
-				<reportElement uuid="54545205-2e80-40f6-975a-616213eaf142" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
-					<printWhenExpression><![CDATA[new Boolean( (!$P{BULANMM}.equals("00")) )]]></printWhenExpression>
+					<printWhenExpression><![CDATA[new Boolean( $P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00") )]]></printWhenExpression>
 				</reportElement>
 				<subreportParameter name="ID_NEGERI">
 					<subreportParameterExpression><![CDATA[""+$F{ID_NEGERI}]]></subreportParameterExpression>
@@ -97,8 +90,52 @@ ORDER BY RN.KOD_MAMPU
 				<subreportParameter name="TAHUN">
 					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="PAPAR">
-					<subreportParameterExpression><![CDATA["Y"]]></subreportParameterExpression>
+				<subreportParameter name="ID_URUSAN">
+					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutNegeriKementerianThnSR.jasper"]]></subreportExpression>
+			</subreport>
+			<break>
+				<reportElement uuid="c8f1920e-02dc-4437-967f-1e845e21ac9a" key="element-1" positionType="Float" x="0" y="35" width="828" height="1"/>
+			</break>
+			<subreport isUsingCache="true">
+				<reportElement uuid="54545205-2e80-40f6-975a-616213eaf142" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[new Boolean( !$P{BULANMM}.equals("00") && !$P{BULANTAMAT}.equals("00") )]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="ID_NEGERI">
+					<subreportParameterExpression><![CDATA[""+$F{ID_NEGERI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_URUSAN">
+					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BULAN">
+					<subreportParameterExpression><![CDATA[$P{BULANMM}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BULAN_TAMAT">
+					<subreportParameterExpression><![CDATA[$P{BULANTAMAT}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TAHUN">
+					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TAHUN_TAMAT">
+					<subreportParameterExpression><![CDATA[$P{TAHUNTAMAT}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutKementerianNegeriBlnThnRangeSR.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="77cf981a-73a5-40af-af39-4c38f33a228c" key="subreport-1" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="53" height="35" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[new Boolean( !$P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00") )]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="ID_NEGERI">
+					<subreportParameterExpression><![CDATA[$F{ID_NEGERI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_KEMENTERIAN">
+					<subreportParameterExpression><![CDATA[$P{ID_KEMENTERIAN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TAHUN">
+					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="BULANMM">
 					<subreportParameterExpression><![CDATA[$P{BULANMM}]]></subreportParameterExpression>
@@ -107,7 +144,7 @@ ORDER BY RN.KOD_MAMPU
 					<subreportParameterExpression><![CDATA[$P{ID_URUSAN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPPermohonanTanahMengikutKementerianNegeriBlnThnSR.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPermohonanTanahMengikutNegeriKementerianBlnThnSR.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</detail>
@@ -164,14 +201,14 @@ ORDER BY RN.KOD_MAMPU
 				</textElement>
 				<textFieldExpression><![CDATA["TIADA"]]></textFieldExpression>
 			</textField>
-			<staticText>
-				<reportElement uuid="d24500bb-e9ba-4a4f-b43d-f8936c92c178" key="staticText-41" x="0" y="10" width="828" height="20"/>
-				<textElement textAlignment="Center">
+			<textField>
+				<reportElement uuid="d1c4f72f-d1af-49b7-9554-efcacea5ca0c" key="staticText-41" x="0" y="10" width="828" height="20"/>
+				<textElement textAlignment="Center" markup="none">
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<text><![CDATA[SENARAI PERMOHONAN TANAH MILIK MENGIKUT NEGERI]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["SENARAI "+" MENGIKUT SEMUA NEGERI BAGI KEMENTERIAN "]]></textFieldExpression>
+			</textField>
 			<staticText>
 				<reportElement uuid="99f839dd-0b3c-4155-a991-b3f4e4be3ada" key="staticText-42" mode="Opaque" x="85" y="50" width="100" height="36" backcolor="#CCCCCC"/>
 				<box>

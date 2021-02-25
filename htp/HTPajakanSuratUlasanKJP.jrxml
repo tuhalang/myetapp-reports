@@ -61,6 +61,7 @@
 ,NVL(MT.JENIS_TANAH,'') JENIS_TANAH
 ,NVL(MT.JENIS_PAJAKAN,'') JENIS_PAJAKAN
 ,NVL(PA.TEMPOH_PAJAKAN,0) TEMPOH
+,NVL(MT.MAKLUMAT_TANAH,'') MAKLUMAT_TANAH
 --
 FROM TBLPFDFAIL A,
 	TBLPERMOHONAN B,
@@ -78,8 +79,20 @@ FROM TBLPFDFAIL A,
  				THEN 'sebahagian'
  			ELSE 'keseluruhan'
  	END JENIS_PAJAKAN
+   	,CASE
+ 		WHEN MT.NO_HAKMILIK IS NOT NULL
+ 			THEN 'No.Hakmilik '||MT.NO_HAKMILIK || ''|| LOT.KETERANGAN ||MT.NO_LOT
+ 		ELSE 'No.Warta '||MT.NO_WARTA || ' '||LOT.KETERANGAN || MT.NO_LOT
+ 	END
+ 	|| ' ' ||RM.NAMA_MUKIM||', '||RD.NAMA_DAERAH ||', '||RN.NAMA_NEGERI
+ 	MAKLUMAT_TANAH
  	FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
+ 	,TBLRUJNEGERI RN,TBLRUJDAERAH RD, TBLRUJMUKIM RM
+ 	,TBLRUJJENISHAKMILIK RJH,TBLRUJLOT LOT
  	WHERE MT.PEGANGAN_HAKMILIK = MTR.PEGANGAN_HAKMILIK(+)
+	AND MT.ID_MUKIM = RM.ID_MUKIM  AND RM.ID_DAERAH = RD.ID_DAERAH  AND RD.ID_NEGERI = RN.ID_NEGERI
+	AND MT.ID_JENISHAKMILIK = RJH.ID_JENISHAKMILIK
+ 	AND MT.ID_LOT = LOT.ID_LOT
  	) MT, TBLHTPPERMOHONAN PP
 WHERE B.ID_FAIL = A.ID_FAIL
   	AND A.ID_KEMENTERIAN = PM.ID_KEMENTERIAN
@@ -112,6 +125,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 	<field name="JENIS_TANAH" class="java.lang.String"/>
 	<field name="JENIS_PAJAKAN" class="java.lang.String"/>
 	<field name="TEMPOH" class="java.lang.String"/>
+	<field name="MAKLUMAT_TANAH" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -177,7 +191,8 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				</textElement>
 				<textFieldExpression><![CDATA["\n2.\tAdalah dimaklumkan bahawa Jabatan ini telah menerima permohonan pajakan tanah bagi "
 +$F{JENIS_PAJAKAN} +" "
-+$F{JENIS_TANAH}+" Pesuruhjaya Tanah Persekutuan bagi tujuan "
++$F{JENIS_TANAH}+" Pesuruhjaya Tanah Persekutuan "
++$F{MAKLUMAT_TANAH}+" UNTUK TUJUAN"
 +$F{TUJUAN}+" untuk tempoh "
 +$F{TEMPOH}+" tahun."
 +" Bersama-sama ini dikemukakan<style isBold='true' pdfFontName='Helvetica-Bold'> salinan hakmilik"

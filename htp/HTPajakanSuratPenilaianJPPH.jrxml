@@ -16,8 +16,7 @@
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="UP" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[
-SELECT  B.ID_PERMOHONAN, A.NO_FAIL
+		<![CDATA[SELECT  B.ID_PERMOHONAN, A.NO_FAIL
 ,TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
         CASE
            WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
@@ -60,6 +59,7 @@ SELECT  B.ID_PERMOHONAN, A.NO_FAIL
 ,NVL(MT.JENIS_TANAH,'') JENIS_TANAH
 ,NVL(MT.JENIS_PAJAKAN,'') JENIS_PAJAKAN
 ,NVL(PA.TEMPOH_PAJAKAN,0) TEMPOH
+,MT.MAKLUMAT_TANAH
 --
 FROM TBLPFDFAIL A,
 	TBLPERMOHONAN B,
@@ -79,8 +79,20 @@ FROM TBLPFDFAIL A,
  		ELSE
  		'keseluruhan'
  	END JENIS_PAJAKAN
+  	,CASE
+ 		WHEN MT.NO_HAKMILIK IS NOT NULL
+ 			THEN 'No.Hakmilik '||MT.NO_HAKMILIK || ''|| LOT.KETERANGAN ||MT.NO_LOT
+ 		ELSE 'No.Warta '||MT.NO_WARTA || ' '||LOT.KETERANGAN || MT.NO_LOT
+ 	END
+ 	|| ' ' ||RM.NAMA_MUKIM||', '||RD.NAMA_DAERAH ||', '||RN.NAMA_NEGERI
+ 	MAKLUMAT_TANAH
  	FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
+ 	,TBLRUJNEGERI RN,TBLRUJDAERAH RD, TBLRUJMUKIM RM
+ 	,TBLRUJJENISHAKMILIK RJH,TBLRUJLOT LOT
  	WHERE MT.PEGANGAN_HAKMILIK = MTR.PEGANGAN_HAKMILIK(+)
+	AND MT.ID_MUKIM = RM.ID_MUKIM  AND RM.ID_DAERAH = RD.ID_DAERAH  AND RD.ID_NEGERI = RN.ID_NEGERI
+	AND MT.ID_JENISHAKMILIK = RJH.ID_JENISHAKMILIK
+ 	AND MT.ID_LOT = LOT.ID_LOT
  	) MT
 WHERE B.ID_FAIL = A.ID_FAIL
 	AND B.ID_PERMOHONAN = PA.ID_PERMOHONAN(+)
@@ -109,6 +121,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 	<field name="JENIS_TANAH" class="java.lang.String"/>
 	<field name="JENIS_PAJAKAN" class="java.lang.String"/>
 	<field name="TEMPOH" class="java.lang.String"/>
+	<field name="MAKLUMAT_TANAH" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -160,7 +173,8 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				</textElement>
 				<textFieldExpression><![CDATA["\n<style isBold='true' pdfFontName='Helvetica-Bold'>PERMOHONAN PAJAKAN "
 +$F{JENIS_PAJAKAN}.toUpperCase()
-+" "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN BAGI TUJUAN"
++" "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN "
++$F{MAKLUMAT_TANAH}+" UNTUK TUJUAN"
 +" "+$F{TUJUAN}.toUpperCase()+" OLEH "
 +$F{NAMA_PEMOHON}.toUpperCase()+ " BAGI TEMPOH "
 +$F{TEMPOH}+" TAHUN</style>\n"]]></textFieldExpression>
@@ -173,7 +187,8 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				</textElement>
 				<textFieldExpression><![CDATA["\n2.\t  Adalah dimaklumkan bahawa Jabatan ini telah menerima permohonan pajakan tanah bagi "
 +$F{JENIS_PAJAKAN} +" "
-+$F{JENIS_TANAH}+" Pesuruhjaya Tanah Persekutuan bagi tujuan "
++$F{JENIS_TANAH}+" Pesuruhjaya Tanah Persekutuan "
++$F{MAKLUMAT_TANAH}+" untuk tujuan "
 +$F{TUJUAN}+" untuk tempoh "
 +$F{TEMPOH}+" tahun."
 +" Bersama-sama ini dikemukakan<style isBold='true' pdfFontName='Helvetica-Bold'> salinan hakmilik, pelan pra-hitungan (jika permohonan sebahagian tanah) dan salinan pelan tapak </style>untuk rujukan dan tindakan tuan selanjutnya."]]></textFieldExpression>

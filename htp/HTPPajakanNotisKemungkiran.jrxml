@@ -16,8 +16,8 @@
 	<parameter name="EMAIL" class="java.lang.String"/>
 	<parameter name="UP" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT   PP.NO_RUJUKAN_LAIN, A.NO_FAIL,
-    TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
+		<![CDATA[SELECT  B.ID_PERMOHONAN, A.NO_FAIL
+,TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
         CASE
            WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
            WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'Februari'
@@ -48,34 +48,63 @@
             WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 12 THEN 'Zulhijjah'
         END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM
 ,INITCAP(PM.NAMA_PEMOHON) AS NAMA_PEMOHON
-,PM. POSKOD, INITCAP(BDR.KETERANGAN) AS NAMA_BANDAR
+,PM. POSKOD
+,INITCAP(BDR.KETERANGAN) AS NAMA_BANDAR
 ,GETNEGERIWILAYAH(PRN.ID_NEGERI) NAMA_NEGERI
-,REPLACE(REPLACE(A.TAJUK_FAIL,'&','&#38;'),'@','&#64;') AS TAJUK_FAIL
-,INITCAP(A.TAJUK_FAIL) AS TUJUAN
-,INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON1,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON1
-,INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON2,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON2
-,INITCAP (REPLACE(REPLACE(PM.ALAMAT_PEMOHON3,'&','&#38;'),'@','&#64;')) AS ALAMAT_PEMOHON3
-,PJK.TARIKH_MULA_PAJAKAN, PJK.TARIKH_TAMATPAJAKAN, PJK.TEMPOH_PAJAKAN, PJK.KADAR_PAJAKAN
-,JHM.KOD_JENIS_HAKMILIK, HU.NO_HAKMILIK, HU.LUAS, PJK.TARIKH_TANDATANGAN
-,INITCAP(NHM.NAMA_NEGERI) AS NEGERI_TANAH, INITCAP(DHM.NAMA_DAERAH) AS DAERAH_TANAH, INITCAP(MHM.NAMA_MUKIM) AS MUKIM_TANAH
-FROM TBLPFDFAIL A, TBLPERMOHONAN B, TBLHTPPERMOHONAN PP,
-     TBLHTPPEMOHON PM, TBLRUJBANDAR BDR, TBLRUJNEGERI PRN--, TBLHTPBAYARAN BYR
-     , TBLHTPPAJAKAN PJK, TBLHTPHAKMILIKURUSAN HU, TBLRUJJENISHAKMILIK JHM
-     , TBLRUJNEGERI NHM, TBLRUJDAERAH DHM, TBLRUJMUKIM MHM
+--
+,REPLACE(REPLACE(PM.ALAMAT_PEMOHON1,'&','&#38;'),'@','&#64;') AS ALAMAT_PEMOHON1
+,REPLACE(REPLACE(PM.ALAMAT_PEMOHON2,'&','&#38;'),'@','&#64;') AS ALAMAT_PEMOHON2
+,REPLACE(REPLACE(PM.ALAMAT_PEMOHON3,'&','&#38;'),'@','&#64;') AS ALAMAT_PEMOHON3
+,REPLACE(REPLACE(B.TUJUAN,'&','&#38;'),'@','&#64;') TUJUAN
+,NVL(MT.JENIS_TANAH,'') JENIS_TANAH
+,NVL(MT.JENIS_PAJAKAN,'') JENIS_PAJAKAN
+,NVL(PA.TEMPOH_PAJAKAN,0) TEMPOH
+,MT.MAKLUMAT_TANAH
+,PA.TARIKH_TANDATANGAN
+,PA.TARIKH_MULA_PAJAKAN, PA.TARIKH_TAMATPAJAKAN, PA.KADAR_PAJAKAN
+--
+FROM TBLPFDFAIL A,
+	TBLPERMOHONAN B,
+	TBLHTPPAJAKAN PA,
+  	TBLHTPPEMOHON PM,
+  	TBLRUJBANDAR BDR,
+ 	TBLRUJNEGERI PRN
+ 	,( SELECT MT.ID_PERMOHONAN
+ 	,CASE
+ 		WHEN MT.NO_HAKMILIK IS NOT NULL
+ 			THEN 'Tanah Milik'
+ 		ELSE 'Tanah Rizab'
+ 	END JENIS_TANAH
+ 	,CASE
+ 		WHEN NVL(MT.LUAS_BERSAMAAN,0) < NVL(MTR.LUAS_BERSAMAAN,0)
+ 			THEN 'sebahagian'
+ 		ELSE
+ 		'keseluruhan'
+ 	END JENIS_PAJAKAN
+  	,CASE
+ 		WHEN MT.NO_HAKMILIK IS NOT NULL
+ 			THEN 'No.Hakmilik '||MT.NO_HAKMILIK || ''|| LOT.KETERANGAN ||MT.NO_LOT
+ 		ELSE 'No.Warta '||MT.NO_WARTA || ' '||LOT.KETERANGAN || MT.NO_LOT
+ 	END
+ 	|| ' ' ||RM.NAMA_MUKIM||', '||RD.NAMA_DAERAH ||', '||RN.NAMA_NEGERI
+ 	MAKLUMAT_TANAH
+ 	FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
+ 	,TBLRUJNEGERI RN,TBLRUJDAERAH RD, TBLRUJMUKIM RM
+ 	,TBLRUJJENISHAKMILIK RJH,TBLRUJLOT LOT
+ 	WHERE MT.PEGANGAN_HAKMILIK = MTR.PEGANGAN_HAKMILIK(+)
+	AND MT.ID_MUKIM = RM.ID_MUKIM  AND RM.ID_DAERAH = RD.ID_DAERAH  AND RD.ID_NEGERI = RN.ID_NEGERI
+	AND MT.ID_JENISHAKMILIK = RJH.ID_JENISHAKMILIK
+ 	AND MT.ID_LOT = LOT.ID_LOT
+ 	) MT
 WHERE B.ID_FAIL = A.ID_FAIL
-     AND B.ID_PERMOHONAN = PP.ID_PERMOHONAN
-     AND (A.ID_STATUS <> 999 OR A.ID_STATUS IS NULL)
-     AND B.ID_PERMOHONAN = PM.ID_PERMOHONAN(+)
-     AND B.ID_PERMOHONAN = HU.ID_PERMOHONAN(+)
-     AND B.ID_PERMOHONAN = PJK.ID_PAJAKAN (+)
-     AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
-     AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
-     AND HU.ID_DAERAH = DHM.ID_DAERAH(+)
-     AND HU.ID_NEGERI = NHM.ID_NEGERI(+)
-     AND HU.ID_MUKIM = MHM.ID_MUKIM(+)
-     AND B.ID_PERMOHONAN = $P!{IDPERMOHONAN}]]>
+	AND B.ID_PERMOHONAN = PA.ID_PERMOHONAN(+)
+  	AND B.ID_PERMOHONAN = PM.ID_PERMOHONAN(+)
+  	AND B.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
+	AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
+  	AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
+     AND B.ID_PERMOHONAN = $P{IDPERMOHONAN}]]>
 	</queryString>
-	<field name="NO_RUJUKAN_LAIN" class="java.lang.String"/>
+	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="HARI_SURAT" class="java.lang.String"/>
 	<field name="BULAN_SURAT" class="java.lang.String"/>
@@ -87,22 +116,18 @@ WHERE B.ID_FAIL = A.ID_FAIL
 	<field name="POSKOD" class="java.lang.String"/>
 	<field name="NAMA_BANDAR" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
-	<field name="TAJUK_FAIL" class="java.lang.String"/>
-	<field name="TUJUAN" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON1" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON2" class="java.lang.String"/>
 	<field name="ALAMAT_PEMOHON3" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="JENIS_TANAH" class="java.lang.String"/>
+	<field name="JENIS_PAJAKAN" class="java.lang.String"/>
+	<field name="TEMPOH" class="java.lang.String"/>
+	<field name="MAKLUMAT_TANAH" class="java.lang.String"/>
+	<field name="TARIKH_TANDATANGAN" class="java.sql.Timestamp"/>
 	<field name="TARIKH_MULA_PAJAKAN" class="java.sql.Timestamp"/>
 	<field name="TARIKH_TAMATPAJAKAN" class="java.sql.Timestamp"/>
-	<field name="TEMPOH_PAJAKAN" class="java.lang.String"/>
 	<field name="KADAR_PAJAKAN" class="java.math.BigDecimal"/>
-	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
-	<field name="NO_HAKMILIK" class="java.lang.String"/>
-	<field name="LUAS" class="java.lang.String"/>
-	<field name="TARIKH_TANDATANGAN" class="java.sql.Timestamp"/>
-	<field name="NEGERI_TANAH" class="java.lang.String"/>
-	<field name="DAERAH_TANAH" class="java.lang.String"/>
-	<field name="MUKIM_TANAH" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -152,7 +177,13 @@ WHERE B.ID_FAIL = A.ID_FAIL
 					<font fontName="Bookman Old Style" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n<style isBold='true'>NOTIS KEMUNGKIRAN PERJANJIAN "+($F{TAJUK_FAIL}!=null?$F{TAJUK_FAIL}.toUpperCase():"")+"</style>\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["NOTIS KEMUNGKIRAN PERJANJIAN PAJAKAN "
++$F{JENIS_PAJAKAN}.toUpperCase()
++" "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN "
++$F{MAKLUMAT_TANAH}+" UNTUK TUJUAN"
++" "+$F{TUJUAN}.toUpperCase()+" OLEH "
++$F{NAMA_PEMOHON}.toUpperCase()+ " BAGI TEMPOH "
++$F{TEMPOH}+" TAHUN\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
 				<reportElement uuid="b61d6127-e672-4ba1-81ca-cf157f4d529b" key="textField-66" positionType="Float" x="50" y="135" width="435" height="15"/>
@@ -164,11 +195,9 @@ WHERE B.ID_FAIL = A.ID_FAIL
 +($F{NAMA_PEMOHON} != null ? $F{NAMA_PEMOHON} : "")
 +" telah menandatangani Perjanjian Pajakan bertarikh "+($F{TARIKH_TANDATANGAN}!=null?$F{TARIKH_TANDATANGAN}:"  ")
 +" (Perjanjian Pajakan) bagi pajakan tanah milik Persekutuan "
-+($F{KOD_JENIS_HAKMILIK}!=null?$F{KOD_JENIS_HAKMILIK}:"  ")+" "+($F{NO_HAKMILIK}!=null?$F{NO_HAKMILIK}:"  ")
-+", "+($F{DAERAH_TANAH}!=null?$F{DAERAH_TANAH}:" ")+", "+($F{MUKIM_TANAH}!=null?$F{MUKIM_TANAH}:"  ")
-+", "+($F{NEGERI_TANAH}!=null?$F{NEGERI_TANAH}:"  ")+" seluas "+($F{LUAS}!=null?$F{LUAS}:"  ")+" untuk "
++$F{MAKLUMAT_TANAH}+" untuk "
 +($F{TUJUAN} != null ? $F{TUJUAN} : "")
-+". Tempoh pajakan adalah selama "+($F{TEMPOH_PAJAKAN}!=null?$F{TEMPOH_PAJAKAN}:"    ")
++". Tempoh pajakan adalah selama "+($F{TEMPOH}!=null?$F{TEMPOH}:"    ")
 +" bermula "+($F{TARIKH_MULA_PAJAKAN}!=null?$F{TARIKH_MULA_PAJAKAN}:"   ")+" sehingga "
 +($F{TARIKH_TAMATPAJAKAN}!=null?$F{TARIKH_TAMATPAJAKAN}:"   ")+" dengan bayaran pajakan sebanyak "
 +"RM"+($F{KADAR_PAJAKAN}!=null?$F{KADAR_PAJAKAN}:"   ")+" setahun."
@@ -231,20 +260,20 @@ WHERE B.ID_FAIL = A.ID_FAIL
 			</subreport>
 			<subreport isUsingCache="true">
 				<reportElement uuid="0ae1ac30-1f40-4837-b6cd-5a24b1472b1b" key="subreport-2" positionType="Float" x="50" y="259" width="435" height="15"/>
+				<subreportParameter name="emelPegawai">
+					<subreportParameterExpression><![CDATA[$P{EMAIL}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="IDPERMOHONAN">
 					<subreportParameterExpression><![CDATA[$P{IDPERMOHONAN}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="NO_TELEFON">
+				<subreportParameter name="telefonPegawai">
 					<subreportParameterExpression><![CDATA[$P{NO_TELEFON}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="ReportDir">
-					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="EMAIL">
-					<subreportParameterExpression><![CDATA[$P{EMAIL}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="NAMAPEGAWAI">
+				<subreportParameter name="namaPegawai">
 					<subreportParameterExpression><![CDATA[$P{NAMAPEGAWAI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BaseDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPRujukanSuratNPegawaiXJKPTG.jasper"]]></subreportExpression>

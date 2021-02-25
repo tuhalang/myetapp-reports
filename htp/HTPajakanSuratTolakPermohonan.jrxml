@@ -59,6 +59,7 @@
 ,NVL(MT.JENIS_TANAH,'') JENIS_TANAH
 ,NVL(MT.JENIS_PAJAKAN,'') JENIS_PAJAKAN
 ,NVL(PA.TEMPOH_PAJAKAN,0) TEMPOH
+,NVL(MT.MAKLUMAT_TANAH,'') MAKLUMAT_TANAH
 --
 FROM TBLPFDFAIL A,
 	TBLPERMOHONAN B,
@@ -78,8 +79,20 @@ FROM TBLPFDFAIL A,
  		ELSE
  		'keseluruhan'
  	END JENIS_PAJAKAN
+  	,CASE
+ 		WHEN MT.NO_HAKMILIK IS NOT NULL
+ 			THEN 'No.Hakmilik '||MT.NO_HAKMILIK || ''|| LOT.KETERANGAN ||MT.NO_LOT
+ 		ELSE 'No.Warta '||MT.NO_WARTA || ' '||LOT.KETERANGAN || MT.NO_LOT
+ 	END
+ 	|| ' ' ||RM.NAMA_MUKIM||', '||RD.NAMA_DAERAH ||', '||RN.NAMA_NEGERI
+ 	MAKLUMAT_TANAH
  	FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
+ 	,TBLRUJNEGERI RN,TBLRUJDAERAH RD, TBLRUJMUKIM RM
+ 	,TBLRUJJENISHAKMILIK RJH,TBLRUJLOT LOT
  	WHERE MT.PEGANGAN_HAKMILIK = MTR.PEGANGAN_HAKMILIK(+)
+	AND MT.ID_MUKIM = RM.ID_MUKIM  AND RM.ID_DAERAH = RD.ID_DAERAH  AND RD.ID_NEGERI = RN.ID_NEGERI
+	AND MT.ID_JENISHAKMILIK = RJH.ID_JENISHAKMILIK
+ 	AND MT.ID_LOT = LOT.ID_LOT
  	) MT
 WHERE B.ID_FAIL = A.ID_FAIL
 	AND B.ID_PERMOHONAN = PA.ID_PERMOHONAN(+)
@@ -108,6 +121,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 	<field name="JENIS_TANAH" class="java.lang.String"/>
 	<field name="JENIS_PAJAKAN" class="java.lang.String"/>
 	<field name="TEMPOH" class="java.lang.String"/>
+	<field name="MAKLUMAT_TANAH" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -158,7 +172,8 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				</textElement>
 				<textFieldExpression><![CDATA["\n<style isBold='true' pdfFontName='Helvetica-Bold'>PERMOHONAN PAJAKAN "
 +$F{JENIS_PAJAKAN}.toUpperCase()
-+" "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN BAGI TUJUAN"
++" "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN "
++$F{MAKLUMAT_TANAH}+" UNTUK TUJUAN"
 +" "+$F{TUJUAN}.toUpperCase()+" OLEH "
 +$F{NAMA_PEMOHON}.toUpperCase()+ " BAGI TEMPOH "
 +$F{TEMPOH}+" TAHUN</style>\n"]]></textFieldExpression>
@@ -172,9 +187,9 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				<textFieldExpression><![CDATA["\n2.\tDimaklumkan bahawa permohonan pihak tuan untuk pajakan sebahagian  tanah milik Persekutuan "
 +$F{JENIS_TANAH}+" Persekutuan "
 +$F{JENIS_PAJAKAN}+" selama "
-+$F{TEMPOH}+" tahun bagi tujuan "
-
-+" bagi tujuan " +$F{TUJUAN}
++$F{TEMPOH}+" tahun "
++$F{MAKLUMAT_TANAH}
++" untuk tujuan "+$F{TUJUAN}
 +" <style isBold='true'> tidak dapat dipertimbangkan.</style> "]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
