@@ -8,18 +8,22 @@
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="UP" class="java.lang.String" isForPrompting="false"/>
-	<parameter name="BILDOKUMEN" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="ID_PERMOHONAN" class="java.lang.String"/>
+	<parameter name="AGENSI" class="java.lang.String"/>
+	<parameter name="KEMENTERIAN" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="HARI" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="BULAN" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="TAHUN" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="NAMAPEGAWAI" class="java.lang.String"/>
 	<parameter name="JAWATAN" class="java.lang.String"/>
-	<parameter name="EMAIL" class="java.lang.String" isForPrompting="false"/>
-	<parameter name="NO_TELEFON" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="ATURAN" class="java.lang.String"/>
 	<parameter name="skrin" class="java.lang.String"/>
 	<parameter name="SUBURUSAN" class="java.lang.String"/>
+	<parameter name="MULA" class="java.lang.String"/>
+	<parameter name="TAMAT" class="java.lang.String"/>
+	<parameter name="TANAH" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT a.id_semakan,TRIM(a.perihal) PERIHAL
+		<![CDATA[SELECT a.id_semakan,TRIM(a.perihal) PERIHAL,SN.ATURAN
 ,(  SELECT
     CASE WHEN B.ID_SEMAKANSENARAI IS NULL THEN ''
     ELSE '/'
@@ -34,6 +38,7 @@ ORDER BY sn.aturan]]>
 	</queryString>
 	<field name="ID_SEMAKAN" class="java.math.BigDecimal"/>
 	<field name="PERIHAL" class="java.lang.String"/>
+	<field name="ATURAN" class="java.math.BigDecimal"/>
 	<field name="FLAG" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
@@ -50,13 +55,16 @@ ORDER BY sn.aturan]]>
 					<rightPen lineWidth="0.25"/>
 				</box>
 				<textElement>
-					<font fontName="Bookman Old Style" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($P{skrin}.equals("ulasan")
     ?"Berdasarkan kepada"
     :"Penyewaan Ruang Pejabat Baru ("
     +$P{SUBURUSAN}+") oleh:"
     +"\n"
+    +$P{AGENSI}+", "+$P{KEMENTERIAN}
+    +"\n\nMaklumat ruang pejabat di alamat:"
+    +"\n\nTempoh"
 )]]></textFieldExpression>
 			</textField>
 		</band>
@@ -78,9 +86,35 @@ ORDER BY sn.aturan]]>
 					<rightPen lineWidth="0.25"/>
 				</box>
 				<textElement>
-					<font fontName="Bookman Old Style" isBold="false" pdfFontName="Helvetica"/>
+					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{PERIHAL}]]></textFieldExpression>
+				<textFieldExpression><![CDATA["\n"+
+(   String.valueOf($F{ATURAN}).equals("1")?
+$F{PERIHAL}
++" "+$P{MULA}
++" hingga "+$P{TAMAT}
++" ("+$P{TAHUN}+" Tahun)"
+    :(  String.valueOf($F{ATURAN}).equals("2")?
+    $P{TAHUN}+" "+$F{PERIHAL}
+    :(  String.valueOf($F{ATURAN}).equals("5")?
+        "Berdasarkan kepada butiran Carian Rasmi hakmilik tanah"
+        +$P{TANAH}
+        +" didapati tanah ini :\n"
+        +$F{PERIHAL}
+        + " "+$P{AGENSI}+", "+$P{KEMENTERIAN}+" menyewa ruang pejabat di alamat seperti di atas. "
+        :(  String.valueOf($F{ATURAN}).equals("6")?
+        $F{PERIHAL}
+        +" "+$P{AGENSI}+", "+$P{KEMENTERIAN}
+        +" menyewa ruang pejabat di alamat seperti di atas dengan syarat perlu mendapat kebenaran daripada *pemegang gadai/ *pengkaveat terlebih dahulu."
+        :(  String.valueOf($F{ATURAN}).equals("7")?
+            "Ulasan "
+            :$F{PERIHAL}
+        )
+        )
+       )
+    )
+)
++"\n"]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
 				<reportElement uuid="163038b6-6cb2-44c3-be34-e2c69157849f" key="textField-4" positionType="Float" stretchType="RelativeToTallestObject" x="0" y="0" width="30" height="15"/>
@@ -91,7 +125,7 @@ ORDER BY sn.aturan]]>
 					<rightPen lineWidth="0.25"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Bookman Old Style"/>
+					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{FLAG}==null?"":$F{FLAG})]]></textFieldExpression>
 			</textField>
