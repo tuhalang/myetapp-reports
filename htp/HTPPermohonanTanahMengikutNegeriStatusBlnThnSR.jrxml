@@ -2,16 +2,21 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPPermohonanTanahMengikutNegeriStatusSR" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="4dee9939-b56a-4444-8ac8-42a24c372384">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="ID_URUSAN" class="java.lang.String"/>
 	<parameter name="ID_NEGERI" class="java.lang.String"/>
 	<parameter name="STATUS" class="java.lang.String"/>
+	<parameter name="BULANMM" class="java.lang.String"/>
+	<parameter name="TAHUN" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT NVL(TO_CHAR(P.TARIKH_SURAT,'dd/mm/yyyy'),'TIADA MAKLUMAT') TARIKH_TERIMA
 ,NVL(TO_CHAR(F.TARIKH_DAFTAR_FAIL,'dd/mm/yyyy'),'TIADA MAKLUMAT') TARIKH_DAFTAR_FAILFORMAT
-,NVL(TO_CHAR((SELECT 
+,NVL(TO_CHAR((SELECT
     RSUSF.TARIKH_MASUK TARIKH_HANTARFORMAT FROM
     TBLRUJSUBURUSANSTATUSFAIL RSUSF, TBLRUJSUBURUSANSTATUS RSUS
     WHERE  RSUS.ID_SUBURUSANSTATUS = RSUSF.ID_SUBURUSANSTATUS
@@ -19,15 +24,15 @@
     AND RSUSF.ID_PERMOHONAN = P.ID_PERMOHONAN
 ),'dd/mm/yyyy'),'TIADA MAKLUMAT') TARIKH_HANTARFORMAT
 ,CASE
-    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 14 
+    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 14
 	THEN 'W.P KUALA LUMPUR'
-    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 15 
+    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 15
 	THEN 'W.P LABUAN'
-    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 16 
+    WHEN UPPER(TRIM(RN.ID_NEGERI)) = 16
 	THEN 'W.P PUTRAJAYA'
     ELSE UPPER(TRIM(RN.NAMA_NEGERI))
 END NEGERI
-,NVL((    SELECT RDI.NAMA_DAERAH FROM TBLRUJDAERAH RDI 
+,NVL((    SELECT RDI.NAMA_DAERAH FROM TBLRUJDAERAH RDI
     WHERE RDI.ID_DAERAH = PP.ID_DAERAH
 ),'') NAMA_DAERAH
 ,NVL((    SELECT RM.nama_mukim FROM TBLRUJMUKIM RM,TBLHTPHAKMILIKURUSAN TPU
@@ -36,7 +41,7 @@ END NEGERI
 ,NVL(F.TAJUK_FAIL,'TIADA MAKLUMAT') TAJUK_FAIL,F.NO_FAIL, PP.No_Rujukan_KJP,PP.NO_RUJUKAN_PTD,PP.NO_RUJUKAN_PTG
 ,NVL(P.TUJUAN,'TIADA MAKLUMAT') TUJUAN,P.ID_PERMOHONAN, PP.NO_RUJUKAN_LAIN
 ,PP.NO_RUJUKAN_UPT
-,NVL((SELECT RJJI.KETERANGAN FROM TBLRUJJENISTANAH RJJI 
+,NVL((SELECT RJJI.KETERANGAN FROM TBLRUJJENISTANAH RJJI
 	WHERE RJJI.id_jenistanah = PP.id_jenistanah
 ),'TIADA MAKLUMAT JENIS TANAH') KETERANGAN
 ,RK.NAMA_KEMENTERIAN KEMENTERIAN
@@ -49,8 +54,8 @@ END NEGERI
 ,NVL((    SELECT KP.NO_RUJUKAN_KEPUTUSAN FROM TBLHTPKEPUTUSANMOHON KP
     WHERE KP.ID_PERMOHONAN =  P.ID_PERMOHONAN AND ROWNUM<=1
 ),'TIADA MAKLUMAT FAIL') NO_FAILKEPUTUSAN
-,   CASE 
-        WHEN $P!{STATUS}='00' THEN 'BELUM ADA KEPUTUSAN' 
+,   CASE
+        WHEN $P!{STATUS}='00' THEN 'BELUM ADA KEPUTUSAN'
         WHEN $P!{STATUS}='01' THEN 'DILULUSKAN'
         WHEN $P!{STATUS}='02' THEN 'TIDAK DILULUSKAN'
         WHEN $P!{STATUS}='03' THEN 'DIBATALKAN/DITARIKBALIK'
@@ -64,6 +69,8 @@ AND F.ID_URUSAN IN ($P!{ID_URUSAN})
 AND F.ID_NEGERI = RN.ID_NEGERI
 AND F.ID_KEMENTERIAN = RK.ID_KEMENTERIAN
 AND F.ID_NEGERI = $P!{ID_NEGERI}
+AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'mm') = '$P!{BULANMM}'
+AND TO_CHAR(F.TARIKH_DAFTAR_FAIL,'yyyy') = '$P!{TAHUN}'
 AND P.ID_PERMOHONAN IN (
 	SELECT ID_PERMOHONAN FROM TBLHTPKEPUTUSANMOHON WHERE STATUS IN ('$P!{STATUS}')
 )
@@ -154,7 +161,7 @@ ORDER BY F.TARIKH_DAFTAR_FAIL DESC]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[DAERAH 
+				<text><![CDATA[DAERAH
 MUKIM]]></text>
 			</staticText>
 			<staticText>
@@ -455,7 +462,7 @@ NO. FAIL KJP]]></text>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[DAERAH 
+				<text><![CDATA[DAERAH
 MUKIM]]></text>
 			</staticText>
 			<staticText>
@@ -513,7 +520,7 @@ AGENSI]]></text>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[NO. FAIL PTD 
+				<text><![CDATA[NO. FAIL PTD
 NO. FAIL PTG]]></text>
 			</staticText>
 			<staticText>
