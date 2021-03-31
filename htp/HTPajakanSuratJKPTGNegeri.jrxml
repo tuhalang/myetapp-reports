@@ -14,6 +14,7 @@
 	<parameter name="EMEL" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="UP" class="java.lang.String"/>
+	<parameter name="GARIS" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT  B.ID_PERMOHONAN, A.NO_FAIL
 ,TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
@@ -46,7 +47,8 @@
             WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 11 THEN 'Zulkaedah'
             WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 12 THEN 'Zulhijjah'
         END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM
-,INITCAP(PM.NAMA_PEJABAT) AS NAMA_PEMOHON
+,PE.NAMA_PEMOHON NAMA_PEMOHON
+,INITCAP(PM.NAMA_PEJABAT) AS PEJABAT
 ,PM. POSKOD
 ,INITCAP(BDR.KETERANGAN) AS NAMA_BANDAR
 ,GETNEGERIWILAYAH(PRN.ID_NEGERI) NAMA_NEGERI
@@ -63,7 +65,7 @@
 FROM TBLPFDFAIL A,
 	TBLPERMOHONAN B,
 	TBLHTPPAJAKAN PA,
-  	--TBLHTPPEMOHON PM,
+  	TBLHTPPEMOHON PE,
   	TBLRUJPEJABATJKPTG PM,
  	TBLRUJBANDAR BDR,
  	TBLRUJNEGERI PRN
@@ -95,13 +97,15 @@ FROM TBLPFDFAIL A,
  	AND MT.ID_LOT = LOT.ID_LOT
  	) MT
 WHERE B.ID_FAIL = A.ID_FAIL
-	AND B.ID_PERMOHONAN = PA.ID_PERMOHONAN(+)
-  	--AND B.ID_PERMOHONAN = PM.ID_PERMOHONAN(+)
-  	AND A.ID_SEKSYEN = PM.ID_SEKSYEN
-  	AND B.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
-	AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
-  	AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
-     AND B.ID_PERMOHONAN = $P{ID_PERMOHONAN}]]>
+AND B.ID_PERMOHONAN = PA.ID_PERMOHONAN(+)
+AND B.ID_PERMOHONAN = PE.ID_PERMOHONAN(+)
+AND A.ID_SEKSYEN = PM.ID_SEKSYEN
+AND A.ID_NEGERI = PM.ID_NEGERI
+AND PM.ID_JENISPEJABAT=22
+AND B.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
+AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
+AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
+AND B.ID_PERMOHONAN = $P{ID_PERMOHONAN}]]>
 	</queryString>
 	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
@@ -112,6 +116,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 	<field name="BULAN_ISLAM" class="java.lang.String"/>
 	<field name="TAHUN_ISLAM" class="java.lang.String"/>
 	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="PEJABAT" class="java.lang.String"/>
 	<field name="POSKOD" class="java.lang.String"/>
 	<field name="NAMA_BANDAR" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
@@ -135,7 +140,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 					<paragraph lineSpacing="Single"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Pengarah,\n"
-+($F{NAMA_PEMOHON}!=null ? $F{NAMA_PEMOHON} + "\n": "")
++($F{PEJABAT}!=null ? $F{PEJABAT} + "\n": "")
 +($F{ALAMAT_PEMOHON1}!=null?$F{ALAMAT_PEMOHON1}+"\n":"")
 +($F{ALAMAT_PEMOHON2}!=null?$F{ALAMAT_PEMOHON2}+"\n":"")
 +($F{ALAMAT_PEMOHON3}!=null?$F{ALAMAT_PEMOHON3}+"\n":"")
@@ -188,7 +193,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				</textElement>
 				<textFieldExpression><![CDATA["\n2.\t  Adalah dimaklumkan bahawa Jabatan ini telah menerima permohonan pajakan tanah bagi "
 +$F{JENIS_PAJAKAN} +" "
-+$F{JENIS_TANAH}+" Pesuruhjaya Tanah Persekutuan bagi tujuan"
++$F{JENIS_TANAH}+" Pesuruhjaya Tanah Persekutuan bagi tujuan "
 +$F{TUJUAN}+" untuk tempoh "
 +$F{TEMPOH}+" tahun."+" Oleh itu, sukacita dipohon kerjasama tuan untuk menyediakan"
 +" <style isBold='true' pdfFontName='Helvetica-Bold'>laporan tanah</style>"
@@ -303,6 +308,11 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPFooterSaya.jasper"]]></subreportExpression>
 			</subreport>
+			<line>
+				<reportElement uuid="12c97311-0a12-488f-9887-60ebceb1ae36" key="line-1" positionType="Float" x="50" y="142" width="435" height="1">
+					<printWhenExpression><![CDATA[new Boolean( !$P{GARIS}.equals("Y"))]]></printWhenExpression>
+				</reportElement>
+			</line>
 		</band>
 	</title>
 	<pageHeader>
