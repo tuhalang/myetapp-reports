@@ -10,8 +10,8 @@
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="ID_PERMOHONAN" class="java.lang.String"/>
 	<parameter name="NAMAPEGAWAI" class="java.lang.String"/>
+	<parameter name="JAWATAN" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="NOTELEFON" class="java.lang.String"/>
-	<parameter name="jawatanPegawai" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="EMEL" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="UP" class="java.lang.String"/>
@@ -47,7 +47,8 @@
             WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 11 THEN 'Zulkaedah'
             WHEN TO_CHAR(SYSDATE,'MM','NLS_CALENDAR=''ENGLISH HIJRAH''') = 12 THEN 'Zulhijjah'
         END AS BULAN_ISLAM, TO_CHAR(SYSDATE,'RRRR','NLS_CALENDAR=''ENGLISH HIJRAH''') AS TAHUN_ISLAM
-,INITCAP(PM.NAMA_KEMENTERIAN) AS NAMA_PEMOHON
+,PE.NAMA_PEMOHON AS NAMA_PEMOHON
+,INITCAP(PM.NAMA_KEMENTERIAN) AS KEMENTERIAN
 ,INITCAP(RA.NAMA_AGENSI) AS NAMA_AGENSI
 ,PM. POSKOD
 ,INITCAP(BDR.KETERANGAN) AS NAMA_BANDAR
@@ -83,7 +84,7 @@ FROM TBLPFDFAIL A,
  			THEN 'No.Hakmilik '||MT.NO_HAKMILIK || ''|| LOT.KETERANGAN ||MT.NO_LOT
  		ELSE 'No.Warta '||MT.NO_WARTA || ' '||LOT.KETERANGAN || MT.NO_LOT
  	END
- 	|| ' ' ||RM.NAMA_MUKIM||', '||RD.NAMA_DAERAH ||', '||RN.NAMA_NEGERI
+ 	|| ' ' ||INITCAP(RM.NAMA_MUKIM) ||', '||INITCAP(RD.NAMA_DAERAH) ||', '||INITCAP(RN.NAMA_NEGERI)
  	MAKLUMAT_TANAH
  	FROM TBLHTPHAKMILIKURUSAN MT,TBLHTPHAKMILIK MTR
  	,TBLRUJNEGERI RN,TBLRUJDAERAH RD, TBLRUJMUKIM RM
@@ -92,17 +93,20 @@ FROM TBLPFDFAIL A,
 	AND MT.ID_MUKIM = RM.ID_MUKIM  AND RM.ID_DAERAH = RD.ID_DAERAH  AND RD.ID_NEGERI = RN.ID_NEGERI
 	AND MT.ID_JENISHAKMILIK = RJH.ID_JENISHAKMILIK
  	AND MT.ID_LOT = LOT.ID_LOT
- 	) MT, TBLHTPPERMOHONAN PP
+ 	) MT
+,TBLHTPPERMOHONAN PP
+,TBLHTPPEMOHON PE
 WHERE B.ID_FAIL = A.ID_FAIL
-  	AND A.ID_KEMENTERIAN = PM.ID_KEMENTERIAN
-	AND B.ID_PERMOHONAN = PP.ID_PERMOHONAN
-    AND PP.ID_AGENSI = RA.ID_AGENSI
-	AND B.ID_PERMOHONAN = PA.ID_PERMOHONAN(+)
-  	AND B.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
+AND A.ID_KEMENTERIAN = PM.ID_KEMENTERIAN
+AND B.ID_PERMOHONAN = PP.ID_PERMOHONAN
+AND PP.ID_AGENSI = RA.ID_AGENSI
+AND B.ID_PERMOHONAN = PA.ID_PERMOHONAN(+)
+AND B.ID_PERMOHONAN = MT.ID_PERMOHONAN(+)
+AND B.ID_PERMOHONAN = PE.ID_PERMOHONAN(+)
     --AND PM.ID_BANDAR = BDR.ID_BANDAR(+)
-    AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
+AND PM.ID_NEGERI = PRN.ID_NEGERI(+)
     --AND B.ID_PERMOHONAN =1615146767
-    AND B.ID_PERMOHONAN = $P{ID_PERMOHONAN}]]>
+AND B.ID_PERMOHONAN = $P{ID_PERMOHONAN}]]>
 	</queryString>
 	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
@@ -113,6 +117,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 	<field name="BULAN_ISLAM" class="java.lang.String"/>
 	<field name="TAHUN_ISLAM" class="java.lang.String"/>
 	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="KEMENTERIAN" class="java.lang.String"/>
 	<field name="NAMA_AGENSI" class="java.lang.String"/>
 	<field name="POSKOD" class="java.lang.String"/>
 	<field name="NAMA_BANDAR" class="java.lang.String"/>
@@ -137,7 +142,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 					<paragraph lineSpacing="Single"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Ketua Setiausaha,\n"
-+($F{NAMA_PEMOHON}!=null?$F{NAMA_PEMOHON}+"\n":"")
++($F{KEMENTERIAN}!=null?$F{KEMENTERIAN}+"\n":"")
 +($F{ALAMAT_PEMOHON1}!=null?$F{ALAMAT_PEMOHON1}+"\n":"")
 +($F{ALAMAT_PEMOHON2}!=null?$F{ALAMAT_PEMOHON2}+"\n":"")
 +($F{ALAMAT_PEMOHON3}!=null?$F{ALAMAT_PEMOHON3}+"\n":"")
@@ -177,8 +182,9 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				</textElement>
 				<textFieldExpression><![CDATA["\n<style isBold='true' pdfFontName='Helvetica-Bold'>PERMOHONAN PAJAKAN "
 +$F{JENIS_PAJAKAN}.toUpperCase()
-+" "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN BAGI TUJUAN"
-+" "+$F{TUJUAN}.toUpperCase()+" OLEH "
++" "+$F{JENIS_TANAH}.toUpperCase()+" PESURUHJAYA TANAH PERSEKUTUAN "
++$F{MAKLUMAT_TANAH}.toUpperCase()+" UNTUK TUJUAN "
++$F{TUJUAN}.toUpperCase()+" OLEH "
 +$F{NAMA_PEMOHON}.toUpperCase()+ " BAGI TEMPOH "
 +$F{TEMPOH}+" TAHUN</style>\n"]]></textFieldExpression>
 			</textField>
@@ -191,7 +197,7 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				<textFieldExpression><![CDATA["\n2.\tAdalah dimaklumkan bahawa Jabatan ini telah menerima permohonan pajakan tanah bagi "
 +$F{JENIS_PAJAKAN} +" "
 +$F{JENIS_TANAH}+" Pesuruhjaya Tanah Persekutuan "
-+$F{MAKLUMAT_TANAH}+" UNTUK TUJUAN"
++$F{MAKLUMAT_TANAH}+" untuk tujuan "
 +$F{TUJUAN}+" untuk tempoh "
 +$F{TEMPOH}+" tahun."
 +" Bersama-sama ini dikemukakan<style isBold='true' pdfFontName='Helvetica-Bold'> salinan hakmilik"
@@ -310,6 +316,9 @@ WHERE B.ID_FAIL = A.ID_FAIL
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{ReportDir} + "//htp//HTPFooterSaya.jasper"]]></subreportExpression>
 			</subreport>
+			<line>
+				<reportElement uuid="12c97311-0a12-488f-9887-60ebceb1ae36" key="line-1" positionType="Float" x="50" y="142" width="435" height="1"/>
+			</line>
 		</band>
 	</title>
 	<pageHeader>
