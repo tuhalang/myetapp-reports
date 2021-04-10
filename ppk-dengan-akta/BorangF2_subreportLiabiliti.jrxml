@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BorangF2_subreportLiabiliti"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT SUBSTR(TO_CHAR(A.NILAI_HUTANG,'999,999,999.99'),1,LENGTH (TO_CHAR(A.NILAI_HUTANG,'999,999,999.99'))-3 ) AS NILAI_HUTANG,
+
+
+CASE
+  WHEN A.NAMA_OB IS NOT NULL AND A.BUTIRAN_HUTANG IS NOT NULL AND LENGTH(AAA.NO_KP1)<12 THEN A.NAMA_OB || ' ' || '(' ||RTRIM(AAA.NO_KP1)|| ')' || chr(10) || 'Butiran Hutang: ' || chr(10) || A.BUTIRAN_HUTANG 
+  WHEN A.NAMA_OB IS NOT NULL AND A.BUTIRAN_HUTANG IS NOT NULL AND LENGTH(RTRIM(AAA.NO_KP1))=12 THEN A.NAMA_OB || ' ' || '(' || SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4) || ')' || chr(10) || 'Butiran Hutang: ' || chr(10) || A.BUTIRAN_HUTANG
+  WHEN A.NAMA_OB IS NOT NULL AND A.BUTIRAN_HUTANG IS NOT NULL AND A.NO_AKAUN IS NOT NULL THEN A.NAMA_OB || chr(10)  || 'No Akaun : ' || REPLACE(REPLACE(A.NO_AKAUN,'/'),'NO. KAVEAT:') || chr(10) || 'Butiran Hutang: ' || chr(10) || A.BUTIRAN_HUTANG
+  WHEN A.NAMA_OB IS NOT NULL AND A.NO_AKAUN IS NULL AND A.BUTIRAN_HUTANG IS NOT NULL THEN A.NAMA_OB || chr(10) || 'Butiran Hutang: ' || chr(10) || A.BUTIRAN_HUTANG
+  WHEN A.NAMA_OB IS NOT NULL AND A.BUTIRAN_HUTANG IS NOT NULL AND LENGTH(AAA.NO_KP1)<12 AND AAA.NO_KP1 = 'TDK' THEN A.NAMA_OB || chr(10) || 'Butiran Hutang: ' || chr(10) || A.BUTIRAN_HUTANG 
+
+  WHEN A.NAMA_OB IS NOT NULL AND A.BUTIRAN_HUTANG IS NULL AND LENGTH(AAA.NO_KP1)<12 THEN A.NAMA_OB || ' ' || '(' ||RTRIM(AAA.NO_KP1)|| ')' 
+  WHEN A.NAMA_OB IS NOT NULL AND A.BUTIRAN_HUTANG IS NULL AND LENGTH(RTRIM(AAA.NO_KP1))=12 THEN A.NAMA_OB || ' ' || '(' || SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4) || ')' 
+  WHEN A.NAMA_OB IS NOT NULL AND A.BUTIRAN_HUTANG IS NULL AND A.NO_AKAUN IS NOT NULL THEN A.NAMA_OB || chr(10)  || 'No Akaun : ' || REPLACE(REPLACE(A.NO_AKAUN,'/'),'NO. KAVEAT:')
+  WHEN A.NAMA_OB IS NOT NULL AND A.NO_AKAUN IS NULL AND A.BUTIRAN_HUTANG IS NULL THEN A.NAMA_OB 
+  WHEN A.NAMA_OB IS NOT NULL AND A.BUTIRAN_HUTANG IS NULL AND LENGTH(AAA.NO_KP1)<12 AND AAA.NO_KP1 = 'TDK' THEN A.NAMA_OB 
+
+END AS MAKLUMAT_PEMIUTANG,
+
+CASE
+  WHEN LENGTH(REPLACE(SUBSTR(A.NILAI_HUTANG,INSTR(A.NILAI_HUTANG,'.'),LENGTH(A.NILAI_HUTANG)),'.')) =  LENGTH(A.NILAI_HUTANG) THEN '00'
+  WHEN LENGTH(REPLACE(SUBSTR(A.NILAI_HUTANG,INSTR(A.NILAI_HUTANG,'.'),LENGTH(A.NILAI_HUTANG)),'.')) = 1 THEN REPLACE(SUBSTR(A.NILAI_HUTANG,INSTR(A.NILAI_HUTANG,'.'),LENGTH(A.NILAI_HUTANG)),'.') ||'0'
+  ELSE REPLACE(SUBSTR(A.NILAI_HUTANG,INSTR(A.NILAI_HUTANG,'.'),LENGTH(A.NILAI_HUTANG)),'.')
+END AS SEN_HUTANG
+
+  FROM TBLPPKOB A,
+     TBLPPKPERMOHONAN B,
+     TBLPPKPERMOHONANSIMATI C,
+     TBLPPKSIMATI D,
+     
+     (SELECT 
+     CASE 
+         WHEN TBLPPKOB.NO_KP_BARU IS NULL AND TBLPPKOB.NO_KP_LAMA IS NOT NULL THEN  TBLPPKOB.NO_KP_LAMA
+         WHEN TBLPPKOB.NO_KP_BARU IS NULL AND TBLPPKOB.NO_KP_LAMA IS NULL THEN  TBLPPKOB.NO_KP_LAIN
+         WHEN TBLPPKOB.NO_KP_BARU IS NULL AND TBLPPKOB.NO_KP_LAIN IS NULL THEN  TBLPPKOB.NO_KP_LAMA 
+         ELSE TBLPPKOB.NO_KP_BARU
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKOB.NO_KP_BARU IS NOT NULL AND TBLPPKOB.NO_KP_LAMA IS NOT NULL THEN TBLPPKOB.NO_KP_LAMA
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKOB.NO_KP_BARU IS  NULL AND TBLPPKOB.NO_KP_LAMA IS NOT NULL THEN TBLPPKOB.NO_KP_LAIN     
+     END AS NO_KP1, ID_OB, NO_KP_LAMA     
+     FROM TBLPPKOB ) AAA
+
+              
+WHERE D.ID_SIMATI = A.ID_SIMATI
+      AND D.ID_SIMATI = C.ID_SIMATI
+      AND A.ID_PERMOHONANSIMATI = C.ID_PERMOHONANSIMATI
+      AND A.ID_OB = AAA.ID_OB(+)
+      AND B.ID_PERMOHONAN = C.ID_PERMOHONAN
+      AND A.ID_TARAFKPTG = 2
+      AND B.ID_FAIL = $P!{idfail}]]></queryString>
+
+	<field name="NILAI_HUTANG" class="java.lang.String"/>
+	<field name="MAKLUMAT_PEMIUTANG" class="java.lang.String"/>
+	<field name="SEN_HUTANG" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="17"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="237"
+						height="16"
+						key="textField"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MAKLUMAT_PEMIUTANG}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="322"
+						y="0"
+						width="66"
+						height="16"
+						key="textField"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NILAI_HUTANG}!= null ? $F{NILAI_HUTANG}:" 00 ")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="423"
+						y="0"
+						width="66"
+						height="15"
+						key="textField"
+						positionType="Float"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{SEN_HUTANG}!= null ? $F{SEN_HUTANG}:" 00 ")]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</summary>
+</jasperReport>

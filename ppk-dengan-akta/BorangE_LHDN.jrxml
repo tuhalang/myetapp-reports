@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BorangE_LHDN"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="AllSectionsNoDetail"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.zoom" value="1.2100000000000006" />
+	<property name="ireport.x" value="0" />
+	<property name="ireport.y" value="0" />
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="namaPegawai" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="jawatan" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="namaPentadbir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="flagBorangF" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="jumlahBayaran" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[-----/Borang E2 edit by wan on 25/10/2011 */------
+
+SELECT DISTINCT
+            a.ID_FAIL,
+            Upper(REPLACE(A.NO_FAIL,'&','&#38;'))As No_Fail,
+
+            B.Id_Permohonan,
+            To_Char(B.Tarikh_Mohon,'dd/MM/yyyy') As Tarikh_Mohon,
+            nmhn.NAMA_NEGERI AS NEGERI_mohon,
+            REPLACE(dmhn.NAMA_DAERAH,'&','&#38;') AS DAERAH_mohon,
+            Nvl(Replace(To_Char(B.Jumlah_Hta_Tarikhmati,'999,999,999.99'),' ', ''),' ')As Jumlah_Hta_Tarikhmati,
+
+            c.ID_PERMOHONANSIMATI,
+
+ ------ /* Maklumat Simati */ ------------
+            d.ID_SIMATI,
+            CASE
+                WHEN d.NAMA_SIMATI IS NOT NULL AND d.NAMA_LAIN IS NULL THEN REPLACE(d.NAMA_SIMATI,'&','&#38;')
+                WHEN d.NAMA_SIMATI IS NOT NULL AND d.NAMA_LAIN IS NOT NULL THEN REPLACE(d.NAMA_SIMATI,'&','&#38;') || ' @'|| REPLACE(d.NAMA_LAIN,'&','&#38;')
+                WHEN d.NAMA_SIMATI IS NULL AND d.NAMA_LAIN IS NOT NULL THEN REPLACE(d.NAMA_LAIN,'&','&#38;')
+            End As Nama_Simati,
+            Case
+                WHEN d.jenis_kp in (0,5,6,7) THEN ', No. KP: '
+                WHEN d.jenis_kp=4 THEN ', No. PASPORT: '
+            -- null,6,0,5,7,4,
+                Else ''
+            END AS Jenis_kp_simati,
+            CASE
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NULL and d.no_kp_lain IS NULL THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4)
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NOT NULL AND d.no_kp_lain IS NULL THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4) || ' ('||d.no_kp_lama ||')'
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NOT NULL AND d.no_kp_lain IS NOT NULL THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4) || ' ('||d.no_kp_lama ||' / '||d.no_kp_lain ||')'
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NULL and d.no_kp_lain IS NOT NULL THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4)  || ' ('||d.no_kp_lain ||')'
+                WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NOT NULL and d.no_kp_lain IS NULL THEN REPLACE(d.no_kp_lama,'&','&#38;')
+                WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NOT NULL and d.no_kp_lain IS NOT NULL THEN REPLACE(d.no_kp_lama,'&','&#38;') || ' ('||d.no_kp_lain ||')'
+                WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NULL and d.no_kp_lain IS NOT NULL THEN REPLACE(d.no_kp_lain,'&','&#38;')
+                ELSE ''
+            END AS kp_simati,
+            d.JENIS_WARGA AS WARGA_SIMATI,
+            CASE
+                WHEN d.ID_BUKTIMATI = 1 THEN ', No. Sijil Mati: '|| d.NO_SIJIL_MATI
+                WHEN d.ID_BUKTIMATI = 2 THEN ', Surat Sumpah Kematian: '|| d.NO_SIJIL_MATI
+                WHEN d.ID_BUKTIMATI = 3 THEN ', Anggapan Kematian dari Mahkamah Tinggi: '|| d.NO_SIJIL_MATI
+                WHEN d.ID_BUKTIMATI = 4 THEN ', No. Permit Kubur: '|| d.NO_SIJIL_MATI
+                ELSE ''
+            END AS BUKTI_MATI,
+            CASE
+                WHEN TO_CHAR(d.TARIKH_MATI,'dd/mm/yyyy') < '01/11/1991' THEN '1'
+                ELSE '0'
+            END AS FLAG_TARIKHMATI,
+            TO_CHAR(d.TARIKH_MATI,'dd/mm/yyyy') as TARIKH_MATI,
+            d.NO_SIJIL_MATI,
+
+  ------ /* Maklumat Pemohon */ ------------
+            Upper(REPLACE(e.NAMA_PEMOHON,'&','&#38;')) as NAMA_PEMOHON,
+            CASE
+                WHEN e.jenis_kp in (0) and e.id_tarafkptg in (1) and nama_pemohon like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN e.id_tarafkptg in (6,10) and nama_pemohon like ('%AMANAH%') THEN ', No. DAFTAR: '
+                WHEN e.id_tarafkptg in (8) and nama_pemohon like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN e.id_tarafkptg in (6,8) THEN ', No. DAFTAR: '
+                WHEN e.jenis_kp in (0) and e.id_tarafkptg=1 THEN ', No. KP: '
+                WHEN e.jenis_kp in (0,5,6) THEN ', No. KP: '
+                WHEN e.jenis_kp in (7) and e.id_tarafkptg in (1) THEN ', No. KP: '
+                WHEN e.jenis_kp=4 THEN ', No. PASPORT: '
+                WHEN e.id_tarafkptg=1 THEN ', No. KP: '
+            -- null,6,0,5,7,4,
+                Else ''
+            END AS Jenis_kp_pemohon,
+            CASE
+                WHEN e.no_kp_baru IS NOT NULL AND e.no_kp_lama IS NULL and e.no_kp_lain IS NULL THEN  SUBSTR(e.no_kp_baru,1,6) || '-' || SUBSTR(e.no_kp_baru,7,2) || '-' || SUBSTR(e.no_kp_baru,9,4)
+                WHEN e.no_kp_baru IS NOT NULL AND e.no_kp_lama IS NOT NULL AND e.no_kp_lain IS NULL THEN  SUBSTR(e.no_kp_baru,1,6) || '-' || SUBSTR(e.no_kp_baru,7,2) || '-' || SUBSTR(e.no_kp_baru,9,4) || ' ('||e.no_kp_lama ||')'
+                WHEN e.no_kp_baru IS NOT NULL AND e.no_kp_lama IS NOT NULL AND e.no_kp_lain IS NOT NULL THEN SUBSTR(e.no_kp_baru,1,6) || '-' || SUBSTR(e.no_kp_baru,7,2) || '-' || SUBSTR(e.no_kp_baru,9,4) || ' ('||e.no_kp_lama ||' / '||e.no_kp_lain ||')'
+                WHEN e.no_kp_baru IS NULL AND e.no_kp_lama IS NOT NULL and e.no_kp_lain IS NULL THEN REPLACE(e.no_kp_lama,'&','&#38;')
+                WHEN e.no_kp_baru IS NULL AND e.no_kp_lama IS NOT NULL and e.no_kp_lain IS NOT NULL THEN REPLACE(e.no_kp_lama,'&','&#38;') || ' ('||e.no_kp_lain ||')'
+                WHEN e.no_kp_baru IS NULL AND e.no_kp_lama IS NULL and e.no_kp_lain IS NOT NULL THEN REPLACE(e.no_kp_lain,'&','&#38;')
+                ELSE ''
+            END AS kp_pemohon,
+            e.JENIS_WARGA AS WARGA_PEMOHON,
+            CASE
+                WHEN e.ALAMAT_1 IS NULL THEN 'TIADA'
+                WHEN e.ALAMAT_2 IS NULL AND e.ALAMAT_3 IS NULL THEN  REPLACE(REPLACE(UPPER(trim(e.ALAMAT_1)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(e.POSKOD),','),'&','&#38;') || ' ' || REPLACE(REPLACE(UPPER(trim(BANDAR.KETERANGAN)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPEMOHON.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN e.ALAMAT_2 IS NULL THEN REPLACE(REPLACE(UPPER(trim(e.ALAMAT_1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(e.ALAMAT_3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(e.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(BANDAR.KETERANGAN)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPEMOHON.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN e.ALAMAT_3 IS NULL THEN REPLACE(REPLACE(UPPER(trim(e.ALAMAT_1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(e.ALAMAT_2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(e.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(BANDAR.KETERANGAN)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPEMOHON.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN e.ALAMAT_3 IS NOT NULL THEN REPLACE(REPLACE(UPPER(trim(e.ALAMAT_1)),','),'&','&#38;')||', ' || REPLACE(REPLACE(UPPER(trim(e.ALAMAT_2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(e.ALAMAT_3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(e.POSKOD)),','),'&','&#38;') || ' ' || REPLACE(REPLACE(UPPER(trim(BANDAR.KETERANGAN)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPEMOHON.NAMA_NEGERI)),','),'&',chr(38))
+                ELSE 'TIADA'
+            END AS ALAMAT_PENUH_PEMOHON,
+
+            g.ID_KEPUTUSANPERMOHONAN,
+
+   ------ /* Maklumat Perbicaraan */ ------------
+            f.ID_PERBICARAAN,
+            f.BIL_BICARA,
+            CASE
+                WHEN f.ALAMAT_BICARA1 IS NULL THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA2 IS NULL AND f.ALAMAT_BICARA3 IS NULL THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' || REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPERBICARAAN.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA2 IS NULL THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPERBICARAAN.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA3 IS NULL THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPERBICARAAN.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA3 IS NOT NULL THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;')||', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' || REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPERBICARAAN.NAMA_NEGERI)),','),'&','&#38;')
+                ELSE 'TIADA'
+            END AS ALAMAT_PENUH_BICARA,
+            TO_CHAR(f.TARIKH_BICARA, 'DD') AS HARI_BICARA,
+            CASE
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '01' THEN 'Januari'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '02' THEN 'Februari'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '03' THEN 'Mac'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '04' THEN 'April'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '05' THEN 'Mei'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '06' THEN 'Jun'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '07' THEN 'Julai'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '08' THEN 'Ogos'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '09' THEN 'September'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '10' THEN 'Oktober'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '11' THEN 'November'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '12' THEN 'Disember'
+                ELSE 'TIADA'
+            END AS BULAN_BICARA,
+            TO_CHAR(f.TARIKH_BICARA, 'YYYY') AS TAHUN_BICARA,
+
+   ------ /* Maklumat Perintah */ ------------
+
+            h.ID_PERINTAH,
+            TO_CHAR(h.TARIKH_PERINTAH, 'DD') AS HARI_PERINTAH,
+            CASE
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '01' THEN 'Januari'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '02' THEN 'Februari'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '03' THEN 'Mac'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '04' THEN 'April'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '05' THEN 'Mei'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '06' THEN 'Jun'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '07' THEN 'Julai'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '08' THEN 'Ogos'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '09' THEN 'September'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '10' THEN 'Oktober'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '11' THEN 'November'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '12' THEN 'Disember'
+                ELSE 'TIADA'
+            END AS BULAN_PERINTAH,
+            TO_CHAR(h.TARIKH_PERINTAH, 'YYYY') AS TAHUN_PERINTAH,
+
+            (SELECT REPLACE(TO_CHAR(JUMLAH_BAYARAN,'999,999,999.99'),' ') FROM TBLPPKBAYARAN WHERE ID_PERMOHONAN = b.ID_PERMOHONAN AND ID_JENISBAYARAN = 26) AS CUKAI_PUSAKA,
+            (SELECT JUMLAH_BAYARAN FROM TBLPPKBAYARAN WHERE ID_PERMOHONAN = b.ID_PERMOHONAN AND ID_JENISBAYARAN = 26) AS CUKAI_PUSAKA_1,
+
+            (SELECT COUNT(*) FROM TBLPPKPERINTAHHTAOBMST WHERE ID_PERINTAH = h.ID_PERINTAH AND ID_JENISPERINTAH IN (1,7)) AS ID_PERINTAHHTAOBMST,
+            (SELECT COUNT(*) FROM TBLPPKPERINTAHHAOBMST WHERE ID_PERINTAH = h.ID_PERINTAH AND ID_JENISPERINTAH IN (1,7)) AS ID_PERINTAHHAOBMST
+From        Tblpfdfail A,
+            Tblppkpermohonan B,
+            Tblppkpermohonansimati C,
+            Tblppksimati D,
+            Tblppkpemohon E,
+            Tblppkperbicaraan F,
+            Tblppkkeputusanpermohonan G,
+            Tblppkperintah H,
+            Tblrujnegeri Nmhn,
+            TBLRUJDAERAH dmhn,
+            Tblrujbandar Bandar,
+            Tblrujnegeri Negeripemohon,
+            Tblrujnegeri Negeriperbicaraan
+WHERE       a.ID_FAIL                   = b.ID_FAIL
+        and b.ID_PERMOHONAN             = c.ID_PERMOHONAN
+        And C.Id_Simati                 = D.Id_Simati
+        And B.Id_Negerimhn              = Nmhn.Id_Negeri
+        and b.ID_DAERAHMHN              = dmhn.ID_DAERAH
+        and e.ID_NEGERI                 = NEGERIPEMOHON.ID_NEGERI
+        and b.ID_PERMOHONAN             = g.ID_PERMOHONAN
+        and f.ID_KEPUTUSANPERMOHONAN    = g.ID_KEPUTUSANPERMOHONAN
+        and f.ID_NEGERIBICARA           = NEGERIPERBICARAAN.ID_NEGERI
+        and b.ID_PEMOHON                = e.ID_PEMOHON
+        and e.ID_BANDAR                 = BANDAR.ID_BANDAR(+)
+        and h.FLAG_JENIS_KEPUTUSAN      = 0
+        And H.Id_Perbicaraan            = F.Id_Perbicaraan
+        and a.id_fail             = $P!{idfail}]]></queryString>
+
+	<field name="ID_FAIL" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="ID_PERMOHONAN" class="java.lang.String"/>
+	<field name="TARIKH_MOHON" class="java.lang.String"/>
+	<field name="NEGERI_MOHON" class="java.lang.String"/>
+	<field name="DAERAH_MOHON" class="java.lang.String"/>
+	<field name="JUMLAH_HTA_TARIKHMATI" class="java.lang.String"/>
+	<field name="ID_PERMOHONANSIMATI" class="java.lang.String"/>
+	<field name="ID_SIMATI" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="JENIS_KP_SIMATI" class="java.lang.String"/>
+	<field name="KP_SIMATI" class="java.lang.String"/>
+	<field name="WARGA_SIMATI" class="java.lang.String"/>
+	<field name="BUKTI_MATI" class="java.lang.String"/>
+	<field name="FLAG_TARIKHMATI" class="java.lang.String"/>
+	<field name="TARIKH_MATI" class="java.lang.String"/>
+	<field name="NO_SIJIL_MATI" class="java.lang.String"/>
+	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="JENIS_KP_PEMOHON" class="java.lang.String"/>
+	<field name="KP_PEMOHON" class="java.lang.String"/>
+	<field name="WARGA_PEMOHON" class="java.lang.String"/>
+	<field name="ALAMAT_PENUH_PEMOHON" class="java.lang.String"/>
+	<field name="ID_KEPUTUSANPERMOHONAN" class="java.lang.String"/>
+	<field name="ID_PERBICARAAN" class="java.lang.String"/>
+	<field name="BIL_BICARA" class="java.lang.String"/>
+	<field name="ALAMAT_PENUH_BICARA" class="java.lang.String"/>
+	<field name="HARI_BICARA" class="java.lang.String"/>
+	<field name="BULAN_BICARA" class="java.lang.String"/>
+	<field name="TAHUN_BICARA" class="java.lang.String"/>
+	<field name="ID_PERINTAH" class="java.lang.String"/>
+	<field name="HARI_PERINTAH" class="java.lang.String"/>
+	<field name="BULAN_PERINTAH" class="java.lang.String"/>
+	<field name="TAHUN_PERINTAH" class="java.lang.String"/>
+	<field name="CUKAI_PUSAKA" class="java.lang.String"/>
+	<field name="CUKAI_PUSAKA_1" class="java.lang.String"/>
+	<field name="ID_PERINTAHHTAOBMST" class="java.lang.String"/>
+	<field name="ID_PERINTAHHAOBMST" class="java.lang.String"/>
+
+	<variable name="PAGE_NUMBER_CURR" class="java.lang.Integer" resetType="Report" calculation="Nothing">
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="78"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="271"
+						y="0"
+						width="219"
+						height="10"
+						key="textField-46"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_FAIL}!= null ? $F{NO_FAIL}:"TIADA")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="40"
+						y="21"
+						width="258"
+						height="18"
+						key="textField-47"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NAMA SIMATI : "+($F{NAMA_SIMATI}!=null?$F{NAMA_SIMATI}:"")
++"\n"+"MYID SIMATI :"+($F{KP_SIMATI}!=null?$F{KP_SIMATI}:"")
++"\nTARIKH MOHON :"+($F{TARIKH_MOHON}!=null?$F{TARIKH_MOHON}:"")
++"\nNAMA PEMOHON :"+($F{NAMA_PEMOHON}!=null?$F{NAMA_PEMOHON}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="298"
+						y="21"
+						width="192"
+						height="18"
+						key="textField-48"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["NO FAIL : "+($F{NO_FAIL}!=null?$F{NO_FAIL}:"")
++"\nNEGERI :"+($F{NEGERI_MOHON}!=null?$F{NEGERI_MOHON}:"")
++"\nDAERAH/JAJAHAN :"+($F{DAERAH_MOHON}!=null?$F{DAERAH_MOHON}:"")]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="21"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="209"
+						y="2"
+						width="89"
+						height="18"
+						key="textField-30"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[" Mukasurat " + $V{PAGE_NUMBER} + " dari "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="299"
+						y="2"
+						width="23"
+						height="18"
+						key="textField-31"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[" "+$V{PAGE_NUMBER}+""]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+		<noData>
+			<band height="40"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="535"
+						height="20"
+						key="staticText-46"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<text><![CDATA[TIADA REKOD BAGI BORANG INI.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="20"
+						width="535"
+						height="20"
+						key="staticText-47"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<text><![CDATA[BORANG TIDAK DAPAT DIJANA.]]></text>
+				</staticText>
+			</band>
+		</noData>
+</jasperReport>

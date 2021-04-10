@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="SuratIringanNotis_subreport"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="nofail" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[select 
+upper(a1.NO_FAIL) as NO_FAIL,UPPER(a4.NAMA_SIMATI) as NAMA_SIMATI,TO_CHAR(A4.TARIKH_MATI,'dd/MM/yyyy') AS TARIKH_MATI,
+CASE
+        WHEN LENGTH(RTRIM(AAA.NO_KP_BARU))<12 THEN  ''||RTRIM(AAA.NO_KP_BARU)||''
+        WHEN LENGTH(RTRIM(AAA.NO_KP_BARU))=12 THEN SUBSTR(AAA.NO_KP_BARU,1,6) || '-' || SUBSTR(AAA.NO_KP_BARU,7,2) || '-' || SUBSTR(AAA.NO_KP_BARU,9,4) 
+        ELSE SUBSTR(AAA.NO_KP_BARU,1,6) || '-' || SUBSTR(AAA.NO_KP_BARU,7,2) || '-' || SUBSTR(AAA.NO_KP_BARU,9,4)  ||' ('||TRIM(SUBSTR(AAA.NO_KP_BARU,13,LENGTH(AAA.NO_KP_BARU)))||')'
+END  AS KP_SIMATI, 
+UPPER(a5.NAMA_OB) AS NAMA_OB,
+CASE 
+    WHEN A5.ALAMAT1_SURAT IS NULL THEN UPPER(A5.ALAMAT_1) ELSE UPPER(A5.ALAMAT1_SURAT)
+END AS ALAMAT1,
+CASE 
+    WHEN A5.ALAMAT1_SURAT IS NULL THEN UPPER(A5.ALAMAT_2) ELSE UPPER(A5.ALAMAT2_SURAT)
+END AS ALAMAT2,
+CASE 
+    WHEN A5.ALAMAT1_SURAT IS NULL THEN UPPER(A5.ALAMAT_3) ELSE UPPER(A5.ALAMAT3_SURAT)
+END AS ALAMAT3,
+CASE 
+    WHEN A5.ALAMAT1_SURAT IS NULL THEN A5.POSKOD ELSE  A5.POSKOD_SURAT
+END AS POSKOD,
+CASE 
+    WHEN A5.ALAMAT1_SURAT IS NULL AND A5.ID_BANDAR IS NULL THEN UPPER(A5.BANDAR) ELSE UPPER(A6.KETERANGAN) 
+END AS BANDAR,
+CASE 
+    WHEN A5.ALAMAT1_SURAT IS NULL THEN UPPER(A7.NAMA_NEGERI) ELSE UPPER(A8.NAMA_NEGERI) 
+END AS NEGERI,
+(select to_char(sysdate,'FMMonth yyyy') from dual) AS TARIKH_SURAT
+from tblpfdfail a1, tblppkpermohonan a2, tblppkpermohonansimati a3, tblppksimati a4, tblppkob a5, tblrujbandar a6, 
+tblrujnegeri a7, tblrujnegeri a8,(SELECT      
+      CASE 
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAIN IS NULL THEN  TBLPPKSIMATI.NO_KP_LAMA 
+         ELSE TBLPPKSIMATI.NO_KP_BARU
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NOT NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS  NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+     END AS NO_KP_BARU , ID_SIMATI      
+     from tblppksimati ) AAA
+where a1.id_fail = a2.id_fail and a2.id_permohonan = a3.id_permohonan and a3.id_simati = a4.id_simati 
+and a3.id_permohonansimati = a5.id_permohonansimati and a5.id_bandarsurat = a6.id_bandar(+) and a5.id_negeri = a7.id_negeri and a5.id_negerisurat = a8.id_negeri
+and a2.SEKSYEN=8 and a5.status_hidup = 0 and a5.id_tarafkptg = 1 and a5.umur >= 18
+AND A4.ID_SIMATI = AAA.ID_SIMATI AND A1.NO_FAIL = '$P!{nofail}']]></queryString>
+
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="TARIKH_MATI" class="java.lang.String"/>
+	<field name="KP_SIMATI" class="java.lang.String"/>
+	<field name="NAMA_OB" class="java.lang.String"/>
+	<field name="ALAMAT1" class="java.lang.String"/>
+	<field name="ALAMAT2" class="java.lang.String"/>
+	<field name="ALAMAT3" class="java.lang.String"/>
+	<field name="POSKOD" class="java.lang.String"/>
+	<field name="BANDAR" class="java.lang.String"/>
+	<field name="NEGERI" class="java.lang.String"/>
+	<field name="TARIKH_SURAT" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="29"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="41"
+						y="6"
+						width="100"
+						height="20"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[Nama]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="241"
+						y="6"
+						width="120"
+						height="20"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[Alamat ]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="73"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="41"
+						y="11"
+						width="159"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_OB}!=null?$F{NAMA_OB}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="241"
+						y="11"
+						width="280"
+						height="59"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{ALAMAT1}!=null?$F{ALAMAT1}+"\n":"")+
+($F{ALAMAT2}!=null?$F{ALAMAT2}+"\n":"")+
+($F{ALAMAT3}!=null?$F{ALAMAT3}+"\n":"")+
+($F{POSKOD}!=null?$F{POSKOD}:"")+" "+($F{BANDAR}!=null?$F{BANDAR}+"\n":"")+
+($F{NEGERI}!=null?$F{NEGERI}:"")]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="1"
+						y="11"
+						width="30"
+						height="20"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</summary>
+		<noData>
+			<band height="58"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="61"
+						y="6"
+						width="100"
+						height="20"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[Nama]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="234"
+						y="9"
+						width="120"
+						height="20"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[Alamat ]]></text>
+				</staticText>
+				<rectangle>
+					<reportElement
+						x="1"
+						y="35"
+						width="30"
+						height="20"
+						key="rectangle-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="41"
+						y="34"
+						width="150"
+						height="20"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[TIADA]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="222"
+						y="34"
+						width="160"
+						height="20"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[TIADA]]></text>
+				</staticText>
+			</band>
+		</noData>
+</jasperReport>
