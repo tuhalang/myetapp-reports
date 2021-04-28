@@ -27,6 +27,7 @@
 	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
 	<parameter name="WANG_CAGARAN" isForPrompting="true" class="java.lang.String"/>
 	<parameter name="KADAR_SEWA" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TEMPOH_TAHUN_BULAN" isForPrompting="false" class="java.lang.String"/>
 	<queryString><![CDATA[SELECT 
 TBLPFDFAIL.NO_FAIL, TBLPHPPERJANJIAN.TEMPOH,
 TO_CHAR (TBLPHPPERJANJIAN.TARIKH_MULA_PERJANJIAN, 'DD') || ' ' || 
@@ -99,7 +100,13 @@ AND TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL AND TBLPERMOHONAN.ID_PERMOHONAN =
 ),NULL) AS TUJUAN2,
 NVL((SELECT TBLRUJSUBSUBURUSAN.NAMA_SUBSUBURUSAN FROM TBLPHPPERMOHONANTUJUAN,TBLPFDFAIL,TBLPERMOHONAN,TBLPHPPERMOHONANSEWA,TBLRUJSUBSUBURUSAN WHERE TBLPHPPERMOHONANTUJUAN.TURUTAN_TUJUAN = '3' 
 AND TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERMOHONANSEWA.ID_PERMOHONAN AND TBLPHPPERMOHONANTUJUAN.ID_PHPPERMOHONANSEWA = TBLPHPPERMOHONANSEWA.ID_PHPPERMOHONANSEWA AND TBLPHPPERMOHONANTUJUAN.ID_JENISTUJUAN = TBLRUJSUBSUBURUSAN.ID_SUBSUBURUSAN AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}
-),NULL) AS TUJUAN3
+),NULL) AS TUJUAN3,
+NVL((SELECT regexp_substr(TBLPHPPERJANJIAN.TEMPOH/12,'[^.]+') NumberOfYears FROM TBLPHPPERJANJIAN,TBLPFDFAIL,
+TBLPERMOHONAN WHERE TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERJANJIAN.ID_PERMOHONAN AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}),0) AS TEMPOH_TAHUN,
+NVL((SELECT REGEXP_SUBSTR(substr(TBLPHPPERJANJIAN.TEMPOH/12,instr(TBLPHPPERJANJIAN.TEMPOH/12,'.'))*12,'[^.]+') NumberOfMonths FROM TBLPHPPERJANJIAN,TBLPFDFAIL,
+TBLPERMOHONAN WHERE TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERJANJIAN.ID_PERMOHONAN AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}),0) AS TEMPOH_BULAN,
+NVL((SELECT TBLPHPPERJANJIAN.TEMPOH/12 - substr(TBLPHPPERJANJIAN.TEMPOH/12,instr(TBLPHPPERJANJIAN.TEMPOH/12,'.')) AS bb FROM TBLPHPPERJANJIAN,TBLPFDFAIL,
+TBLPERMOHONAN WHERE TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERJANJIAN.ID_PERMOHONAN AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}),0) AS TEMPOH_BULAN2
 FROM
 TBLPFDFAIL,
 TBLPERMOHONAN,
@@ -129,8 +136,8 @@ AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERMOHONANSEWA.ID_PERMOHONAN
 AND TBLPHPPERJANJIAN.FLAG_PERJANJIAN = 'U'
 AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 
+	<field name="TEMPOH" class="java.lang.Integer"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
-	<field name="TEMPOH" class="java.lang.String"/>
 	<field name="TARIKH_MULA_PERJANJIAN" class="java.lang.String"/>
 	<field name="TARIKH_TAMAT_PERJANJIAN" class="java.lang.String"/>
 	<field name="KADAR_SEWA" class="java.lang.String"/>
@@ -152,7 +159,6 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 	<field name="NAMA_DAERAH" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
 	<field name="LUAS_GUNA" class="java.lang.String"/>
-	<field name="LUAS_MHNBERSAMAAN" class="java.math.BigDecimal"/>
 	<field name="TUJUAN" class="java.lang.String"/>
 	<field name="TUJUANLAIN1" class="java.lang.String"/>
 	<field name="TUJUANLAIN2" class="java.lang.String"/>
@@ -160,6 +166,10 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 	<field name="TUJUAN1" class="java.lang.String"/>
 	<field name="TUJUAN2" class="java.lang.String"/>
 	<field name="TUJUAN3" class="java.lang.String"/>
+	<field name="TEMPOH_TAHUN" class="java.lang.String"/>
+	<field name="TEMPOH_BULAN" class="java.lang.String"/>
+	<field name="TEMPOH_BULAN2" class="java.lang.String"/>
+	<field name="LUAS_MHNBERSAMAAN" class="java.math.BigDecimal"/>
 
 		<background>
 			<band height="0"  isSplitAllowed="true" >
@@ -178,11 +188,11 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 			</band>
 		</columnHeader>
 		<detail>
-			<band height="462"  isSplitAllowed="true" >
+			<band height="504"  isSplitAllowed="true" >
 				<subreport  isUsingCache="true">
 					<reportElement
 						x="0"
-						y="307"
+						y="349"
 						width="416"
 						height="15"
 						key="subreport-1"
@@ -205,7 +215,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="29"
-						y="213"
+						y="251"
 						width="415"
 						height="29"
 						key="textField-55"
@@ -243,9 +253,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
+						x="31"
 						y="28"
-						width="161"
+						width="143"
 						height="15"
 						key="textField-5"
 						positionType="Float"/>
@@ -257,21 +267,21 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
+						x="31"
 						y="48"
-						width="161"
+						width="143"
 						height="15"
 						key="textField-6"
 						positionType="Float"/>
 					<box></box>
-					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+					<textElement textAlignment="Left" verticalAlignment="Top" markup="styled" lineSpacing="Single">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["TEMPOH PERJANJIAN\n"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="190"
+						x="174"
 						y="28"
 						width="20"
 						height="15"
@@ -285,7 +295,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="190"
+						x="174"
 						y="48"
 						width="20"
 						height="15"
@@ -299,9 +309,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="220"
+						x="197"
 						y="28"
-						width="224"
+						width="256"
 						height="15"
 						key="textField-9"
 						positionType="Float"/>
@@ -313,9 +323,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="220"
+						x="198"
 						y="48"
-						width="224"
+						width="256"
 						height="15"
 						key="textField-10"
 						positionType="Float"/>
@@ -323,13 +333,14 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_MULA_PERJANJIAN} != null ? $F{TARIKH_MULA_PERJANJIAN}:"")+" - "+($F{TARIKH_TAMAT_PERJANJIAN} != null ? $F{TARIKH_TAMAT_PERJANJIAN}:"")+($F{TEMPOH}!=null ? "\n("+$F{TEMPOH}:"")+" BULAN)\n"]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_MULA_PERJANJIAN} != null ? $F{TARIKH_MULA_PERJANJIAN}:"")+" - "+($F{TARIKH_TAMAT_PERJANJIAN} != null ? $F{TARIKH_TAMAT_PERJANJIAN}:"")+
+"\n( "+$P{TEMPOH_TAHUN_BULAN}+" )\n"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
+						x="31"
 						y="68"
-						width="161"
+						width="143"
 						height="15"
 						key="textField-11"
 						positionType="Float"/>
@@ -341,9 +352,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
+						x="31"
 						y="88"
-						width="161"
+						width="143"
 						height="15"
 						key="textField-12"
 						positionType="Float"/>
@@ -355,7 +366,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="190"
+						x="174"
 						y="68"
 						width="20"
 						height="15"
@@ -369,7 +380,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="190"
+						x="174"
 						y="88"
 						width="20"
 						height="15"
@@ -383,9 +394,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="220"
+						x="199"
 						y="68"
-						width="224"
+						width="256"
 						height="15"
 						key="textField-15"
 						positionType="Float"/>
@@ -401,39 +412,37 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="220"
+						x="199"
 						y="88"
-						width="224"
+						width="256"
 						height="15"
 						key="textField-16"
 						positionType="Float"/>
 					<box></box>
-					<textElement textAlignment="Center" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+					<textElement textAlignment="Left" verticalAlignment="Top" markup="styled" lineSpacing="Single">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["PESURUHJAYA TANAH PERSEKUTUAN\n\n"
-+"DAN\n\n"
-+($F{NAMA_PEMOHON}!=null ? $F{NAMA_PEMOHON}:"").toUpperCase()+"\n"]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA["PESURUHJAYA TANAH PERSEKUTUAN\n"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
-						y="129"
-						width="161"
+						x="31"
+						y="167"
+						width="143"
 						height="15"
 						key="textField-17"
 						positionType="Float"/>
 					<box></box>
-					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+					<textElement textAlignment="Left" verticalAlignment="Top" markup="styled" lineSpacing="Single">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="11" isBold="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["WANG CAGARAN KADAR SEWAAN\n"]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
-						y="108"
-						width="161"
+						x="31"
+						y="146"
+						width="143"
 						height="15"
 						key="textField-18"
 						positionType="Float"/>
@@ -445,8 +454,8 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="190"
-						y="129"
+						x="174"
+						y="167"
 						width="20"
 						height="15"
 						key="textField-19"
@@ -459,8 +468,8 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="190"
-						y="108"
+						x="174"
+						y="146"
 						width="20"
 						height="15"
 						key="textField-20"
@@ -473,9 +482,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="220"
-						y="129"
-						width="224"
+						x="199"
+						y="167"
+						width="256"
 						height="15"
 						key="textField-21"
 						positionType="Float"/>
@@ -487,9 +496,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="220"
-						y="108"
-						width="224"
+						x="199"
+						y="146"
+						width="256"
 						height="15"
 						key="textField-22"
 						positionType="Float"/>
@@ -501,9 +510,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
-						y="150"
-						width="161"
+						x="31"
+						y="188"
+						width="143"
 						height="15"
 						key="textField-23"
 						positionType="Float"/>
@@ -515,8 +524,8 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="190"
-						y="150"
+						x="174"
+						y="188"
 						width="20"
 						height="15"
 						key="textField-24"
@@ -529,9 +538,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="220"
-						y="150"
-						width="224"
+						x="199"
+						y="188"
+						width="256"
 						height="15"
 						key="textField-25"
 						positionType="Float"/>
@@ -545,9 +554,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
+						x="13"
 						y="44"
-						width="413"
+						width="395"
 						height="3"
 						key="textField-26"
 						positionType="Float"/>
@@ -559,9 +568,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
+						x="13"
 						y="64"
-						width="413"
+						width="395"
 						height="3"
 						key="textField-27"
 						positionType="Float"/>
@@ -573,9 +582,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
+						x="13"
 						y="84"
-						width="413"
+						width="395"
 						height="3"
 						key="textField-28"
 						positionType="Float"/>
@@ -587,9 +596,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
-						y="125"
-						width="413"
+						x="13"
+						y="163"
+						width="395"
 						height="3"
 						key="textField-29"
 						positionType="Float"/>
@@ -601,9 +610,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
-						y="104"
-						width="413"
+						x="13"
+						y="142"
+						width="395"
 						height="3"
 						key="textField-30"
 						positionType="Float"/>
@@ -615,9 +624,9 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="29"
-						y="145"
-						width="413"
+						x="13"
+						y="183"
+						width="395"
 						height="3"
 						key="textField-31"
 						positionType="Float"/>
@@ -630,7 +639,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<break>
 					<reportElement
 						x="0"
-						y="169"
+						y="207"
 						width="475"
 						height="0"
 						key="element-1"/>
@@ -638,7 +647,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<subreport  isUsingCache="true">
 					<reportElement
 						x="1"
-						y="327"
+						y="369"
 						width="415"
 						height="15"
 						key="subreport-2"
@@ -661,7 +670,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<subreport  isUsingCache="true">
 					<reportElement
 						x="1"
-						y="367"
+						y="409"
 						width="415"
 						height="15"
 						key="subreport-4"
@@ -684,7 +693,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<subreport  isUsingCache="true">
 					<reportElement
 						x="1"
-						y="387"
+						y="429"
 						width="415"
 						height="15"
 						key="subreport-5"
@@ -707,7 +716,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="29"
-						y="213"
+						y="251"
 						width="415"
 						height="29"
 						key="textField-69"
@@ -732,7 +741,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="68"
-						y="266"
+						y="304"
 						width="376"
 						height="16"
 						key="textField-71"
@@ -748,7 +757,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="29"
-						y="247"
+						y="285"
 						width="415"
 						height="14"
 						key="textField-75"
@@ -762,7 +771,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="29"
-						y="262"
+						y="300"
 						width="413"
 						height="3"
 						key="textField-76"
@@ -776,7 +785,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<subreport  isUsingCache="true">
 					<reportElement
 						x="1"
-						y="407"
+						y="449"
 						width="415"
 						height="15"
 						key="subreport-7"
@@ -790,7 +799,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<subreport  isUsingCache="true">
 					<reportElement
 						x="1"
-						y="427"
+						y="469"
 						width="415"
 						height="15"
 						key="subreport-8"
@@ -804,7 +813,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<subreport  isUsingCache="true">
 					<reportElement
 						x="1"
-						y="447"
+						y="489"
 						width="415"
 						height="15"
 						key="subreport-9"
@@ -818,7 +827,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<subreport  isUsingCache="true">
 					<reportElement
 						x="1"
-						y="347"
+						y="389"
 						width="415"
 						height="15"
 						key="subreport-10"
@@ -835,7 +844,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="29"
-						y="196"
+						y="234"
 						width="415"
 						height="15"
 						key="textField-85"
@@ -850,7 +859,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="29"
-						y="266"
+						y="304"
 						width="29"
 						height="16"
 						key="textField-88"
@@ -864,7 +873,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="29"
-						y="287"
+						y="325"
 						width="29"
 						height="16"
 						key="textField-89"
@@ -878,7 +887,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="68"
-						y="287"
+						y="325"
 						width="376"
 						height="16"
 						key="textField-91"
@@ -896,7 +905,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="29"
-						y="283"
+						y="321"
 						width="413"
 						height="3"
 						key="textField-92"
@@ -910,7 +919,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="10"
-						y="443"
+						y="485"
 						width="413"
 						height="3"
 						key="textField-94"
@@ -924,7 +933,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="10"
-						y="423"
+						y="465"
 						width="413"
 						height="3"
 						key="textField-95"
@@ -938,7 +947,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="10"
-						y="403"
+						y="445"
 						width="413"
 						height="3"
 						key="textField-96"
@@ -952,7 +961,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="10"
-						y="383"
+						y="425"
 						width="413"
 						height="3"
 						key="textField-97"
@@ -966,7 +975,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="10"
-						y="363"
+						y="405"
 						width="413"
 						height="3"
 						key="textField-98"
@@ -980,7 +989,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="10"
-						y="343"
+						y="385"
 						width="413"
 						height="3"
 						key="textField-99"
@@ -994,7 +1003,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="10"
-						y="323"
+						y="365"
 						width="413"
 						height="3"
 						key="textField-100"
@@ -1008,7 +1017,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="176"
+						y="214"
 						width="451"
 						height="14"
 						key="textField-101"
@@ -1018,6 +1027,34 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true" isUnderline="true"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["PERJANJIAN PENYEWAAN TANAH\n\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="274"
+						y="104"
+						width="78"
+						height="15"
+						key="textField-102"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["DAN\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="200"
+						y="123"
+						width="256"
+						height="15"
+						key="textField-103"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PEMOHON}!=null ? $F{NAMA_PEMOHON}:"").toUpperCase()+"\n"]]></textFieldExpression>
 				</textField>
 			</band>
 		</detail>
