@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SuratKaveat" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="30ad8b04-fa79-4778-9b00-f62c4e24cc8a">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SuratKaveat" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="30ad8b04-fa79-4778-9b00-f62c4e24cc8a">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
-	<property name="ireport.zoom" value="0.8264462809917354"/>
+	<property name="ireport.zoom" value="1.1000000000000005"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.y" value="305"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -15,10 +15,9 @@
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<parameter name="namaPejabat" class="java.lang.String" isForPrompting="false"/>
 	<queryString>
-		<![CDATA[-----/* Script Surat Kaveat edit by wan on 06/04/2011 */ ------------
-
-SELECT DISTINCT
+		<![CDATA[SELECT DISTINCT
     P.ID_PERMOHONAN,
+    F.ID_FAIL,
     NVL(P.SEKSYEN,' ') AS SEKSYENPERMOHONAN,
     TO_CHAR(P."TARIKH_MOHON",'dd/mm/yyyy') AS TARIKH_MOHON,
     CASE
@@ -59,8 +58,26 @@ SELECT DISTINCT
         WHEN TO_CHAR(sysdate, 'MM')='11' THEN 'November'
         WHEN TO_CHAR(sysdate, 'MM')='12' THEN 'Disember'
     END || ' ' || TO_CHAR(sysdate, 'YYYY') AS BULAN_TODAY
-    ,PEJ.PEJABAT
-FROM TBLPFDFAIL F,
+    ,
+    PEJ.PEJABAT,
+       REPLACE(UPPER(KVT.NAMA_FIRMA),',') AS NAMA_FIRMA,
+       REPLACE(UPPER(TRIM(KVT.alamat1)),',') AS ALAMAT_FIRMA1,
+       REPLACE(UPPER(TRIM(KVT.alamat2)),',') AS ALAMAT_FIRMA2,
+       REPLACE(UPPER(TRIM(KVT.alamat3)),',') AS ALAMAT_FIRMA3,
+       KVT.NO_TEL,
+       CASE
+            WHEN KVT.POSKOD IS NULL THEN '' ELSE KVT.POSKOD
+       END AS POSKOD_FIRMA,
+       CASE
+       		WHEN UPPER(TRIM(RB.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(RB.KETERANGAN)),'')
+       		ELSE ''
+       END AS BANDAR_FIRMA,
+       CASE
+       		WHEN UPPER(TRIM(RN.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(RN.NAMA_NEGERI)),'')
+       		ELSE ''
+       END AS NEGERI_FIRMA
+FROM
+	TBLPFDFAIL F,
     TBLPPKPERMOHONAN P,
     TBLPPKPERMOHONANSIMATI PS,
     TBLPPKSIMATI S,
@@ -98,14 +115,15 @@ WHERE  F.ID_FAIL                = P.ID_FAIL
     AND P.ID_PERMOHONAN          = PS.ID_PERMOHONAN
     AND P.ID_PEMOHON             = PE.ID_PEMOHON
     AND PS.ID_SIMATI              = S.ID_SIMATI
-   AND PE.ID_BANDARSURAT         = RB.ID_BANDAR(+)
-   AND PE.ID_NEGERISURAT         = RN.ID_NEGERI(+)
-   AND P.ID_PERMOHONAN          = KVT.ID_PERMOHONAN
-   AND P.ID_DAERAHMHN = PEJ.ID_DAERAHURUS
- --  AND F.ID_FAIL                = 99181045632
-AND F.ID_FAIL                = $P!{idfail}]]>
+   	AND PE.ID_BANDARSURAT         = RB.ID_BANDAR(+)
+   	AND PE.ID_NEGERISURAT         = RN.ID_NEGERI(+)
+   	AND P.ID_PERMOHONAN          = KVT.ID_PERMOHONAN
+   	AND P.ID_DAERAHMHN = PEJ.ID_DAERAHURUS
+--  AND F.ID_FAIL                = 99191171211
+    AND F.ID_FAIL                = $P!{idfail}]]>
 	</queryString>
 	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
 	<field name="SEKSYENPERMOHONAN" class="java.lang.String"/>
 	<field name="TARIKH_MOHON" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
@@ -126,6 +144,14 @@ AND F.ID_FAIL                = $P!{idfail}]]>
 	<field name="NUM_HARI_TODAY" class="java.lang.String"/>
 	<field name="BULAN_TODAY" class="java.lang.String"/>
 	<field name="PEJABAT" class="java.lang.String"/>
+	<field name="NAMA_FIRMA" class="java.lang.String"/>
+	<field name="ALAMAT_FIRMA1" class="java.lang.String"/>
+	<field name="ALAMAT_FIRMA2" class="java.lang.String"/>
+	<field name="ALAMAT_FIRMA3" class="java.lang.String"/>
+	<field name="NO_TEL" class="java.lang.String"/>
+	<field name="POSKOD_FIRMA" class="java.lang.String"/>
+	<field name="BANDAR_FIRMA" class="java.lang.String"/>
+	<field name="NEGERI_FIRMA" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -133,7 +159,7 @@ AND F.ID_FAIL                = $P!{idfail}]]>
 		<band splitType="Prevent"/>
 	</pageHeader>
 	<detail>
-		<band height="541" splitType="Prevent">
+		<band height="562" splitType="Prevent">
 			<textField isBlankWhenNull="true">
 				<reportElement uuid="4d39d764-01e6-4e99-b296-12c4a95bdf6e" key="textField-1" x="294" y="131" width="186" height="13" isRemoveLineWhenBlank="true"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -324,6 +350,13 @@ AND F.ID_FAIL                = $P!{idfail}]]>
 				</textElement>
 				<textFieldExpression><![CDATA["3.   Oleh yang demikian, sila tuan/puan berhubung terus dengan peguamcara bagi pihak pengkaveat iaitu <style isBold='true' pdfFontName='Helvetica-Bold'> "+$F{NAMA_KAVEAT}+".</style>"]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement uuid="5a0eb00a-92fb-4f67-b5b6-8f38aa63046d" key="staticText-22" positionType="Float" x="56" y="511" width="31" height="19"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="10"/>
+				</textElement>
+				<text><![CDATA[s.k :]]></text>
+			</staticText>
 			<textField isBlankWhenNull="false">
 				<reportElement uuid="0eccc80c-da90-4e74-97fd-1d8ad6c9c6ba" key="textField-14" positionType="Float" x="56" y="484" width="247" height="15"/>
 				<textElement/>
@@ -336,6 +369,35 @@ AND F.ID_FAIL                = $P!{idfail}]]>
 				</textElement>
 				<textFieldExpression><![CDATA["\"BERKHIDMAT UNTUK NEGARA\""
 +"\n "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="a2fd80a9-4dc8-4e71-a874-a7a2321c068d" key="textField-9" positionType="Float" x="87" y="538" width="411" height="13" isRemoveLineWhenBlank="true"/>
+				<textElement verticalAlignment="Middle" markup="styled">
+					<font fontName="Arial" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NEGERI_FIRMA}!=null ? $F{NEGERI_FIRMA}:""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="9700c946-5793-4d2d-9dc7-341c42c019f6" key="textField-5" positionType="Float" x="87" y="525" width="411" height="13" isRemoveLineWhenBlank="true"/>
+				<textElement verticalAlignment="Middle" markup="styled">
+					<font fontName="Arial" size="10" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{ALAMAT_FIRMA1}!=null ? $F{ALAMAT_FIRMA1}+"\n":"")
++($F{ALAMAT_FIRMA2}!=null ? $F{ALAMAT_FIRMA2}+"\n":"")
++($F{ALAMAT_FIRMA3}!=null ? $F{ALAMAT_FIRMA3}+"\n":"")
++(($F{POSKOD_FIRMA}!=null && $F{BANDAR_FIRMA}!=null) ? $F{POSKOD_FIRMA}+" "+$F{BANDAR_FIRMA}+"":($F{POSKOD_FIRMA}==null && $F{BANDAR_FIRMA}!=null) ? $F{BANDAR_FIRMA}+"":($F{POSKOD_FIRMA}!=null && $F{BANDAR_FIRMA}==null) ? $F{POSKOD_FIRMA}+"":"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6581f9eb-aaf7-462a-af48-0dc2adc4074f" key="textField-6" positionType="Float" x="87" y="511" width="411" height="13"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NAMA_FIRMA}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="472d9e39-b431-4637-af8c-a15047f0a7ba" key="textField-8" positionType="Float" x="87" y="551" width="341" height="11" isRemoveLineWhenBlank="true"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[($F{NO_TEL}!=null ? "No. Telefon: "+$F{NO_TEL}:"")]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
