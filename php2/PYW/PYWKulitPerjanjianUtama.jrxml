@@ -25,6 +25,7 @@
 
 	<parameter name="ID_FAIL" isForPrompting="true" class="java.lang.String"/>
 	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="TEMPOH_TAHUN_BULAN" isForPrompting="false" class="java.lang.String"/>
 	<queryString><![CDATA[SELECT DISTINCT TBLPFDFAIL.ID_FAIL,
 TBLPFDFAIL.NO_FAIL,
 REPLACE(UPPER(REPLACE(TRIM(TBLPHPPEMOHON.NAMA),'&','&#38;')),',')  as NAMA_PEMOHON,
@@ -71,7 +72,13 @@ CASE
 END AS NO_HAKMILIK,
 INITCAP(MUKIMTANAH.NAMA_MUKIM) AS NAMA_MUKIM,
 INITCAP(DAERAHTANAH.NAMA_DAERAH) AS NAMA_DAERAH,
-INITCAP(NEGERITANAH.NAMA_NEGERI) AS NAMA_NEGERI, RUJSUBURUSAN.NAMA_SUBURUSAN
+INITCAP(NEGERITANAH.NAMA_NEGERI) AS NAMA_NEGERI, RUJSUBURUSAN.NAMA_SUBURUSAN,
+NVL((SELECT regexp_substr(TBLPHPPERJANJIAN.TEMPOH/12,'[^.]+') NumberOfYears FROM TBLPHPPERJANJIAN,TBLPFDFAIL,
+TBLPERMOHONAN WHERE TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERJANJIAN.ID_PERMOHONAN AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}),0) AS TEMPOH_TAHUN,
+NVL((SELECT REGEXP_SUBSTR(substr(TBLPHPPERJANJIAN.TEMPOH/12,instr(TBLPHPPERJANJIAN.TEMPOH/12,'.'))*12,'[^.]+') NumberOfMonths FROM TBLPHPPERJANJIAN,TBLPFDFAIL,
+TBLPERMOHONAN WHERE TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERJANJIAN.ID_PERMOHONAN AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}),0) AS TEMPOH_BULAN,
+NVL((SELECT TBLPHPPERJANJIAN.TEMPOH/12 - substr(TBLPHPPERJANJIAN.TEMPOH/12,instr(TBLPHPPERJANJIAN.TEMPOH/12,'.')) AS bb FROM TBLPHPPERJANJIAN,TBLPFDFAIL,
+TBLPERMOHONAN WHERE TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERJANJIAN.ID_PERMOHONAN AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}),0) AS TEMPOH_BULAN2
 FROM
 TBLPFDFAIL,
 TBLPERMOHONAN,
@@ -99,14 +106,13 @@ AND TBLPHPHAKMILIK.ID_DAERAH = DAERAHTANAH.ID_DAERAH(+)
 AND TBLPFDFAIL.ID_SUBURUSAN = RUJSUBURUSAN.ID_SUBURUSAN(+)
 AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 
-	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="TEMPOH" class="java.lang.Integer"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="NAMA_PEMOHON" class="java.lang.String"/>
 	<field name="TUJUAN" class="java.lang.String"/>
 	<field name="NO_SIRI" class="java.lang.String"/>
 	<field name="TARIKH_MULA_PERJANJIAN" class="java.lang.String"/>
 	<field name="TARIKH_TAMAT_PERJANJIAN" class="java.lang.String"/>
-	<field name="TEMPOH" class="java.lang.String"/>
 	<field name="JENIS_LOT" class="java.lang.String"/>
 	<field name="NO_LOT" class="java.lang.String"/>
 	<field name="NO_HAKMILIK" class="java.lang.String"/>
@@ -114,6 +120,10 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 	<field name="NAMA_DAERAH" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
 	<field name="NAMA_SUBURUSAN" class="java.lang.String"/>
+	<field name="TEMPOH_TAHUN" class="java.lang.String"/>
+	<field name="TEMPOH_BULAN" class="java.lang.String"/>
+	<field name="TEMPOH_BULAN2" class="java.lang.String"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
 
 		<background>
 			<band height="700"  isSplitAllowed="true" >
@@ -176,7 +186,7 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]></queryString>
 +($F{NAMA_PEMOHON}!=null ? $F{NAMA_PEMOHON}:"")+"\n\n\n"
 +"TEMPOH PERJANJIAN\n"
 +($F{TARIKH_MULA_PERJANJIAN}!=null ? $F{TARIKH_MULA_PERJANJIAN}:"")+" HINGGA "+($F{TARIKH_TAMAT_PERJANJIAN}!=null ? $F{TARIKH_TAMAT_PERJANJIAN}:"")+"\n"+
-"( "+($F{TEMPOH}!=null ? $F{TEMPOH}:"")+" BULAN )"+"\n\n\n"+
+"( "+ $P{TEMPOH_TAHUN_BULAN}+" )"+"\n\n\n"+
 "TEMPAT : "+($F{JENIS_LOT}!=null ? $F{JENIS_LOT}:"") + ($F{NO_LOT}!=null ? " "+$F{NO_LOT}:"") + ($F{NO_HAKMILIK}!=null ? " "+$F{NO_HAKMILIK}:"")
 +"\n"+($F{NAMA_MUKIM} != null ? $F{NAMA_MUKIM}:"").toUpperCase()+" "+($F{NAMA_DAERAH}!=null ? "DAERAH "+$F{NAMA_DAERAH}:"").toUpperCase()+" "
 +"\n"+($F{NAMA_NEGERI} != null ? $F{NAMA_NEGERI} :"").toUpperCase()+"\n\n"
