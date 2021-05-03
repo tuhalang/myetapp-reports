@@ -58,17 +58,19 @@ RL.KETERANGAN AS JENIS_LOT,TPH.NO_LOT
     END AS BULAN_SEMASA
 --
 ,RN.KOD_MAMPU,TPH.ID_DAERAH,TPH.ID_MUKIM,MTP.TARIKH_PILIH
+,NVL(MTP.PAJAKAN,'TIADA MAKLUMAT') PAJAKAN
 FROM TBLHTPHAKMILIK TPH
 ,TBLRUJMUKIM RM,TBLRUJDAERAH RD,TBLRUJNEGERI RN
 ,TBLRUJAGENSI RA,TBLHTPHAKMILIKAGENSI TPHA
 ,TBLRUJKEMENTERIAN RK,TBLRUJKEMENTERIANMAPPING RKME
 ,TBLRUJLOT RL,TBLRUJJENISHAKMILIK RJH
 ,TBLRUJSEKSYENUPI SEK
-,(SELECT F.NO_FAIL,TPHU.PEGANGAN_HAKMILIK,TPP.TARIKH_MASUK TARIKH_PILIH
-	FROM	TBLHTPHAKMILIKURUSAN TPHU, TBLPFDFAIL F, TBLPERMOHONAN P, TBLHTPPAJAKAN TPP
+,(SELECT F.NO_FAIL,TPHU.PEGANGAN_HAKMILIK,TPP.TARIKH_MASUK TARIKH_PILIH,NVL(RSU.NAMA_SUBURUSAN,'TIADA MAKLUMAT') PAJAKAN
+	FROM	TBLHTPHAKMILIKURUSAN TPHU, TBLPFDFAIL F, TBLPERMOHONAN P, TBLHTPPAJAKAN TPP,TBLRUJSUBURUSAN RSU
  	WHERE P.ID_FAIL=F.ID_FAIL
 	AND TPHU.ID_PERMOHONAN = P.ID_PERMOHONAN
 	AND TPHU.ID_PERMOHONAN = TPP.ID_PERMOHONAN
+	AND F.ID_SUBURUSAN = RSU.ID_SUBURUSAN(+)
 	AND F.ID_URUSAN = '3'
  ) MTP
 WHERE TPH.ID_HAKMILIK = TPHA.ID_HAKMILIK
@@ -122,6 +124,7 @@ ORDER BY RN.KOD_MAMPU,TPH.ID_DAERAH,TPH.ID_MUKIM,MTP.TARIKH_PILIH DESC]]>
 	<field name="ID_DAERAH" class="java.math.BigDecimal"/>
 	<field name="ID_MUKIM" class="java.math.BigDecimal"/>
 	<field name="TARIKH_PILIH" class="java.sql.Timestamp"/>
+	<field name="PAJAKAN" class="java.lang.String"/>
 	<variable name="JUMLAH_LUAS" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{LUAS}]]></variableExpression>
 		<initialValueExpression><![CDATA[0]]></initialValueExpression>
@@ -330,7 +333,8 @@ SEKSYEN]]></text>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="7"/>
 				</textElement>
-				<textFieldExpression><![CDATA[($F{KEGUNAAN_TANAH}!=null?$F{KEGUNAAN_TANAH}:"")]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{KEGUNAAN_TANAH}!=null?$F{KEGUNAAN_TANAH}:"")
++($F{PAJAKAN}!=null? " ("+$F{PAJAKAN}+")":"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
 				<reportElement uuid="b4e9b36c-a9d0-4137-8336-ed74a2a0f16d" key="textField-8" positionType="Float" stretchType="RelativeToBandHeight" x="360" y="0" width="150" height="20"/>
