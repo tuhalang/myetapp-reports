@@ -2,7 +2,7 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="NotaPerbicaraan17" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="509" leftMargin="56" rightMargin="30" topMargin="28" bottomMargin="28" uuid="d526f3d8-9fec-45d0-94a5-3f5188df1bd2">
 	<property name="ireport.zoom" value="1.6105100000000008"/>
 	<property name="ireport.x" value="17"/>
-	<property name="ireport.y" value="384"/>
+	<property name="ireport.y" value="0"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<import value="net.sf.jasperreports.engine.*"/>
@@ -42,8 +42,8 @@ SELECT DISTINCT
             WHEN b.JUM_HARTA_TAMBAHAN_TKHMATI = 0 THEN (replace(to_char(b.JUMLAH_HTA_TARIKHMATI,'999,999,999.99'),' ', ''))
             WHEN b.JUM_HARTA_TAMBAHAN_TKHMATI IS NOT NULL THEN (replace(to_char(b.JUM_HARTA_TAMBAHAN_TKHMATI,'999,999,999.99'),' ', ''))
         END AS TBLPPKPERMOHONN_JUM_HARTAMATI,
-        TO_CHAR(b.TARIKH_MOHON,'DD/MM/YYYY') AS TARIKH_MOHON
-        ,PP.JUMLAH JUMLAH_BAYARAN_PERINTAH
+        TO_CHAR(b.TARIKH_MOHON,'DD/MM/YYYY') AS TARIKH_MOHON,
+        PP.JUMLAH JUMLAH_BAYARAN_PERINTAH
     --- /* Maklumat Pemohon */ ---
         ,NVL(upper(c.NAMA_PEMOHON),'') AS TBLPPKPEMOHON_NAMA_PEMOHON,
         CASE
@@ -150,18 +150,22 @@ FROM    TBLPFDFAIL a,
 	    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TL WHERE TL.LAIN_TUJUAN ='Y' ) TL,
 	    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TP WHERE TP.BATAL_KUASA_PENTADBIR ='Y' ) TP,
 	    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TA WHERE TA.BATAL_P_AMANAH ='Y' ) TA,
-	   	(SELECT ID_PERMOHONAN,
-	   		CASE
-				WHEN ((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON)    <= 10
-	   				THEN 10
-	   			WHEN ((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON)  > 10
-		   			THEN
-					ROUND((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON,2)
-	   		END AS JUMLAH
-	   		FROM TBLPPKPERMOHONAN TH
-	   		WHERE TH.HARTA_TINGGAL ='Y'
-   		) TH
-	   	,TBLPPKPERMOHONAN P
+	   	(SELECT TH.ID_PERMOHONAN,
+		   		CASE
+					WHEN ROUND((0.2/100) * ((TH.JUM_HARTA_TAMBAHAN_TKHMOHON)- NVL(DISKAUN.TOTAL,0)),2)  <= 10 THEN 10
+					WHEN ROUND((0.2/100) * ((TH.JUM_HARTA_TAMBAHAN_TKHMOHON)- NVL(DISKAUN.TOTAL,0)),2) > 10  THEN ROUND((0.2/100) * ((TH.JUM_HARTA_TAMBAHAN_TKHMOHON)
+					- NVL(DISKAUN.TOTAL,0)),2)
+		   		END AS JUMLAH
+		   		FROM TBLPPKPERMOHONAN TH,
+				(SELECT F.ID_PERMOHONAN, (SELECT SUM(A.nilai_ha_tarikhmohon) FROM tblppkha A, tblppkpermohonansimati B
+					WHERE F.id_permohonan = B.id_permohonan
+					AND B.id_simati = A.id_simati
+					AND A.id_jenisha = '98'
+					AND rownum<=1) TOTAL
+					FROM TBLPPKPERMOHONAN F, TBLPFDFAIL FAIL2  WHERE F.ID_FAIL = FAIL2.ID_FAIL AND F.ID_FAIL = $P!{idfail}) DISKAUN
+		   		WHERE TH.HARTA_TINGGAL ='Y'
+	   	) TH,
+	   	TBLPPKPERMOHONAN P
 	   	WHERE
 		   	P.ID_PERMOHONAN = TL.ID_PERMOHONAN (+)
 		    AND P.ID_PERMOHONAN = TP.ID_PERMOHONAN (+)
