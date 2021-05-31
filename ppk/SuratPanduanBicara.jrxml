@@ -4,16 +4,15 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="371"/>
+	<property name="ireport.y" value="334"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="idfail" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[-- /* Surat Panduan Bicaran edit by wan 0n 31-05-2011 and second edit on 04/01/2012 *  --
-
-Select Distinct
+		<![CDATA[Select Distinct
     a.no_fail,
+    b.SEKSYEN,
     b.ID_DAERAHMHN,
     z.nama_daerah as Daerah_Mohon,
     p.nama_pejabat as Unit_Pusaka,
@@ -23,7 +22,23 @@ Select Distinct
     p.poskod,p.no_tel as telefon,
     Upper(bu.keterangan)as Bandar_Unit,
     Upper(nu.nama_negeri) as negeri_unit,
-    p.emel,PP.JUMLAH JUMLAH_BAYARAN_PERINTAH, b.JUMLAH_HARTA_TARIKHMOHON,
+    p.emel,
+    CASE
+    	WHEN B.SEKSYEN = '8' THEN 'RM '|| REPLACE(TO_CHAR(GETJUMLAHFORMAT((
+			CASE
+	                --- /* untuk kes s8 */ ---
+				WHEN B.JUMLAH_HARTA_TARIKHMOHON <= 1000 THEN ROUND(10,1)
+		        WHEN B.JUMLAH_HARTA_TARIKHMOHON BETWEEN 1001 AND 50000 THEN ROUND(30,1)
+		        WHEN B.JUMLAH_HARTA_TARIKHMOHON >= 50001 THEN ROUND((0.2/100)* ((B.JUMLAH_HARTA_TARIKHMOHON) -
+		        (select nvl(sum(ha.nilai_ha_tarikhmohon),2) from tblppkha ha, tblppkpermohonansimati ps
+				where B.id_permohonan = ps.id_permohonan
+				and ps.id_simati = ha.id_simati
+				and ha.id_jenisha = '98' and rownum<=1)),1)
+			END
+			)),'999,999,999.99'),' ')
+		WHEN B.SEKSYEN = '17' THEN PP.JUMLAH
+    END JUMLAH_BAYARAN_PERINTAH,
+    b.JUMLAH_HARTA_TARIKHMOHON,
     replace(
     	(select nilai_ha_tarikhmohon from tblppkha ha, tblppkpermohonansimati ps
 		where b.id_permohonan = ps.id_permohonan
@@ -70,8 +85,7 @@ WHERE
     AND p.id_jenispejabat   in (22,0)
     AND p.id_seksyen        = 2
     AND B.ID_PERMOHONAN 	= PP.ID_PERMOHONAN (+)
-    AND a.id_fail           = $P!{idfail}
-]]>
+    AND a.id_fail           = $P!{idfail}]]>
 	</queryString>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
