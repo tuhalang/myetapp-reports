@@ -1,88 +1,122 @@
-<?xml version="1.0" encoding="UTF-8"  ?>
-<!-- Created with iReport - A designer for JasperReports -->
-<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
-<jasperReport
-		 name="BorangF2_subreportByrnPerintah"
-		 columnCount="1"
-		 printOrder="Vertical"
-		 orientation="Portrait"
-		 pageWidth="595"
-		 pageHeight="842"
-		 columnWidth="595"
-		 columnSpacing="0"
-		 leftMargin="0"
-		 rightMargin="0"
-		 topMargin="0"
-		 bottomMargin="0"
-		 whenNoDataType="NoPages"
-		 isTitleNewPage="false"
-		 isSummaryNewPage="false">
-	<property name="ireport.scriptlethandling" value="0" />
-	<property name="ireport.encoding" value="UTF-8" />
-	<import value="java.util.*" />
-	<import value="net.sf.jasperreports.engine.*" />
-	<import value="net.sf.jasperreports.engine.data.*" />
-
-	<parameter name="idPermohonan" isForPrompting="true" class="java.lang.String"/>
-	<queryString><![CDATA[SELECT NVL(REPLACE(TO_CHAR(A.JUMLAH_BAYARAN,'999,999,999.99'),' ',''),'') AS AMAUN, A.NO_RESIT,
-       TO_CHAR(A.TARIKH_BAYARAN,'dd/mm/yyyy') AS TARIKH_RESIT
-FROM TBLPPKBAYARAN A,
-     TBLRUJJENISBAYARAN B,
-     TBLPPKPERMOHONAN C
-
-
-WHERE B.ID_JENISBAYARAN = A.ID_JENISBAYARAN
-    AND A.ID_JENISBAYARAN = 24
-    AND C.ID_PERMOHONAN = A.ID_PERMOHONAN(+)
-    AND C.ID_PERMOHONAN = $P!{idPermohonan}]]></queryString>
-
-	<field name="AMAUN" class="java.lang.String"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangF2_subreportByrnPerintah" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cc77a01b-27b2-4d3c-87f1-ed01f47900f6">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="idPermohonan" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[    Select Distinct
+    a.no_fail,
+    B.ID_PERMOHONAN,
+    D.NO_RESIT,
+    TO_CHAR(D.TARIKH_BAYARAN,'dd/mm/yyyy') AS TARIKH_RESIT,
+    b.JUMLAH_HARTA_TARIKHMOHON,
+    CASE
+    	WHEN B.SEKSYEN = '8' THEN 'RM '|| REPLACE(TO_CHAR(GETJUMLAHFORMAT((
+			CASE
+	                --- /* untuk kes s8 */ ---
+				WHEN B.JUMLAH_HARTA_TARIKHMOHON <= 1000 THEN ROUND(10,1)
+		        WHEN B.JUMLAH_HARTA_TARIKHMOHON BETWEEN 1001 AND 50000 THEN ROUND(30,1)
+		        WHEN B.JUMLAH_HARTA_TARIKHMOHON >= 50001 THEN ROUND((0.2/100)* ((B.JUMLAH_HARTA_TARIKHMOHON) -
+		        (select nvl(sum(ha.nilai_ha_tarikhmohon),2) from tblppkha ha, tblppkpermohonansimati ps
+				where B.id_permohonan = ps.id_permohonan
+				and ps.id_simati = ha.id_simati
+				and ha.id_jenisha = '98' and rownum<=1)),2)
+			END
+			)),'999,999,999.99'),' ')
+		WHEN B.SEKSYEN = '17' THEN PP.JUMLAH
+    END AMAUN
+From
+	tblpfdfail a,
+	tblppkpermohonan b,
+	TBLPPKBAYARAN D,
+    TBLRUJJENISBAYARAN E,
+	(SELECT
+	    P.ID_PERMOHONAN,
+	  	P.ID_FAIL,
+	   	JUM_HARTA_TAMBAHAN_TKHMOHON,
+		'RM '|| REPLACE(TO_CHAR(
+		CASE
+			WHEN (NVL(TL.JUMLAH,0) + NVL(TP.JUMLAH,0) + NVL(TA.JUMLAH,0) +  NVL(TH.JUMLAH,0)) LIKE '%.%'
+				THEN GETJUMLAHFORMAT((NVL(TL.JUMLAH,0) + NVL(TP.JUMLAH,0) + NVL(TA.JUMLAH,0) +  NVL(TH.JUMLAH,0)))
+			ELSE '' || (NVL(TL.JUMLAH,0) + NVL(TP.JUMLAH,0) + NVL(TA.JUMLAH,0) +  NVL(TH.JUMLAH,0))
+			END
+			,'999,999,999.99'),' ') AS JUMLAH
+	    FROM
+	    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TL WHERE TL.LAIN_TUJUAN ='Y' ) TL,
+	    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TP WHERE TP.BATAL_KUASA_PENTADBIR ='Y' ) TP,
+	    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TA WHERE TA.BATAL_P_AMANAH ='Y' ) TA,
+	   	(SELECT TH.ID_PERMOHONAN,
+		   		CASE
+					WHEN ROUND((0.2/100) * ((TH.JUM_HARTA_TAMBAHAN_TKHMOHON)- NVL(DISKAUN.TOTAL,0)),2)  <= 10 THEN 10
+					WHEN ROUND((0.2/100) * ((TH.JUM_HARTA_TAMBAHAN_TKHMOHON)- NVL(DISKAUN.TOTAL,0)),2) > 10  THEN ROUND((0.2/100) * ((TH.JUM_HARTA_TAMBAHAN_TKHMOHON)
+					- NVL(DISKAUN.TOTAL,0)),2)
+		   		END AS JUMLAH
+		   		FROM TBLPPKPERMOHONAN TH,
+				(SELECT F.ID_PERMOHONAN, (SELECT ROUND(SUM(A.nilai_ha_tarikhmohon),2) FROM tblppkha A, tblppkpermohonansimati B
+					WHERE F.id_permohonan = B.id_permohonan
+					AND B.id_simati = A.id_simati
+					AND A.id_jenisha = '98'
+					AND rownum<=1) TOTAL
+					FROM TBLPPKPERMOHONAN F) DISKAUN
+		   		WHERE TH.HARTA_TINGGAL ='Y'
+	   	) TH,
+	   	TBLPPKPERMOHONAN P
+	   	WHERE
+		    P.ID_PERMOHONAN = TL.ID_PERMOHONAN (+)
+		    AND P.ID_PERMOHONAN = TP.ID_PERMOHONAN (+)
+		    AND P.ID_PERMOHONAN = TA.ID_PERMOHONAN (+)
+		    AND P.ID_PERMOHONAN = TH.ID_PERMOHONAN (+)
+    ) PP
+WHERE
+	A.id_fail           	= B.id_fail
+	AND D.ID_PERMOHONAN 	= B.ID_PERMOHONAN(+)
+    	AND B.ID_PERMOHONAN 	= PP.ID_PERMOHONAN (+)
+   	AND D.ID_JENISBAYARAN 	= E.ID_JENISBAYARAN
+   	AND D.ID_JENISBAYARAN 	= 24
+	AND B.ID_PERMOHONAN 	= $P!{idPermohonan}]]>
+	</queryString>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
 	<field name="NO_RESIT" class="java.lang.String"/>
 	<field name="TARIKH_RESIT" class="java.lang.String"/>
-
-		<background>
-			<band height="0"  isSplitAllowed="true" >
-			</band>
-		</background>
-		<title>
-			<band height="0"  isSplitAllowed="false" >
-			</band>
-		</title>
-		<pageHeader>
-			<band height="0"  isSplitAllowed="false" >
-			</band>
-		</pageHeader>
-		<columnHeader>
-			<band height="0"  isSplitAllowed="false" >
-			</band>
-		</columnHeader>
-		<detail>
-			<band height="13"  isSplitAllowed="true" >
-				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="0"
-						y="0"
-						width="445"
-						height="13"
-						key="textField-1"/>
-					<box></box>
-					<textElement verticalAlignment="Middle">
-						<font fontName="Verdana" pdfFontName="Helvetica" size="9"/>
-					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["RM "+$F{AMAUN}+ " ( No.Resit : " + $F{NO_RESIT} + ", Tkh. Resit : " + $F{TARIKH_RESIT}+" )"]]></textFieldExpression>
-				</textField>
-			</band>
-		</detail>
-		<columnFooter>
-			<band height="0"  isSplitAllowed="false" >
-			</band>
-		</columnFooter>
-		<pageFooter>
-			<band height="0"  isSplitAllowed="false" >
-			</band>
-		</pageFooter>
-		<summary>
-			<band height="0"  isSplitAllowed="false" >
-			</band>
-		</summary>
+	<field name="JUMLAH_HARTA_TARIKHMOHON" class="java.math.BigDecimal"/>
+	<field name="AMAUN" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Prevent"/>
+	</title>
+	<pageHeader>
+		<band splitType="Prevent"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Prevent"/>
+	</columnHeader>
+	<detail>
+		<band height="13" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="9942966d-fe25-4bdc-b932-4ef59abae6a1" key="textField-1" x="0" y="0" width="445" height="13"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Verdana" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["RM "+$F{AMAUN}+ " ( No.Resit : " + $F{NO_RESIT} + ", Tkh. Resit : " + $F{TARIKH_RESIT}+" )"]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Prevent"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Prevent"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Prevent"/>
+	</summary>
 </jasperReport>
