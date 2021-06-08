@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="SuratIringanJPPHPAAH_tarikhHantar"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idpejJKPTG" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="bilDokumen" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT 
+        A.ID_FAIL, TO_CHAR(JPPH.TARIKH_SIMPAN,'DD/MM/YYYY') AS TARIKH_SIMPAN,
+        Q.ID_PEJABATJKPTG,
+        CASE
+            WHEN B.SEKSYEN=8 THEN REPLACE(A.NO_FAIL,'&','&#38;')
+            WHEN B.SEKSYEN=17 THEN REPLACE(LPAD (A.NO_FAIL,LENGTH(A.NO_FAIL)-6),'&','&#38;')
+        END AS NO_FAIL,
+        CASE
+            WHEN H.NAMA_SIMATI IS NOT NULL AND H.NAMA_LAIN IS NULL THEN REPLACE(H.NAMA_SIMATI,'&','&#38;')
+            WHEN H.NAMA_SIMATI IS NOT NULL AND H.NAMA_LAIN IS NOT NULL THEN REPLACE(H.NAMA_SIMATI,'&','&#38;') || ' @ '|| REPLACE(H.NAMA_LAIN,'&','&#38;')
+            WHEN H.NAMA_SIMATI IS NULL AND H.NAMA_LAIN IS NOT NULL THEN REPLACE(H.NAMA_LAIN,'&','&#38;')
+            END AS NAMA_SIMATI,
+        CASE
+            WHEN H.NO_KP_BARU IS NOT NULL AND H.NO_KP_LAMA IS NULL AND H.NO_KP_LAIN IS NULL THEN SUBSTR(H.NO_KP_BARU,1,6) || '-' || SUBSTR(H.NO_KP_BARU,7,2) || '-' || SUBSTR(H.NO_KP_BARU,9,4)
+            WHEN H.NO_KP_BARU IS NOT NULL AND H.NO_KP_LAMA IS NOT NULL AND H.NO_KP_LAIN IS NULL THEN SUBSTR(H.NO_KP_BARU,1,6) || '-' || SUBSTR(H.NO_KP_BARU,7,2) || '-' || SUBSTR(H.NO_KP_BARU,9,4) || ' ('||H.NO_KP_LAMA ||')'
+            WHEN H.NO_KP_BARU IS NOT NULL AND H.NO_KP_LAMA IS NOT NULL AND H.NO_KP_LAIN IS NOT NULL THEN SUBSTR(H.NO_KP_BARU,1,6) || '-' || SUBSTR(H.NO_KP_BARU,7,2) || '-' || SUBSTR(H.NO_KP_BARU,9,4) || ' ('||H.NO_KP_LAMA ||')' || ' ('||H.NO_KP_LAIN ||')'
+            WHEN H.NO_KP_BARU IS NOT NULL AND H.NO_KP_LAMA IS NULL AND H.NO_KP_LAIN IS NOT NULL THEN SUBSTR(H.NO_KP_BARU,1,6) || '-' || SUBSTR(H.NO_KP_BARU,7,2) || '-' || SUBSTR(H.NO_KP_BARU,9,4)  || ' ('||H.NO_KP_LAIN ||')'
+            WHEN H.NO_KP_BARU IS NULL AND H.NO_KP_LAMA IS NOT NULL AND H.NO_KP_LAIN IS NULL THEN REPLACE(H.NO_KP_LAMA,'&','&#38;')
+            WHEN H.NO_KP_BARU IS NULL AND H.NO_KP_LAMA IS NOT NULL AND H.NO_KP_LAIN IS NOT NULL THEN REPLACE(H.NO_KP_LAMA,'&','&#38;') || ' ('||H.NO_KP_LAIN ||')'
+            WHEN H.NO_KP_BARU IS NULL AND H.NO_KP_LAMA IS NULL AND H.NO_KP_LAIN IS NOT NULL THEN REPLACE(H.NO_KP_LAIN,'&','&#38;')
+              ELSE '-'
+        END AS KP_SIMATI,
+        
+        NVL(D.NO_HAKMILIK, '' ) AS NO_HAKMILIK,
+        NVL(D.NO_PAJAKAN, '' ) AS NO_PAJAKAN,
+        NVL(D.NO_LOT_ID, '' ) AS NO_LOT, 
+        NVL(D.NO_PT, '' ) AS NO_PT,
+        CASE
+            WHEN D.LUAS_HMP IS NULL THEN '0.0000'
+            WHEN D.LUAS_HMP IS NOT NULL THEN D.LUAS_HMP
+            WHEN D.LUAS_HMP < 1 THEN '0'||D.LUAS_HMP
+        END AS LUAS,
+        NVL(D.JENIS_HTA, '') AS JENIS_HTA,
+        NVL(D.BA_SIMATI,'') AS BA_SIMATI,
+        NVL(D.BB_SIMATI,'') AS BB_SIMATI,
+        UPPER(NVL(P.KOD_JENIS_HAKMILIK,'')) AS JENIS_HM,
+        CASE
+            WHEN D.ID_KATEGORI IS NULL THEN ''
+            WHEN D.ID_KATEGORI =2 THEN 'H'
+            ELSE 'MP'
+        END AS KOD_LUAS,
+        UPPER(NVL(R.NAMA_MUKIM, '' )) AS MUKIM_HARTA,
+        UPPER(NVL(S.NAMA_DAERAH, '' )) AS DAERAH_HARTA,
+        UPPER(NVL(T.KETERANGAN, '')) AS KATEGORI_HARTA
+FROM    TBLPFDFAIL A,
+        TBLPPKPERMOHONAN B,
+        TBLPPKPERMOHONANSIMATI C,
+        TBLPPKSIMATI H,
+        TBLPPKHTA D,
+        TBLRUJJENISHAKMILIK P,
+        TBLRUJPEJABATURUSAN Q,
+        TBLRUJMUKIM R,
+        TBLRUJDAERAH S,
+        TBLRUJKATEGORI T,
+        TBLRUJPEJABAT U,
+        TBLRUJNEGERI V,
+        TBLINTJPPHAH JPPH
+WHERE   A.ID_FAIL               = B.ID_FAIL
+   -- AND B.ID_PERMOHONAN         = C.ID_PERMOHONAN
+    AND C.ID_PERMOHONANSIMATI   = D.ID_PERMOHONANSIMATI
+    AND D.ID_JENISHM            = P.ID_JENISHAKMILIK(+)
+    AND D.ID_SIMATI             = H.ID_SIMATI
+    AND D.ID_NEGERI             = V.ID_NEGERI(+)
+    AND D.ID_NEGERI             = Q.ID_NEGERIURUS
+    AND D.ID_DAERAH             = Q.ID_DAERAHURUS
+    AND U.ID_PEJABAT            = Q.ID_PEJABATJKPTG
+    AND Q.ID_JENISPEJABAT       = 3
+    AND D.ID_MUKIM              = R.ID_MUKIM (+)
+    AND D.ID_DAERAH             = S.ID_DAERAH(+)
+    AND D.ID_KATEGORI           = T.ID_KATEGORI(+)
+    AND D.JENIS_HTA             = 'Y'
+    AND B.ID_PERMOHONAN         = JPPH.ID_PERMOHONAN
+    AND D.ID_HTA                = JPPH.ID_HTA
+    and a.id_fail               = $P!{idfail}
+    and q.ID_PEJABATJKPTG       = $P!{idpejJKPTG}
+Order by luas asc]]></queryString>
+
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="TARIKH_SIMPAN" class="java.lang.String"/>
+	<field name="ID_PEJABATJKPTG" class="java.math.BigDecimal"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="KP_SIMATI" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_PAJAKAN" class="java.lang.String"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="NO_PT" class="java.lang.String"/>
+	<field name="LUAS" class="java.lang.String"/>
+	<field name="JENIS_HTA" class="java.lang.String"/>
+	<field name="BA_SIMATI" class="java.math.BigDecimal"/>
+	<field name="BB_SIMATI" class="java.math.BigDecimal"/>
+	<field name="JENIS_HM" class="java.lang.String"/>
+	<field name="KOD_LUAS" class="java.lang.String"/>
+	<field name="MUKIM_HARTA" class="java.lang.String"/>
+	<field name="DAERAH_HARTA" class="java.lang.String"/>
+	<field name="KATEGORI_HARTA" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="13"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="-1"
+						y="0"
+						width="314"
+						height="13"
+						key="textField-12"
+						positionType="Float"/>
+					<box></box>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" pdfFontName="Helvetica" size="10" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Nilaian JPPH ini telah dihantar pada " +$F{TARIKH_SIMPAN} + " secara atas talian."]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>
