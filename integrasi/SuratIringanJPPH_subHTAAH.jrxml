@@ -1,0 +1,693 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="SuratIringanJPPH_subHTAAH"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idpejJKPTG" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="bilDokumen" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[Select 
+        a.id_fail,
+        q.id_pejabatjkptg,
+        CASE
+            WHEN b.seksyen=8 THEN REPLACE(A.NO_FAIL,'&','&#38;')
+            WHEN b.seksyen=17 THEN REPLACE(lpad (A.NO_FAIL,length(A.NO_FAIL)-6),'&','&#38;')
+        End AS NO_FAIL,
+        CASE
+            WHEN H.NAMA_SIMATI IS NOT NULL AND H.NAMA_LAIN IS NULL THEN REPLACE(H.NAMA_SIMATI,'&','&#38;')
+            WHEN H.NAMA_SIMATI IS NOT NULL AND H.NAMA_LAIN IS NOT NULL THEN REPLACE(H.NAMA_SIMATI,'&','&#38;') || ' @ '|| REPLACE(H.NAMA_LAIN,'&','&#38;')
+            WHEN H.NAMA_SIMATI IS NULL AND H.NAMA_LAIN IS NOT NULL THEN REPLACE(H.NAMA_LAIN,'&','&#38;')
+            END AS Nama_simati,
+        CASE
+            WHEN H.no_kp_baru IS NOT NULL AND H.no_kp_lama IS NULL and H.no_kp_lain IS NULL THEN SUBSTR(H.no_kp_baru,1,6) || '-' || SUBSTR(H.no_kp_baru,7,2) || '-' || SUBSTR(H.no_kp_baru,9,4)
+            WHEN H.no_kp_baru IS NOT NULL AND H.no_kp_lama IS NOT NULL AND H.no_kp_lain IS NULL THEN SUBSTR(H.no_kp_baru,1,6) || '-' || SUBSTR(H.no_kp_baru,7,2) || '-' || SUBSTR(H.no_kp_baru,9,4) || ' ('||H.no_kp_lama ||')'
+            WHEN H.no_kp_baru IS NOT NULL AND H.no_kp_lama IS NOT NULL AND H.no_kp_lain IS NOT NULL THEN SUBSTR(H.no_kp_baru,1,6) || '-' || SUBSTR(H.no_kp_baru,7,2) || '-' || SUBSTR(H.no_kp_baru,9,4) || ' ('||H.no_kp_lama ||')' || ' ('||H.no_kp_lain ||')'
+            WHEN H.no_kp_baru IS NOT NULL AND H.no_kp_lama IS NULL and H.no_kp_lain IS NOT NULL THEN SUBSTR(H.no_kp_baru,1,6) || '-' || SUBSTR(H.no_kp_baru,7,2) || '-' || SUBSTR(H.no_kp_baru,9,4)  || ' ('||H.no_kp_lain ||')'
+            WHEN H.no_kp_baru IS NULL AND H.no_kp_lama IS NOT NULL and H.no_kp_lain IS NULL THEN REPLACE(H.no_kp_lama,'&','&#38;')
+            WHEN H.no_kp_baru IS NULL AND H.no_kp_lama IS NOT NULL and H.no_kp_lain IS NOT NULL THEN REPLACE(H.no_kp_lama,'&','&#38;') || ' ('||H.no_kp_lain ||')'
+            WHEN H.no_kp_baru IS NULL AND H.no_kp_lama IS NULL and H.no_kp_lain IS NOT NULL THEN REPLACE(H.no_kp_lain,'&','&#38;')
+              Else '-'
+        END AS kp_simati,
+        
+        NVL(d.NO_HAKMILIK, '' ) AS NO_HAKMILIK,
+        NVL(d.NO_PAJAKAN, '' ) AS NO_PAJAKAN,
+        NVL(d.NO_LOT_ID, '' ) AS NO_LOT, 
+        NVL(d.NO_PT, '' ) AS NO_PT,
+        CASE
+            WHEN d.LUAS_HMP is null THEN '0.0000'
+            WHEN d.LUAS_HMP is not null THEN d.LUAS_HMP
+            WHEN d.LUAS_HMP < 1 THEN '0'||d.LUAS_HMP
+        END AS LUAS,
+        NVL(d.JENIS_HTA, '') AS JENIS_HTA,
+        nvl(d.BA_SIMATI,'') AS BA_SIMATI,
+        nvl(d.BB_SIMATI,'') AS BB_SIMATI,
+        Upper(nvl(p.kod_jenis_hakmilik,'')) AS jenis_HM,
+        CASE
+            WHEN d.id_kategori is null THEN ''
+            WHEN d.id_kategori =2 THEN 'H'
+            Else 'MP'
+        END AS KOD_LUAS,
+        Upper(NVL(r.NAMA_MUKIM, '' )) AS Mukim_Harta,
+        Upper(NVL(s.NAMA_DAERAH, '' )) AS Daerah_Harta,
+        Upper(NVL(t.KETERANGAN, '')) AS Kategori_Harta
+From    tblpfdfail a,
+        tblppkpermohonan b,
+        tblppkpermohonansimati c,
+        tblppksimati h,
+        tblppkhta d,
+        tblrujjenishakmilik p,
+        tblrujpejabaturusan q,
+        tblrujmukim r,
+        tblrujdaerah s,
+        tblrujkategori t,
+        tblrujpejabat u,
+        tblrujnegeri v,
+        tblintjpphah jpph
+where   a.id_fail               = b.id_fail
+    and b.id_permohonan         = c.id_permohonan
+    and c.id_permohonansimati   = d.id_permohonansimati
+    and d.id_jenishm            = p.id_jenishakmilik(+)
+    and d.id_simati             = h.id_simati
+    and d.id_negeri             = v.id_negeri(+)
+    and d.id_negeri             = q.id_negeriurus
+    and d.id_daerah             = q.id_daerahurus
+    and u.ID_PEJABAT            = q.ID_PEJABATJKPTG
+    and q.id_jenispejabat       = 3
+    and d.id_mukim              = r.id_mukim (+)
+    and d.id_daerah             = s.id_daerah(+)
+    and d.id_kategori           = t.id_kategori(+)
+    and d.jenis_hta             = 'Y'
+    and b.id_permohonan         = jpph.id_permohonan
+    and d.id_hta                = jpph.id_hta
+    and a.id_fail               = $P!{idfail}
+    and q.ID_PEJABATJKPTG       = $P!{idpejJKPTG}
+Order by luas asc]]></queryString>
+
+	<field name="ID_FAIL" class="java.lang.String"/>
+	<field name="ID_PEJABATJKPTG" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="KP_SIMATI" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_PAJAKAN" class="java.lang.String"/>
+	<field name="NO_LOT" class="java.lang.String"/>
+	<field name="NO_PT" class="java.lang.String"/>
+	<field name="LUAS" class="java.lang.String"/>
+	<field name="JENIS_HTA" class="java.lang.String"/>
+	<field name="BA_SIMATI" class="java.lang.String"/>
+	<field name="BB_SIMATI" class="java.lang.String"/>
+	<field name="JENIS_HM" class="java.lang.String"/>
+	<field name="KOD_LUAS" class="java.lang.String"/>
+	<field name="MUKIM_HARTA" class="java.lang.String"/>
+	<field name="DAERAH_HARTA" class="java.lang.String"/>
+	<field name="KATEGORI_HARTA" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="115"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="408"
+						y="32"
+						width="53"
+						height="14"
+						key="staticText-35"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Lampiran]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="83"
+						y="73"
+						width="352"
+						height="13"
+						key="textField-12"
+						positionType="Float"/>
+					<box></box>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" pdfFontName="Helvetica" size="10" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NAMA_SIMATI}+" - No.K/P:  "+$F{KP_SIMATI}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						mode="Transparent"
+						x="76"
+						y="73"
+						width="7"
+						height="13"
+						key="staticText-36"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<text><![CDATA[:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Transparent"
+						x="1"
+						y="73"
+						width="75"
+						height="13"
+						key="staticText-37"
+						positionType="Float"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica" size="10" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Nama Simati   ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="1"
+						y="88"
+						width="434"
+						height="13"
+						key="textField-13"
+						positionType="Float"/>
+					<box></box>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" pdfFontName="Helvetica" size="10" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["No Fail                : "+($F{NO_FAIL}!=null?$F{NO_FAIL}+" ":"TIADA")]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="69"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="0"
+						y="24"
+						width="461"
+						height="45"
+						backcolor="#CCCCCC"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<line direction="TopDown">
+					<reportElement
+						x="76"
+						y="24"
+						width="0"
+						height="45"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="143"
+						y="24"
+						width="0"
+						height="45"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="94"
+						y="34"
+						width="33"
+						height="24"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ Luas  (h/mp)        ]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="192"
+						y="24"
+						width="0"
+						height="45"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="290"
+						y="35"
+						width="75"
+						height="24"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Daerah / Bandar]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="199"
+						y="35"
+						width="78"
+						height="24"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Mukim / Seksyen]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="379"
+						y="34"
+						width="76"
+						height="24"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Kategori Tanah]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="285"
+						y="24"
+						width="0"
+						height="45"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="371"
+						y="24"
+						width="0"
+						height="45"
+						key="line-5"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="2"
+						y="32"
+						width="71"
+						height="37"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Jenis & No. Hakmilik/ No. Lot/ No. PT]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="146"
+						y="34"
+						width="45"
+						height="24"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Bahagian]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="1"
+						width="240"
+						height="14"
+						key="staticText-16"/>
+					<box></box>
+					<textElement>
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Harta Tak Alih (Ada Hakmilik)]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="11"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="0"
+						width="461"
+						height="11"
+						key="rectangle-2"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</rectangle>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="5"
+						y="2"
+						width="68"
+						height="9"
+						key="textField-3"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"+($F{JENIS_HM}!=null ? $F{JENIS_HM}:"")+" "+($F{NO_HAKMILIK}!=null ? $F{NO_HAKMILIK}+"\n":"")
++($F{NO_LOT}!=null ? $F{NO_LOT}+"\n":"")
++($F{NO_PT}!=null ? $F{NO_PT}+"\n":"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="79"
+						y="2"
+						width="61"
+						height="9"
+						key="textField-4"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"+($F{LUAS}!=null?$F{LUAS}:"")+" "+($F{KOD_LUAS}!=null?$F{KOD_LUAS}+" ":"")+"\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="196"
+						y="2"
+						width="85"
+						height="9"
+						key="textField-7"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"+($F{MUKIM_HARTA}!=null?$F{MUKIM_HARTA}:"")+"\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="289"
+						y="2"
+						width="76"
+						height="9"
+						key="textField-8"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"+($F{DAERAH_HARTA}!=null ? $F{DAERAH_HARTA}:"")+"\n"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="374"
+						y="2"
+						width="83"
+						height="9"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"+($F{KATEGORI_HARTA}!=null ? $F{KATEGORI_HARTA}:"")+"\n"]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="76"
+						y="0"
+						width="0"
+						height="11"
+						key="line-6"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="143"
+						y="0"
+						width="0"
+						height="11"
+						key="line-7"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="192"
+						y="0"
+						width="0"
+						height="11"
+						key="line-8"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="285"
+						y="0"
+						width="0"
+						height="11"
+						key="line-9"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="371"
+						y="0"
+						width="0"
+						height="11"
+						key="line-10"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="146"
+						y="2"
+						width="43"
+						height="9"
+						key="textField-11"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["\n"+($F{BA_SIMATI} != null ? $F{BA_SIMATI}+" / ":"")
++($F{BB_SIMATI} != null ? $F{BB_SIMATI}:"")+"\n"]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+		<noData>
+			<band height="125"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="27"
+						width="240"
+						height="15"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Harta Tak Alih (Ada Hakmilik)]]></text>
+				</staticText>
+				<rectangle>
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="101"
+						width="461"
+						height="24"
+						key="rectangle-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="198"
+						y="105"
+						width="60"
+						height="17"
+						key="staticText-9"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" size="9"/>
+					</textElement>
+				<text><![CDATA[-TIADA-]]></text>
+				</staticText>
+				<rectangle>
+					<reportElement
+						x="0"
+						y="56"
+						width="461"
+						height="45"
+						backcolor="#CCCCCC"
+						key="rectangle-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<line direction="TopDown">
+					<reportElement
+						x="76"
+						y="56"
+						width="0"
+						height="45"
+						key="line-11"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="143"
+						y="56"
+						width="0"
+						height="45"
+						key="line-12"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="94"
+						y="66"
+						width="33"
+						height="24"
+						key="staticText-29"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ Luas  (h/mp)        ]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="192"
+						y="56"
+						width="0"
+						height="45"
+						key="line-13"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="289"
+						y="67"
+						width="75"
+						height="24"
+						key="staticText-30"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Daerah / Bandar]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="202"
+						y="67"
+						width="78"
+						height="24"
+						key="staticText-31"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Mukim / Seksyen]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="379"
+						y="66"
+						width="76"
+						height="24"
+						key="staticText-32"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Kategori Tanah]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="286"
+						y="56"
+						width="0"
+						height="45"
+						key="line-14"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="372"
+						y="56"
+						width="0"
+						height="45"
+						key="line-15"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="2"
+						y="64"
+						width="71"
+						height="37"
+						key="staticText-33"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Jenis & No. Hakmilik/ No. Lot/ No. PT]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="146"
+						y="66"
+						width="45"
+						height="24"
+						key="staticText-34"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Bahagian]]></text>
+				</staticText>
+			</band>
+		</noData>
+</jasperReport>

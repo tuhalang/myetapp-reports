@@ -4,16 +4,15 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="371"/>
+	<property name="ireport.y" value="415"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="idfail" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[-- /* Surat Panduan Bicaran edit by wan 0n 31-05-2011 and second edit on 04/01/2012 *  --
-
-Select Distinct
+		<![CDATA[Select Distinct
     a.no_fail,
+    b.SEKSYEN,
     b.ID_DAERAHMHN,
     z.nama_daerah as Daerah_Mohon,
     p.nama_pejabat as Unit_Pusaka,
@@ -23,7 +22,23 @@ Select Distinct
     p.poskod,p.no_tel as telefon,
     Upper(bu.keterangan)as Bandar_Unit,
     Upper(nu.nama_negeri) as negeri_unit,
-    p.emel,PP.JUMLAH JUMLAH_BAYARAN_PERINTAH, b.JUMLAH_HARTA_TARIKHMOHON,
+    p.emel,
+    CASE
+    	WHEN B.SEKSYEN = '8' THEN 'RM '|| REPLACE(TO_CHAR(GETJUMLAHFORMAT((
+			CASE
+	                --- /* untuk kes s8 */ ---
+				WHEN B.JUMLAH_HARTA_TARIKHMOHON <= 1000 THEN ROUND(10,1)
+		        WHEN B.JUMLAH_HARTA_TARIKHMOHON BETWEEN 1001 AND 50000 THEN ROUND(30,1)
+		        WHEN B.JUMLAH_HARTA_TARIKHMOHON >= 50001 THEN ROUND((0.2/100)* ((B.JUMLAH_HARTA_TARIKHMOHON) -
+		        (select nvl(sum(ha.nilai_ha_tarikhmohon),2) from tblppkha ha, tblppkpermohonansimati ps
+				where B.id_permohonan = ps.id_permohonan
+				and ps.id_simati = ha.id_simati
+				and ha.id_jenisha = '98' and rownum<=1)),2)
+			END
+			)),'999,999,999.99'),' ')
+		WHEN B.SEKSYEN = '17' THEN PP.JUMLAH
+    END JUMLAH_BAYARAN_PERINTAH,
+    b.JUMLAH_HARTA_TARIKHMOHON,
     replace(
     	(select nilai_ha_tarikhmohon from tblppkha ha, tblppkpermohonansimati ps
 		where b.id_permohonan = ps.id_permohonan
@@ -40,34 +55,40 @@ From
 	tblrujdaerah z,
 	(SELECT
 	    P.ID_PERMOHONAN,
-        'RM '|| REPLACE(TO_CHAR(((NVL(TL.JUMLAH,0) + NVL(TP.JUMLAH,0) + NVL(TA.JUMLAH,0) + NVL(TH.JUMLAH,0))),'999,999,999.99'),' ') JUMLAH
+	  	P.ID_FAIL,
+	   	JUM_HARTA_TAMBAHAN_TKHMOHON,
+		'RM '|| REPLACE(TO_CHAR(
+		CASE
+			WHEN (NVL(TL.JUMLAH,0) + NVL(TP.JUMLAH,0) + NVL(TA.JUMLAH,0) +  NVL(TH.JUMLAH,0)) LIKE '%.%'
+				THEN GETJUMLAHFORMAT((NVL(TL.JUMLAH,0) + NVL(TP.JUMLAH,0) + NVL(TA.JUMLAH,0) +  NVL(TH.JUMLAH,0)))
+			ELSE '' || (NVL(TL.JUMLAH,0) + NVL(TP.JUMLAH,0) + NVL(TA.JUMLAH,0) +  NVL(TH.JUMLAH,0))
+			END
+			,'999,999,999.99'),' ') AS JUMLAH
 	    FROM
-		    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TL WHERE TL.LAIN_TUJUAN ='Y' ) TL,
-		    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TP WHERE TP.BATAL_KUASA_PENTADBIR ='Y' ) TP,
-		    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TA WHERE TA.BATAL_P_AMANAH ='Y' ) TA,
-		    (SELECT ID_PERMOHONAN,
-			    CASE
-					WHEN ((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON) <= 10  THEN 10
-		   			WHEN ((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON)  > 10
-	   			THEN
-		   			CASE
-					   	WHEN SUBSTR(TO_CHAR(ROUND((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON,2)),-1) =  1 OR SUBSTR(TO_CHAR(ROUND((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON,2)),-1) =  6
-							THEN ROUND(((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON ) - 0.01 ,2)
-						WHEN SUBSTR(TO_CHAR(ROUND((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON,2)),-1) =  2 OR SUBSTR(TO_CHAR(ROUND((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON,2)),-1) =  7
-							THEN ROUND(((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON ) - 0.02 ,2)
-						WHEN SUBSTR(TO_CHAR(ROUND((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON,2)),-1) =  3 OR SUBSTR(TO_CHAR(ROUND((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON,2)),-1) =  8
-							THEN ROUND(((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON ) + 0.02 ,2)
-					   	WHEN SUBSTR(TO_CHAR(ROUND((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON,2)),-1) =  4 OR SUBSTR(TO_CHAR(ROUND((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON,2)),-1) =  9
-							THEN ROUND(((0.2/100) * JUM_HARTA_TAMBAHAN_TKHMOHON ) + 0.01 ,2)
-					END
-   				END AS JUMLAH
-	   		FROM TBLPPKPERMOHONAN TH WHERE TH.HARTA_TINGGAL ='Y') TH,
-   		TBLPPKPERMOHONAN P
-   	WHERE
-	   	P.ID_PERMOHONAN = TL.ID_PERMOHONAN (+)
-	    AND P.ID_PERMOHONAN = TP.ID_PERMOHONAN (+)
-	    AND P.ID_PERMOHONAN = TA.ID_PERMOHONAN (+)
-	    AND P.ID_PERMOHONAN = TH.ID_PERMOHONAN (+)
+	    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TL WHERE TL.LAIN_TUJUAN ='Y' ) TL,
+	    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TP WHERE TP.BATAL_KUASA_PENTADBIR ='Y' ) TP,
+	    (SELECT ID_PERMOHONAN,30 JUMLAH FROM TBLPPKPERMOHONAN TA WHERE TA.BATAL_P_AMANAH ='Y' ) TA,
+	   	(SELECT TH.ID_PERMOHONAN,
+		   		CASE
+					WHEN ROUND((0.2/100) * ((TH.JUM_HARTA_TAMBAHAN_TKHMOHON)- NVL(DISKAUN.TOTAL,0)),2)  <= 10 THEN 10
+					WHEN ROUND((0.2/100) * ((TH.JUM_HARTA_TAMBAHAN_TKHMOHON)- NVL(DISKAUN.TOTAL,0)),2) > 10  THEN ROUND((0.2/100) * ((TH.JUM_HARTA_TAMBAHAN_TKHMOHON)
+					- NVL(DISKAUN.TOTAL,0)),2)
+		   		END AS JUMLAH
+		   		FROM TBLPPKPERMOHONAN TH,
+				(SELECT F.ID_PERMOHONAN, (SELECT ROUND(SUM(A.nilai_ha_tarikhmohon),2) FROM tblppkha A, tblppkpermohonansimati B
+					WHERE F.id_permohonan = B.id_permohonan
+					AND B.id_simati = A.id_simati
+					AND A.id_jenisha = '98'
+					AND rownum<=1) TOTAL
+					FROM TBLPPKPERMOHONAN F, TBLPFDFAIL FAIL2  WHERE F.ID_FAIL = FAIL2.ID_FAIL AND F.ID_FAIL = $P!{idfail}) DISKAUN
+		   		WHERE TH.HARTA_TINGGAL ='Y'
+	   	) TH,
+	   	TBLPPKPERMOHONAN P
+	   	WHERE
+		   	P.ID_PERMOHONAN = TL.ID_PERMOHONAN (+)
+		    AND P.ID_PERMOHONAN = TP.ID_PERMOHONAN (+)
+		    AND P.ID_PERMOHONAN = TA.ID_PERMOHONAN (+)
+		    AND P.ID_PERMOHONAN = TH.ID_PERMOHONAN (+)
     ) PP
 WHERE
 	a.id_fail           	= b.id_fail
@@ -83,6 +104,7 @@ WHERE
     AND a.id_fail           = $P!{idfail}]]>
 	</queryString>
 	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="SEKSYEN" class="java.lang.String"/>
 	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
 	<field name="DAERAH_MOHON" class="java.lang.String"/>
 	<field name="UNIT_PUSAKA" class="java.lang.String"/>
