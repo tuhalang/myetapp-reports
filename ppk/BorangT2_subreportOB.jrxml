@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangT2_subreportWaris1" pageWidth="540" pageHeight="720" columnWidth="540" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="833f33aa-7981-4726-a201-4a0046510fb2">
+	<property name="ireport.zoom" value="3.897434200000005"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="idPerintah" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="PAGE_NUMBER" class="java.lang.Integer" isForPrompting="false"/>
+	<parameter name="namaNegeri" class="java.lang.String"/>
+	<parameter name="idPerintahHTAOBMST" class="java.lang.String"/>
+	<parameter name="hariBicara" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="bulanBicara" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="tahunBicara" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ID_PERINTAHHAOBMST" class="java.lang.String"/>
+	<parameter name="id_hta" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT DISTINCT to_char(A.ID_PERINTAHHTAOBMST) ID_PERINTAHHTAOBMST ,
+CASE
+    WHEN A.FLAG_PEJABAT_TANAH = 'Y' THEN A.BA_PEJABAT_TANAH
+    ELSE B.BA_SIMATI
+END AS BA_SIMATI,
+CASE
+    WHEN A.FLAG_PEJABAT_TANAH = 'Y' THEN A.BB_PEJABAT_TANAH
+    ELSE B.BB_SIMATI
+END AS BB_SIMATI, B.ID_HTA, B.CATATAN,
+REPLACE(REPLACE(REPLACE(REPLACE((A.CATATAN),'<br />',''),'&nbsp;',' '),'<p>',''),'</p>','')AS CATATAN_B,
+CASE
+    WHEN LENGTH(AAA.NO_KP1)<12 THEN  ''||RTRIM(AAA.NO_KP1)||''
+    WHEN LENGTH(RTRIM(AAA.NO_KP1))=12 THEN SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4)
+    ELSE SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4)  ||' ('||SUBSTR(AAA.NO_KP1,13,LENGTH(AAA.NO_KP1))||')'
+END  AS KP_SIMATI
+FROM TBLPPKPERINTAHHTAOBMST A, TBLPPKHTA B,
+     TBLRUJJENISHAKMILIK C, TBLPPKHTAPERMOHONAN F,
+     TBLPPKSIMATI G,
+     (SELECT
+        CASE
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAIN IS NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+         ELSE TBLPPKSIMATI.NO_KP_BARU
+        END || '' ||
+        CASE
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NOT NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN TBLPPKSIMATI.NO_KP_LAMA
+        END || '' ||
+        CASE
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS  NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN TBLPPKSIMATI.NO_KP_LAIN
+        END AS NO_KP1, ID_SIMATI
+      FROM TBLPPKSIMATI ) AAA,
+      TBLPPKPERMOHONANSIMATI H, TBLPPKPERMOHONAN I, TBLPFDFAIL J --add 3/3/2017
+WHERE A.ID_JENISPERINTAH IN (1,7)
+      AND B.ID_HTA = A.ID_HTA
+      AND B.ID_JENISHM = C.ID_JENISHAKMILIK(+)
+      AND A.FLAG_HARTA = 'B'
+      AND A.ID_PERINTAH LIKE '$P!{idPerintah}'
+      and a.id_hta = $P{id_hta}
+      AND F.ID_HTA = A.ID_HTA -- add on 16/12/2016
+      AND F.STATUS_PEMILIKAN = B.STATUS_PEMILIKAN
+      AND G.ID_SIMATI = B.ID_SIMATI -- add on 16/12/2016
+      AND G.ID_SIMATI = AAA.ID_SIMATI -- add on 16/12/2016
+      AND B.ID_SIMATI = H.ID_SIMATI --add 3/3/2017
+      AND H.ID_PERMOHONAN = I.ID_PERMOHONAN --add 3/3/2017
+      AND I.ID_FAIL = J.ID_FAIL --add 3/3/2017
+      AND (J.ID_URUSAN =382 AND J.ID_SUBURUSAN = 60) --add 3/3/2017
+      AND H.ID_PERMOHONANSIMATI = F.ID_PERMOHONANSIMATI --add 3/3/2017
+ ORDER BY B.ID_HTA]]>
+	</queryString>
+	<field name="ID_PERINTAHHTAOBMST" class="java.lang.String"/>
+	<field name="BA_SIMATI" class="java.math.BigDecimal"/>
+	<field name="BB_SIMATI" class="java.math.BigDecimal"/>
+	<field name="ID_HTA" class="java.math.BigDecimal"/>
+	<field name="CATATAN" class="java.lang.String"/>
+	<field name="CATATAN_B" class="java.lang.String"/>
+	<field name="KP_SIMATI" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="31" splitType="Stretch">
+			<subreport isUsingCache="true">
+				<reportElement uuid="55cd23ec-80a3-477b-9905-1d12b6de1302" key="subreport-1" positionType="Float" x="0" y="1" width="159" height="2" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_PERINTAHHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{ID_PERINTAHHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWaris1.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="3a83a869-ab8c-455d-9698-7ba4e0651663" key="subreport-9" positionType="Float" x="0" y="4" width="159" height="2" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_PERINTAHHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{ID_PERINTAHHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$P{idPerintahHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="kpSimati">
+					<subreportParameterExpression><![CDATA[$F{KP_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangT2_subreportWarisSinglePA.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="b247f434-6512-404d-9a60-07cebcce8eb1" key="subreport-8" positionType="Float" x="0" y="7" width="159" height="2" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_PERINTAHHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{ID_PERINTAHHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$P{idPerintahHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="kpSimati">
+					<subreportParameterExpression><![CDATA[$F{KP_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWarisDouble.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="827389c9-01d6-464c-a9b8-b8f473d1b474" key="subreport-7" positionType="Float" x="0" y="10" width="159" height="2" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_PERINTAHHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{ID_PERINTAHHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$P{idPerintahHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="kpSimati">
+					<subreportParameterExpression><![CDATA[$F{KP_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWarisTriple.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="f254dc8d-0fe4-475e-be68-e8b56f98c1a9" key="subreport-6" positionType="Float" x="0" y="13" width="159" height="2" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_PERINTAHHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{ID_PERINTAHHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$P{idPerintahHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="kpSimati">
+					<subreportParameterExpression><![CDATA[$F{KP_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWaris4.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="c85c38f3-b54c-465f-b32a-253f5644cf98" key="subreport-5" positionType="Float" x="0" y="16" width="159" height="2" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_PERINTAHHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{ID_PERINTAHHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$P{idPerintahHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="kpSimati">
+					<subreportParameterExpression><![CDATA[$F{KP_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangE_subreportWarisSinglePAOBHilang.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="9828133e-a686-41a4-bda8-a7045d4c8ab3" key="subreport-4" positionType="Float" x="0" y="19" width="159" height="2" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_PERINTAHHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{ID_PERINTAHHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$P{idPerintahHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="kpSimati">
+					<subreportParameterExpression><![CDATA[$F{KP_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWarisDoubleOBHilang.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="e521ab93-2218-484b-87fe-a7bea4596af0" key="subreport-3" positionType="Float" x="0" y="22" width="159" height="2" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_PERINTAHHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{ID_PERINTAHHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$P{idPerintahHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="kpSimati">
+					<subreportParameterExpression><![CDATA[$F{KP_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWarisTripleOBHilang.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="9eb834b0-8ad7-418f-89c5-299ce42e6e48" key="subreport-2" positionType="Float" x="0" y="25" width="159" height="2" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_PERINTAHHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{ID_PERINTAHHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$P{idPerintahHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="kpSimati">
+					<subreportParameterExpression><![CDATA[$F{KP_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWaris4OBHilang.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="eb27643c-192d-4609-b87a-11ab2a701878" key="textField-15" positionType="Float" x="0" y="28" width="147" height="2" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[new Boolean ((!$F{CATATAN_B}.equals("")))]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Catatan :\n"+
+$F{CATATAN_B}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>
