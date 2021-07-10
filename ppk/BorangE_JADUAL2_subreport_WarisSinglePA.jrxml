@@ -17,22 +17,22 @@
 A.STATUS_TADBIR, A.ID_PA1
 ,B.NAMA_OB, B.NO_KP_BARU,B.ID_TARAFKPTG
 ,B.NO_KP_LAMA, B.NO_KP_LAIN, nvl(B.JENIS_WARGA,'1') as JENIS_WARGA,B.CATATAN
-,CASE WHEN B.NO_KP_BARU IS NULL AND B.NO_KP_LAMA IS NOT NULL THEN B.NO_KP_LAMA
-	WHEN B.NO_KP_BARU IS NULL AND B.NO_KP_LAMA IS NULL THEN B.NO_KP_LAIN
-   	WHEN B.NO_KP_BARU IS NOT NULL AND B.NO_KP_LAMA IS NOT NULL THEN SUBSTR(B.NO_KP_BARU,1,6) || '-' || SUBSTR(B.NO_KP_BARU,7,2) || '-' || SUBSTR(B.NO_KP_BARU,9,4)
-         WHEN B.NO_KP_BARU IS NOT NULL AND B.NO_KP_LAMA IS NULL THEN SUBSTR(B.NO_KP_BARU,1,6) || '-' || SUBSTR(B.NO_KP_BARU,7,2) || '-' || SUBSTR(B.NO_KP_BARU,9,4)
-END AS NO_KP
 ,CASE
-	WHEN B.JENIS_WARGA IS NULL THEN 'MALAYSIA'
-        	WHEN B.JENIS_WARGA = 1 THEN 'MALAYSIA'
-        	WHEN B.JENIS_WARGA = 2 THEN 'BUKAN WARGANEGARA'
-        	WHEN B.JENIS_WARGA = 3 THEN 'PEMASTAUTIN TETAP'
-END AS WARGANEGARA
+         WHEN B.NO_KP_BARU IS NULL AND B.NO_KP_LAMA IS NOT NULL THEN B.NO_KP_LAMA
+         WHEN B.NO_KP_BARU IS NULL AND B.NO_KP_LAMA IS NULL THEN B.NO_KP_LAIN
+         WHEN B.NO_KP_BARU IS NOT NULL AND B.NO_KP_LAMA IS NOT NULL THEN SUBSTR(B.NO_KP_BARU,1,6) || '-' || SUBSTR(B.NO_KP_BARU,7,2) || '-' || SUBSTR(B.NO_KP_BARU,9,4)
+         WHEN B.NO_KP_BARU IS NOT NULL AND B.NO_KP_LAMA IS NULL THEN SUBSTR(B.NO_KP_BARU,1,6) || '-' || SUBSTR(B.NO_KP_BARU,7,2) || '-' || SUBSTR(B.NO_KP_BARU,9,4)
+END  AS NO_KP
+,CASE
+        WHEN B.JENIS_WARGA IS NULL THEN 'MALAYSIA'
+        WHEN B.JENIS_WARGA = 1 THEN 'MALAYSIA'
+        WHEN B.JENIS_WARGA = 2 THEN 'BUKAN WARGANEGARA'
+        WHEN B.JENIS_WARGA = 3 THEN 'PEMASTAUTIN TETAP'
+        END AS WARGANEGARA
 ,(SELECT COUNT(*)
    FROM TBLPPKPERINTAHHAOBDTL A, TBLPPKOBPERMOHONAN B
    WHERE B.ID_OB = A.ID_OB
        AND A.ID_PERINTAHHAOBMST = $P!{idPerintahHAOBMST}
-       and b.id_permohonansimati = $P{idPermohonanSimati} -- Tambah 10072021
        AND A.ID_PA1 IS NULL
        AND A.BA_WARIS != 0)
 AS singleWaris
@@ -75,9 +75,13 @@ AND A.BA_WARIS != 0]]>
 				<textElement verticalAlignment="Top">
 					<font fontName="Verdana" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[($F{ID_TARAFKPTG}.equals("1") ?$F{NAMA_OB}:($F{NAMA_OB} != null ? $F{NAMA_OB}
-+ ($F{JENIS_WARGA}.equals("1") || $F{JENIS_WARGA}.equals("3") ?($F{NO_KP_BARU}!= null || $F{NO_KP_LAMA} != null || $F{NO_KP_LAIN} != null?"\nNo. KP: "+ $F{NO_KP} :" "):"\nNo. Pasport: "+$F{NO_KP}) :"TIADA")
-+($F{ID_TARAFKPTG}.equals("6") ?" ":"\nWarganegara :"+$F{WARGANEGARA}))+($F{STATUS_TADBIR}=="Y"?"\nadalah pentadbir kepada:":"\nadalah pemegang amanah kepada:")]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{ID_TARAFKPTG}.equals("1")?
+    ($F{NAMA_OB} != null ? $F{NAMA_OB}:"TIADA")
++ ($F{JENIS_WARGA}.equals("1") || $F{JENIS_WARGA}.equals("3")?
+    ($F{NO_KP_BARU}!= null || $F{NO_KP_LAMA} != null || $F{NO_KP_LAIN} != null?
+    "\nNo. KP: "+ $F{NO_KP} :" "):"\nNo. Pasport: "+$F{NO_KP})
++($F{ID_TARAFKPTG}.equals("6")?"":"\nWarganegara :"+$F{WARGANEGARA}):$F{NAMA_OB})
++($F{STATUS_TADBIR}=="Y"?"\nadalah wakil kepada:":"\nadalah pemegang amanah kepada:")]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
 				<reportElement uuid="ddc08b61-7bd6-4cee-8255-686f2f41ca91" key="subreport-1" positionType="Float" x="20" y="14" width="300" height="14"/>
@@ -101,7 +105,7 @@ AND A.BA_WARIS != 0]]>
 				<textElement>
 					<font fontName="Verdana" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[new java.lang.Integer( ($V{COLUMN_COUNT}.intValue()) + $F{SINGLEWARIS}.intValue() )+"."]]></textFieldExpression>
+				<textFieldExpression><![CDATA[new java.lang.Integer( ($V{COLUMN_COUNT}.intValue()) +  ($F{SINGLEWARIS}.intValue()))+"."]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
