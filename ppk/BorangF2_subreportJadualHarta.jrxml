@@ -14,18 +14,24 @@
 	<parameter name="NILAI_BERSIH_2" class="java.lang.String" isForPrompting="false"/>
 	<queryString>
 		<![CDATA[SELECT P.ID_PERMOHONAN,
-(P.NILAI_TARIKHMOHON - NVL(SI.NILAI_HUTANG,0)) NILAI_TARIKHMOHON_ASAL,
-TRUNC((P.NILAI_TARIKHMOHON - NVL(SI.NILAI_HUTANG,0)),0) NILAI_TARIKHMOHON
-, SUBSTR((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)
-,(LENGTH((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0))-1)
-,LENGTH((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)))
-NILAI_TARIKHMOHON2
+REPLACE(TO_CHAR((P.NILAI_TARIKHMOHON - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' ') NILAI_TARIKHMOHON_ASAL,
+TRUNC((P.NILAI_TARIKHMOHON - NVL(SI.NILAI_HUTANG,0)),0) NILAI_TARIKHMOHON,
+CASE
+	WHEN
+		SUBSTR(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '),
+		(LENGTH(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '))-1),
+		LENGTH(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '))) IS NULL THEN '00'
+	ELSE
+		SUBSTR(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '),
+		(LENGTH(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '))-1),
+		LENGTH(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' ')))
+END AS NILAI_TARIKHMOHON2
 FROM (
 		SELECT SUM(NILAI_TARIKHMOHON) NILAI_TARIKHMOHON, ID_FAIL, ID_PERMOHONAN
 		FROM (
 				SELECT * FROM (SELECT d.id_fail, d.no_fail, b.ID_PERMOHONAN, a.nilai_hta_tarikhmohon AS NILAI_TARIKHMOHON, a.ID_HTA AS ID
 				FROM tblppkhta a, tblppkpermohonansimati b, tblppkpermohonan c, tblpfdfail d, TBLPPKPERINTAHHTAOBMST e
-				WHERE a.id_permohonansimati = b.id_permohonansimati
+				WHERE a.id_simati = b.id_simati
 				AND b.id_permohonan = c.id_permohonan
 				AND a.ID_HTA = e.ID_HTA
 				AND e.ID_JENISPERINTAH = 2
@@ -33,7 +39,7 @@ FROM (
 			UNION
 				SELECT * FROM (SELECT d.id_fail, d.no_fail, b.ID_PERMOHONAN, a.nilai_ha_tarikhmohon AS NILAI_TARIKHMOHON, a.id_ha AS ID
 		  		FROM tblppkha a, tblppkpermohonansimati b, tblppkpermohonan c, tblpfdfail d, TBLPPKPERINTAHHAOBMST e
-		 		WHERE a.id_permohonansimati = b.id_permohonansimati
+		 		WHERE a.id_simati = b.id_simati
 		  		AND b.id_permohonan = c.id_permohonan
 		  		AND a.ID_HA = e.ID_HA
 				AND e.ID_JENISPERINTAH = 2
@@ -53,7 +59,7 @@ P.ID_PERMOHONAN = SI.ID_PERMOHONAN(+)
 AND P.ID_FAIL = $P{idfail}]]>
 	</queryString>
 	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
-	<field name="NILAI_TARIKHMOHON_ASAL" class="java.math.BigDecimal"/>
+	<field name="NILAI_TARIKHMOHON_ASAL" class="java.lang.String"/>
 	<field name="NILAI_TARIKHMOHON" class="java.math.BigDecimal"/>
 	<field name="NILAI_TARIKHMOHON2" class="java.lang.String"/>
 	<background>
@@ -186,7 +192,7 @@ AND P.ID_FAIL = $P{idfail}]]>
 				<textElement textAlignment="Right">
 					<font fontName="Verdana" size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{NILAI_TARIKHMOHON}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{NILAI_TARIKHMOHON} != null ? $F{NILAI_TARIKHMOHON}:"0"]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
 				<reportElement uuid="19a1cf84-ffad-4cff-8ed4-c80a30bb6af7" key="textField" positionType="Float" mode="Transparent" x="401" y="6" width="59" height="16" isPrintWhenDetailOverflows="true"/>

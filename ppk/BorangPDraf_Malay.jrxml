@@ -2,7 +2,7 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangPDraf_Malay" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="b3a161ee-13fd-4613-89b7-9a775943ca96">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="414"/>
+	<property name="ireport.y" value="48"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<import value="net.sf.jasperreports.engine.*"/>
@@ -13,6 +13,20 @@
 	<queryString>
 		<![CDATA[SELECT
 	F.ID_FAIL, TO_CHAR(SYSDATE,'YYYY') AS TAHUN_DRAF,
+	B.NAMA_PEMOHON AS PM_NAMA,
+	REPLACE(REPLACE(UPPER(TRIM(B.ALAMAT1_SURAT)), '&', '&#38;'), ',') AS PM_ALAMAT1,
+	REPLACE(REPLACE(UPPER(TRIM(B.ALAMAT2_SURAT)), '&', '&#38;'), ',') AS PM_ALAMAT2,
+	REPLACE(REPLACE(UPPER(TRIM(B.ALAMAT3_SURAT)), '&', '&#38;'), ',') AS PM_ALAMAT3,
+	REPLACE(UPPER(B.POSKOD_SURAT), ',') AS PM_POSKOD,
+	CASE
+		WHEN UPPER(TRIM(B.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(REPLACE(TRIM(B.KETERANGAN), '&', '&#38;')), '')
+		ELSE ''
+	END AS PM_BANDAR ,
+	CASE
+		WHEN UPPER(TRIM(B.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(B.NAMA_NEGERI)), '')
+		ELSE ''
+	END AS PM_NEGERI,
+	GETMYIDFORMAT(GETMYID(B.NO_KP_BARU,	B.NO_KP_LAMA, B.NO_KP_LAIN)) PM_KP,
 	F_DULU.NO_FAIL AS NO_FAIL,
 	SUBSTR(F_DULU.NO_FAIL, 1, INSTR(F_DULU.NO_FAIL, '/S') -1) AS NEW_FAIL,
 	N.NAMA_NEGERI AS NEGERI_MOHON,
@@ -30,10 +44,10 @@
 	SM.NO_KP_LAMA,
 	SM.NO_KP_LAIN)) KP_SIMATI,
 	CASE
-		WHEN UPPER(TRIM(B_DULU.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN 		NVL(UPPER(REPLACE(TRIM(B_DULU.KETERANGAN), '&', '&#38;')), '')
+		WHEN UPPER(TRIM(B_DULU.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(REPLACE(TRIM(B_DULU.KETERANGAN), '&', '&#38;')), '')
 		ELSE ''
 	END AS BANDAR_PM ,
-CASE
+	CASE
 		WHEN UPPER(TRIM(N_DULU.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(N_DULU.NAMA_NEGERI)), '')
 		ELSE ''
 	END AS NEGERI_PM,
@@ -97,7 +111,26 @@ FROM
 	TBLRUJBANDAR B_DULU ,
 	TBLRUJNEGERI N_DULU ,
 	TBLPPKOB PE,
-	TBLRUJNEGERI PEN
+	TBLRUJNEGERI PEN,
+	(
+		SELECT
+			C.ID_SIMATI, B.NAMA_PEMOHON, B.ALAMAT1_SURAT, B.ALAMAT2_SURAT, B.ALAMAT3_SURAT, B.POSKOD_SURAT,
+			B.NO_KP_BARU, B.NO_KP_LAMA, B.NO_KP_LAIN, N.KETERANGAN, M.NAMA_NEGERI
+		FROM
+			TBLPPKPERMOHONAN A,
+			TBLPPKPEMOHON B,
+			TBLPPKPERMOHONANSIMATI C,
+			TBLPFDFAIL E,
+			TBLRUJNEGERI M,
+			TBLRUJBANDAR N
+		WHERE
+			A.ID_PEMOHON = B.ID_PEMOHON
+			AND A.ID_PERMOHONAN = C.ID_PERMOHONAN
+			AND A.ID_FAIL = E.ID_FAIL
+			AND B.ID_NEGERI = M.ID_NEGERI (+)
+			AND B.ID_BANDAR = N.ID_BANDAR (+)
+			AND A.SEKSYEN = 8
+	) B
 WHERE
 	P.ID_FAIL = F.ID_FAIL
 	AND P.ID_DAERAHMHN = D.ID_DAERAH
@@ -111,10 +144,19 @@ WHERE
 	AND PM_DULU.ID_NEGERI = N_DULU.ID_NEGERI(+)
 	AND P.ID_PEMOHON = PE.ID_PEMOHON
 	AND PE.ID_NEGERISURAT = PEN.ID_NEGERI(+)
+	AND SM.ID_SIMATI = B.ID_SIMATI
 	AND F.ID_FAIL = $P!{idfailbaru}]]>
 	</queryString>
 	<field name="ID_FAIL" class="java.math.BigDecimal"/>
 	<field name="TAHUN_DRAF" class="java.lang.String"/>
+	<field name="PM_NAMA" class="java.lang.String"/>
+	<field name="PM_ALAMAT1" class="java.lang.String"/>
+	<field name="PM_ALAMAT2" class="java.lang.String"/>
+	<field name="PM_ALAMAT3" class="java.lang.String"/>
+	<field name="PM_POSKOD" class="java.lang.String"/>
+	<field name="PM_BANDAR" class="java.lang.String"/>
+	<field name="PM_NEGERI" class="java.lang.String"/>
+	<field name="PM_KP" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
 	<field name="NEW_FAIL" class="java.lang.String"/>
 	<field name="NEGERI_MOHON" class="java.lang.String"/>
@@ -203,15 +245,15 @@ WHERE
 + "</style> si mati"
 + "\n"
 + "\nPetisyen daripada <style isBold='true'>"
-+ ($F{NAMA_PEMOHON} != null ? $F{NAMA_PEMOHON} : "TIADA")
-+ ($F{KP_PEMOHON} != null ? ", No. KP: "+ $F{KP_PEMOHON} : "")
++ ($F{PM_NAMA} != null ? $F{PM_NAMA} : "TIADA")
++ ($F{PM_KP} != null ? ", No. KP: "+ $F{PM_KP} : "")
 + "</style> yang beralamat di <style isBold='true'>"
-+ ($F{ALAMAT1_PM} !=null ? $F{ALAMAT1_PM} : "")
-+ ($F{ALAMAT2_PM} !=null ? ", " + $F{ALAMAT2_PM} : "")
-+ ($F{ALAMAT3_PM} !=null ? ", " + $F{ALAMAT3_PM} : "")
-+ ($F{POSKOD_PM} !=null ? ", " + $F{POSKOD_PM} : "")
-+ ($F{BANDAR_PM} !=null ? " " + $F{BANDAR_PM} : "")
-+ (($F{NEGERI_PM} != null) && ($F{BANDAR_PM} == null) ? " " + $F{NEGERI_PM} : (($F{NEGERI_PM}!=null) && ($F{BANDAR_PM}!=null) ? ", " + $F{NEGERI_PM}:"TIADA"))
++ ($F{PM_ALAMAT1} !=null ? $F{PM_ALAMAT1} : "")
++ ($F{PM_ALAMAT2} !=null ? ", " + $F{PM_ALAMAT2} : "")
++ ($F{PM_ALAMAT3} !=null ? ", " + $F{PM_ALAMAT3} : "")
++ ($F{PM_POSKOD} !=null ? ", " + $F{PM_POSKOD} : "")
++ ($F{PM_BANDAR} !=null ? " " + $F{PM_BANDAR} : "")
++ (($F{PM_NEGERI} != null) && ($F{PM_NEGERI} == null) ? " " + $F{PM_NEGERI} : (($F{PM_NEGERI}!=null) && ($F{PM_BANDAR}!=null) ? ", " + $F{PM_NEGERI}:"TIADA"))
 +".</style>"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
