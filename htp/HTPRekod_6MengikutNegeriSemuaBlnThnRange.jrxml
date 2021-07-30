@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPRekodSenarai7MengikutKementerian" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="d15aa04e-278d-4810-b1f4-a5c0d662c9a6">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPRekodSenaraiTanahPerolehanMengikutNegeriSemua" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="d15aa04e-278d-4810-b1f4-a5c0d662c9a6">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
@@ -8,76 +8,76 @@
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="ID_KEMENTERIAN" class="java.lang.Integer"/>
+	<parameter name="ID_NEGERI" class="java.lang.String"/>
 	<parameter name="TAHUN" class="java.lang.String"/>
+	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
 	<parameter name="BULANMM" class="java.lang.String"/>
 	<parameter name="BULANTAMAT" class="java.lang.String"/>
-	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
-	<parameter name="BULANSEMASA" class="java.lang.String" isForPrompting="false"/>
-	<parameter name="BULANHINGGA" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="BULANSEMASA" class="java.lang.String"/>
+	<parameter name="BULANHINGGA" class="java.lang.String"/>
 	<parameter name="ID_URUSAN" class="java.lang.String"/>
 	<parameter name="TANAH" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT DISTINCT TPH.ID_KEMENTERIAN,RK.NAMA_KEMENTERIAN
+		<![CDATA[SELECT
+--
+DISTINCT RN.NAMA_NEGERI,RN.KOD_MAMPU,TPH.ID_NEGERI
 FROM TBLHTPHAKMILIK TPH
-,TBLRUJLOT RL,TBLRUJJENISHAKMILIK RJH
 ,TBLRUJMUKIM RM,TBLRUJDAERAH RD,TBLRUJNEGERI RN
-,TBLRUJAGENSI RA
-,TBLHTPHAKMILIKAGENSI TPHA
+,TBLRUJAGENSI RA,TBLHTPHAKMILIKAGENSI TPHA
 ,TBLRUJKEMENTERIAN RK,TBLRUJKEMENTERIANMAPPING RKME
+,TBLRUJLOT RL,TBLRUJJENISHAKMILIK RJH
 ,TBLRUJSEKSYENUPI SEK
- ,	(SELECT P.ID_PERMOHONAN,NVL(PP.NO_RUJUKAN_UPT,'TIADA') NO_FAILCEROBOH
- 	FROM	TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
- 	WHERE P.ID_FAIL=F.ID_FAIL 	AND P.ID_PERMOHONAN=PP.ID_PERMOHONAN 	AND PP.ID_JENISTANAH =3
- ) FC
+,(	SELECT TPHA.ID_HAKMILIK,F.NO_FAIL,P.TARIKH_TERIMA TARIKH_PILIH
+ 	FROM	TBLPFDFAIL F,TBLPERMOHONAN P,TBLPHPHAKMILIKPERMOHONAN HPHP,TBLHTPHAKMILIKAGENSI TPHA
+ 	WHERE P.ID_FAIL=F.ID_FAIL 	AND P.ID_PERMOHONAN=HPHP.ID_PERMOHONAN 	AND HPHP.ID_HAKMILIKAGENSI = TPHA.ID_HAKMILIKAGENSI
+ 	AND F.ID_SUBURUSAN = 33
+ ) MTP
 WHERE TPH.ID_HAKMILIK = TPHA.ID_HAKMILIK
 AND TPHA.STATUS ='Y'
 AND TPHA.ID_KEMENTERIAN=RKME.ID_KEMENTERIANLAMA
+AND TPHA.ID_AGENSI = RA.ID_AGENSI
 AND RKME.ID_KEMENTERIANBARU=RK.ID_KEMENTERIAN
 AND RKME.STATUS = 'A'
-AND TPHA.ID_AGENSI = RA.ID_AGENSI
 AND TPH.ID_MUKIM = RM.ID_MUKIM
 AND TPH.ID_DAERAH = RD.ID_DAERAH
 AND TPH.ID_NEGERI = RN.ID_NEGERI
 AND TPH.ID_LOT = RL.ID_LOT
 AND TPH.ID_JENISHAKMILIK = RJH.ID_JENISHAKMILIK
+--AND NVL(TPH.NO_HAKMILIK,' ') <> ' '
 AND TPH.STATUS_SAH IN (
-    SELECT STATUS_SAH FROM TBLHTPRUJSTATUSAH
-   	WHERE AKTIF=1
+    SELECT STATUS_SAH FROM TBLHTPRUJSTATUSAH WHERE AKTIF=1
 )
-AND TPH.ID_PERMOHONAN = FC.ID_PERMOHONAN
 AND TPH.ID_SEKSYENUPI = SEK.ID_SEKSYENUPI(+)
--- local ID_KEMENTERIAN = 3, 12/2014
+AND TPH.ID_HAKMILIK = MTP.ID_HAKMILIK(+)
+--AND TPH.ID_NEGERI = 5
+--AND TPH.ID_NEGERI = $P!{ID_NEGERI}
 --
-AND TPH.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
-AND TO_CHAR(TPH.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}'
---AND TO_CHAR(FC.TARIKH_TERIMA,'MM') = '$P!{BULANMM}'
+AND TO_CHAR(NVL(MTP.TARIKH_PILIH,SYSDATE),'YYYY') BETWEEN '$P!{TAHUN}' AND '$P!{TAHUNTAMAT}'
+--
+AND TO_CHAR(NVL(MTP.TARIKH_PILIH,SYSDATE),'MM') BETWEEN '$P!{BULANMM}' AND '$P!{BULANTAMAT}'
+--AND TO_CHAR(MTP.TARIKH_PILIH,'YYYY') = '$P!{TAHUN}'
+--AND TO_CHAR(MTP.TARIKH_PILIH,'MM') = '$P!{BULANMM}'
+--
 $P!{TANAH}
-ORDER BY RK.NAMA_KEMENTERIAN]]>
+ORDER BY RN.KOD_MAMPU]]>
 	</queryString>
-	<field name="ID_KEMENTERIAN" class="java.math.BigDecimal"/>
-	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="KOD_MAMPU" class="java.lang.String"/>
+	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
 		<band height="25" splitType="Stretch">
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement uuid="71371294-cfea-42b1-bdca-7e96e2142c68" key="staticText-1" x="0" y="0" width="828" height="20"/>
 				<textElement textAlignment="Center" markup="none">
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["SENARAI TANAH "+($P{ID_URUSAN}.equals("1")?"MILIK ":($P{ID_URUSAN}.equals("2")?"RIZAB ":""))+" PERSEKUTUAN DARI PENGAMBILAN MENGIKUT KEMENTERIAN"
-+( $P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00")
-    ?" BAGI TAHUN "+$P{TAHUN}
-    :(!$P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00")
-        ? " BAGI BULAN "+$P{BULANSEMASA} +" TAHUN "+$P{TAHUN}
-            :"\n DARI BULAN "+$P{BULANSEMASA} +" TAHUN "+$P{TAHUN}
-            +" SEHINGGA BULAN "+$P{BULANHINGGA} +" TAHUN "+$P{TAHUNTAMAT}
-    )
-)]]></textFieldExpression>
+				<textFieldExpression><![CDATA["SENARAI TANAH PERSEKUTUAN TERLIBAT TUKARGUNA SEMUA NEGERI"
++"\nDARI BULAN "+$P{BULANSEMASA}+" TAHUN "+$P{TAHUN}+" SEHINGGA BULAN "+$P{BULANHINGGA}+" TAHUN "+ $P{TAHUNTAMAT}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -96,14 +96,20 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 :($P{ID_URUSAN}.equals("0")?"AND NVL(TPH.NO_WARTA,' ') <> ' '":"")
 )]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="ID_KEMENTERIAN">
-					<subreportParameterExpression><![CDATA[$F{ID_KEMENTERIAN}]]></subreportParameterExpression>
-				</subreportParameter>
 				<subreportParameter name="TAHUN">
 					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="ID_NEGERI_">
+					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_NEGERI})]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TAHUNTAMAT">
+					<subreportParameterExpression><![CDATA[$P{TAHUNTAMAT}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="NAMA">
+					<subreportParameterExpression><![CDATA[$F{NAMA_NEGERI}]]></subreportParameterExpression>
+				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "/htp/HTPRekod_7MengikutKementerianThnSR.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "/htp/HTPRekod_6MengikutNegeriBlnThnRangeSR.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</detail>
@@ -153,7 +159,7 @@ ORDER BY RK.NAMA_KEMENTERIAN]]>
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<text><![CDATA[SENARAI TANAH PERSEKUTUAN PENGAMBILAN MENGIKUT KEMENTERIAN]]></text>
+				<text><![CDATA[SENARAI TANAH PERSEKUTUAN TERLIBAT TUKARGUNA SEMUA NEGERI]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="54397e3f-7d82-4b07-9684-f208a2fc1010" key="staticText-225" x="0" y="55" width="828" height="25"/>
