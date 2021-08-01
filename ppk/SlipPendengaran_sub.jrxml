@@ -63,22 +63,18 @@
 	TO_DATE (A.TARIKH_BICARA,'DD/MM/YYYY') AS TARIKH_BICARA_DATE,
 	E.SEKSYEN,
 	CASE
- --- /* untuk kes s17
+ --- 	/* untuk kes s17 */ ---
         WHEN E.SEKSYEN = '17' THEN PP.JUMLAH
- --- /* untuk kes s8 */ ---
+ --- 	/* untuk kes s8 */ ---
         WHEN E.SEKSYEN = '8' THEN
     		'RM '|| REPLACE(TO_CHAR(GETJUMLAHFORMAT((
 			CASE
-	                --- /* untuk kes s8 */ ---
-				WHEN E.JUMLAH_HARTA_TARIKHMOHON <= 1000 THEN ROUND(10,1)
-		        WHEN E.JUMLAH_HARTA_TARIKHMOHON BETWEEN 1001 AND 50000 THEN ROUND(30,1)
-		        WHEN E.JUMLAH_HARTA_TARIKHMOHON >= 50001 THEN ROUND((0.2/100)* ((E.JUMLAH_HARTA_TARIKHMOHON) -
-		        (select nvl(sum(ha.nilai_ha_tarikhmohon),2) from tblppkha ha, tblppkpermohonansimati ps
-				where E.id_permohonan = ps.id_permohonan
-				and ps.id_simati = ha.id_simati
-				and ha.id_jenisha = '98' and rownum<=1)),2)
+		        --- /* untuk kes s8 */ ---
+				WHEN E.JUMLAH_HARTA_TARIKHMOHON - NVL(ARB.TOTAL,0) <= 1000 THEN ROUND(10,1)
+		        WHEN E.JUMLAH_HARTA_TARIKHMOHON - NVL(ARB.TOTAL,0) BETWEEN 1001 AND 50000 THEN ROUND(30,1)
+		        WHEN E.JUMLAH_HARTA_TARIKHMOHON - NVL(ARB.TOTAL,0) >= 50001 THEN ROUND((0.2/100)* (E.JUMLAH_HARTA_TARIKHMOHON - NVL(ARB.TOTAL,0)),2)
 			END
-			)),'999,999,999.99'),' ')
+		)),'999,999,999.99'),' ')
     END AS BAYARAN_PERINTAH,
 	CASE
         --- /* untuk kes s8 */ ---
@@ -98,6 +94,11 @@ FROM
 	TBLPPKKEPUTUSANPERMOHONAN D,
 	TBLPPKPERMOHONAN E,
 	TBLPPKRUJUNIT UU,
+	(SELECT
+		F.ID_PERMOHONAN, (SELECT SUM(A.nilai_ha_tarikhmohon) FROM tblppkha A, tblppkpermohonansimati B
+	 WHERE F.id_permohonan = B.id_permohonan AND B.ID_PERMOHONANSIMATI = A.ID_PERMOHONANSIMATI AND B.id_simati = A.id_simati AND A.id_jenisha = '98' AND rownum<=1) TOTAL
+	 FROM TBLPPKPERMOHONAN F
+	)ARB,
 	(SELECT
 	    P.ID_PERMOHONAN,
 	  	P.ID_FAIL,
@@ -141,6 +142,7 @@ FROM
 WHERE
 	B.ID_FAIL = E.ID_FAIL AND UU.ID_UNITPSK = A.ID_UNITPSK
 	AND E.ID_PERMOHONAN = D.ID_PERMOHONAN
+	AND E.ID_PERMOHONAN = ARB.ID_PERMOHONAN
 	AND D.ID_KEPUTUSANPERMOHONAN = A.ID_KEPUTUSANPERMOHONAN
 	AND C.ID_PEMOHON = E.ID_PEMOHON
 	AND TO_CHAR(A.TARIKH_BICARA,'dd/MM/yyyy') = '$P!{tarikh_bicara}'
