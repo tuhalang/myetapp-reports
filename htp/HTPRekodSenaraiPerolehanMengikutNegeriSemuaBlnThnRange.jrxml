@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPRekodSenaraiMilikNegeri" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="7eb7267a-bc83-4a72-afde-42b774b17605">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPRekodSenaraiTanahPerolehanMengikutNegeriSemua" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="d15aa04e-278d-4810-b1f4-a5c0d662c9a6">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
@@ -8,11 +8,24 @@
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="LAPORAN" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ID_NEGERI" class="java.lang.String"/>
+	<parameter name="TAHUN" class="java.lang.String"/>
+	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
+	<parameter name="BULANMM" class="java.lang.String"/>
+	<parameter name="BULANTAMAT" class="java.lang.String"/>
+	<parameter name="BULANSEMASA" class="java.lang.String"/>
+	<parameter name="BULANHINGGA" class="java.lang.String"/>
+	<parameter name="TANAH" class="java.lang.String"/>
+	<parameter name="ID_URUSAN" class="java.lang.String"/>
+	<parameter name="PEROLEHAN" class="java.lang.String"/>
+	<parameter name="PEROLEHANDESC" class="java.lang.String">
+		<defaultValueExpression><![CDATA[($P{PEROLEHAN}.equals("1")?" MELALUI PEMBELIAN"
+:($P{PEROLEHAN}.equals("2")?" MELALUI PERLETAKHAKAN":" MELALUI PERMOHONAN PEMBERIMILIKAN & PERIZABAN")
+)]]></defaultValueExpression>
+	</parameter>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT DISTINCT RN.KOD_MAMPU,TPH.ID_NEGERI
---,TPH.ID_DAERAH,TPH.ID_MUKIM
+		<![CDATA[SELECT DISTINCT RN.KOD_MAMPU,RN.ID_NEGERI
 FROM TBLHTPHAKMILIK TPH
 ,TBLRUJLOT RL,TBLRUJJENISHAKMILIK RJH
 ,TBLRUJMUKIM RM,TBLRUJDAERAH RD,TBLRUJNEGERI RN
@@ -20,11 +33,7 @@ FROM TBLHTPHAKMILIK TPH
 ,TBLHTPHAKMILIKAGENSI TPHA
 ,TBLRUJKEMENTERIAN RK,TBLRUJKEMENTERIANMAPPING RKME
 ,TBLRUJSEKSYENUPI SEK
-,(	SELECT F.NO_FAIL,PP.NO_RUJUKAN_PTG,PP.NO_RUJUKAN_PTD,P.ID_PERMOHONAN
-	FROM TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
-	WHERE F.ID_FAIL=P.ID_FAIL
-	AND P.ID_PERMOHONAN = PP.ID_PERMOHONAN
-) FAIL
+,TBLPERMOHONAN P,TBLPFDFAIL F
 WHERE TPH.ID_HAKMILIK = TPHA.ID_HAKMILIK
 AND TPHA.STATUS ='Y'
 AND TPHA.ID_KEMENTERIAN=RKME.ID_KEMENTERIANLAMA
@@ -36,15 +45,22 @@ AND TPH.ID_DAERAH = RD.ID_DAERAH
 AND TPH.ID_NEGERI = RN.ID_NEGERI
 AND TPH.ID_LOT = RL.ID_LOT
 AND TPH.ID_JENISHAKMILIK = RJH.ID_JENISHAKMILIK
-AND NVL(TPH.NO_HAKMILIK,' ') <> ' '
 AND TPH.STATUS_SAH IN (
     SELECT STATUS_SAH FROM TBLHTPRUJSTATUSAH
    	WHERE AKTIF=1
 )
+AND TPH.ID_PERMOHONAN = P.ID_PERMOHONAN
+AND P.ID_FAIL = F.ID_FAIL
+--
+AND F.ID_URUSAN IN ($P!{PEROLEHAN})
 AND TPH.ID_SEKSYENUPI = SEK.ID_SEKSYENUPI(+)
-AND TPH.ID_PERMOHONAN = FAIL.ID_PERMOHONAN
-ORDER BY RN.KOD_MAMPU
---,TPH.ID_DAERAH,TPH.ID_MUKIM]]>
+-- local ID_KEMENTERIAN = 3, 12/2014
+--AND TPH.ID_NEGERI = '$P!{ID_NEGERI}'
+AND TO_CHAR(TPH.TARIKH_TERIMA,'yyyy') BETWEEN '$P!{TAHUN}' AND '$P!{TAHUNTAMAT}'
+AND TO_CHAR(TPH.TARIKH_TERIMA,'MM') BETWEEN '$P!{BULANMM}' AND '$P!{BULANTAMAT}'
+--
+$P!{TANAH}
+ORDER BY RN.KOD_MAMPU]]>
 	</queryString>
 	<field name="KOD_MAMPU" class="java.lang.String"/>
 	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
@@ -52,15 +68,19 @@ ORDER BY RN.KOD_MAMPU
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="20" splitType="Stretch">
-			<staticText>
-				<reportElement uuid="077e153b-4379-4f73-9316-559bb4fef931" key="staticText-1" x="0" y="0" width="828" height="20"/>
-				<textElement textAlignment="Center">
+		<band height="25" splitType="Stretch">
+			<textField isStretchWithOverflow="true">
+				<reportElement uuid="71371294-cfea-42b1-bdca-7e96e2142c68" key="staticText-1" x="0" y="0" width="828" height="20"/>
+				<textElement textAlignment="Center" markup="none">
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<text><![CDATA[SENARAI TANAH MILIK PERSEKUTUAN MENGIKUT NEGERI]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["SENARAI TANAH PERSEKUTUAN PEROLEHAN "
++$P{PEROLEHANDESC}
++" SEMUA NEGERI"
++"\nDARI BULAN "+$P{BULANSEMASA}+" TAHUN "+$P{TAHUN}+" "
++"HINGGA BULAN "+$P{BULANHINGGA}+" TAHUN "+$P{TAHUNTAMAT}+" "]]></textFieldExpression>
+			</textField>
 		</band>
 	</title>
 	<pageHeader>
@@ -74,10 +94,30 @@ ORDER BY RN.KOD_MAMPU
 			<subreport isUsingCache="true">
 				<reportElement uuid="4ad5656b-6e7e-45ca-867e-068edb3eca93" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="45" height="20" isPrintWhenDetailOverflows="true"/>
 				<subreportParameter name="ID_NEGERI">
-					<subreportParameterExpression><![CDATA[$F{ID_NEGERI}]]></subreportParameterExpression>
+					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_NEGERI})]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TANAH">
+					<subreportParameterExpression><![CDATA[($P{ID_URUSAN}.equals("1")?"AND NVL(TPH.NO_HAKMILIK,' ') <> ' '"
+:($P{ID_URUSAN}.equals("0")?"AND NVL(TPH.NO_WARTA,' ') <> ' '":"")
+)]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BULANTAMAT">
+					<subreportParameterExpression><![CDATA[$P{BULANTAMAT}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TAHUN">
+					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BULANMM">
+					<subreportParameterExpression><![CDATA[$P{BULANMM}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TAHUNTAMAT">
+					<subreportParameterExpression><![CDATA[$P{TAHUNTAMAT}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PEROLEHAN">
+					<subreportParameterExpression><![CDATA[$P{PEROLEHAN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "/htp/HTPRekodSenaraiMilikNegeriSR.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "/htp/HTPRekodTanahPerolehanMengikutNegeriBlnThnRangeSR.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</detail>
@@ -87,28 +127,28 @@ ORDER BY RN.KOD_MAMPU
 	<pageFooter>
 		<band height="18" splitType="Stretch">
 			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
-				<reportElement uuid="4c04bb78-75bc-47df-8edd-8ea0ef528570" key="textField-15" x="54" y="0" width="100" height="18"/>
+				<reportElement uuid="32869ee8-5d57-434c-814e-4956f13bce94" key="textField-15" x="54" y="0" width="100" height="18"/>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement uuid="e70aa191-1f9b-4679-be14-3e3b37cd9f17" key="staticText-214" x="0" y="0" width="53" height="18"/>
+				<reportElement uuid="48a2e712-692c-400d-aa8a-b11625981467" key="staticText-214" x="0" y="0" width="53" height="18"/>
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<text><![CDATA[Tarikh Cetak :]]></text>
 			</staticText>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="14efced0-244f-4d9d-80c2-929ea527d700" key="textField-16" x="684" y="0" width="116" height="18"/>
+				<reportElement uuid="ccdaefe8-e01f-4737-b16c-1334426407da" key="textField-16" x="679" y="0" width="116" height="18"/>
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[" Mukasurat " + $V{PAGE_NUMBER} + " dari "]]></textFieldExpression>
 			</textField>
 			<textField evaluationTime="Report" isBlankWhenNull="false">
-				<reportElement uuid="d05f125d-1ae7-4fd5-8f63-d2e82fb42a9d" key="textField-18" x="799" y="0" width="23" height="18"/>
+				<reportElement uuid="67e5a788-3f1e-405a-8318-3390b0a2fdd8" key="textField-18" x="799" y="0" width="23" height="18"/>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
 				</textElement>
@@ -122,29 +162,28 @@ ORDER BY RN.KOD_MAMPU
 	<noData>
 		<band height="80" splitType="Stretch">
 			<staticText>
-				<reportElement uuid="b1e558c9-ddae-42b7-b6c5-a73f91ca61ea" key="staticText-223" mode="Opaque" x="0" y="55" width="828" height="25"/>
-				<box>
-					<pen lineWidth="0.5"/>
-					<topPen lineWidth="0.5"/>
-					<leftPen lineWidth="0.5"/>
-					<bottomPen lineWidth="0.5"/>
-					<rightPen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[TIADA REKOD]]></text>
-			</staticText>
-			<staticText>
-				<reportElement uuid="e40aba32-d0f5-4179-bcc7-5748757fcbe0" key="staticText-227" x="0" y="0" width="828" height="20"/>
+				<reportElement uuid="8ae0adaa-6bfc-465f-acc4-265b96545cbc" key="staticText-215" x="0" y="0" width="828" height="20"/>
 				<textElement textAlignment="Center">
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<text><![CDATA[SENARAI TANAH MILIK PERSEKUTUAN MENGIKUT NEGERI]]></text>
+				<text><![CDATA[SENARAI TANAH PERSEKUTUAN PEROLEHAN SEMUA NEGERI]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="480a6f18-d5e3-4f2d-a5d3-d5795d340565" key="staticText-228" mode="Opaque" x="150" y="30" width="75" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="54397e3f-7d82-4b07-9684-f208a2fc1010" key="staticText-225" x="0" y="55" width="828" height="25"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[TIADA REKOD]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e5741aa3-d290-4045-b9aa-bab1ab75cd2b" key="staticText-228" mode="Opaque" x="210" y="30" width="70" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -155,10 +194,10 @@ ORDER BY RN.KOD_MAMPU
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[NO. HAKMILIK]]></text>
+				<text><![CDATA[NO. WARTA]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="ccf574c2-d8ec-4a9e-9953-22e7ee5290fc" key="staticText-229" mode="Opaque" x="275" y="30" width="50" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="c0757e90-14ea-443a-a3bb-4471b08ae195" key="staticText-229" mode="Opaque" x="90" y="30" width="60" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -169,10 +208,10 @@ ORDER BY RN.KOD_MAMPU
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[NO. LOT/PT]]></text>
+				<text><![CDATA[DAERAH]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="0ba6af99-6f64-441e-998b-b33747054259" key="staticText-230" mode="Opaque" x="225" y="30" width="50" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="a899d2bd-bda1-4a9a-8db0-dd00f149732b" key="staticText-230" mode="Opaque" x="330" y="30" width="50" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -183,10 +222,24 @@ ORDER BY RN.KOD_MAMPU
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[TARIKH DAFTAR]]></text>
+				<text><![CDATA[NO. LOT]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="9bed0976-d1ee-4772-8157-d7ca30a613c0" key="staticText-231" mode="Opaque" x="485" y="30" width="173" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="bb3d07c1-b8a8-439f-aea8-37e097c1886d" key="staticText-231" mode="Opaque" x="280" y="30" width="50" height="25" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[TARIKH WARTA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c01b7267-7f76-4f8c-b85b-8ff8768b9443" key="staticText-232" mode="Opaque" x="430" y="30" width="208" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -200,7 +253,7 @@ ORDER BY RN.KOD_MAMPU
 				<text><![CDATA[KEGUNAAN TANAH]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="cdc7da1d-3ad3-49d7-8a2f-93932fc17983" key="staticText-232" mode="Opaque" x="658" y="30" width="85" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="6968dc53-f5cb-42bd-93ac-720420c40596" key="staticText-233" mode="Opaque" x="638" y="30" width="95" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -214,7 +267,7 @@ ORDER BY RN.KOD_MAMPU
 				<text><![CDATA[NO. FAIL JKPTG]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="a565e45a-bb06-4c5e-a217-b8c835aeabac" key="staticText-233" mode="Opaque" x="743" y="30" width="85" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="560bb4e2-c361-44c7-98ba-f71870f1e322" key="staticText-234" mode="Opaque" x="733" y="30" width="95" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -228,7 +281,7 @@ ORDER BY RN.KOD_MAMPU
 				<text><![CDATA[NO. FAIL PTG/PTD]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="668f6dbc-2c71-42e9-9b6c-23be2d9d342f" key="staticText-234" mode="Opaque" x="375" y="30" width="110" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="8fba43b1-c448-422c-be64-6087dbaae685" key="staticText-235" mode="Opaque" x="150" y="30" width="60" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -239,10 +292,10 @@ ORDER BY RN.KOD_MAMPU
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[KEMENTERIAN]]></text>
+				<text><![CDATA[MUKIM]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="70d05b4a-67a8-42eb-9bf8-06d8d69962cf" key="staticText-235" mode="Opaque" x="325" y="30" width="50" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="3c8539f8-458c-4260-836e-bcfd46b3cd08" key="staticText-236" mode="Opaque" x="380" y="30" width="50" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -257,7 +310,7 @@ ORDER BY RN.KOD_MAMPU
 (HEKTAR)]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="1754b7fc-faa3-468d-a292-d3e1be3a6487" key="staticText-236" mode="Opaque" x="0" y="30" width="30" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="7058a7c9-3fe9-41d9-9725-34014b903c66" key="staticText-237" mode="Opaque" x="0" y="30" width="30" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -271,7 +324,7 @@ ORDER BY RN.KOD_MAMPU
 				<text><![CDATA[BIL.]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="e4374938-82d7-4bca-b39b-d85a0699db73" key="staticText-237" mode="Opaque" x="30" y="30" width="60" height="25" backcolor="#CCCCCC"/>
+				<reportElement uuid="2ed9cf6c-bfb7-4ee3-8af4-2c1e66e905b3" key="staticText-238" mode="Opaque" x="30" y="30" width="60" height="25" backcolor="#CCCCCC"/>
 				<box>
 					<pen lineWidth="0.5"/>
 					<topPen lineWidth="0.5"/>
@@ -282,21 +335,7 @@ ORDER BY RN.KOD_MAMPU
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[DAERAH]]></text>
-			</staticText>
-			<staticText>
-				<reportElement uuid="e048fa95-de2f-4150-b200-4ef3ab6d2cd4" key="staticText-239" mode="Opaque" x="90" y="30" width="60" height="25" backcolor="#CCCCCC"/>
-				<box>
-					<pen lineWidth="0.5"/>
-					<topPen lineWidth="0.5"/>
-					<leftPen lineWidth="0.5"/>
-					<bottomPen lineWidth="0.5"/>
-					<rightPen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[MUKIM]]></text>
+				<text><![CDATA[NEGERI]]></text>
 			</staticText>
 		</band>
 	</noData>
