@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPPajakanKecilSenaraiSemakPTP" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="0681ff19-b4bb-4c72-8efc-a2648dc39c56">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPJRPSemakanSR" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="0681ff19-b4bb-4c72-8efc-a2648dc39c56">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
-	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.zoom" value="1.771561000000001"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<import value="net.sf.jasperreports.engine.*"/>
@@ -25,8 +25,10 @@
 	<parameter name="DATA" class="java.lang.Integer">
 		<defaultValueExpression><![CDATA[2]]></defaultValueExpression>
 	</parameter>
+	<parameter name="ALAMAT" class="java.lang.String"/>
+	<parameter name="TARIKH_CARIAN_RASMI" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT a.id_semakan,TRIM(a.perihal) PERIHAL,SN.ATURAN
+		<![CDATA[/*SELECT distinct a.id_semakan,TRIM(a.perihal) PERIHAL,SN.ATURAN, SH.CATATAN
 ,(  SELECT
     CASE WHEN B.ID_SEMAKANSENARAI IS NULL THEN ''
     ELSE '/'
@@ -34,16 +36,34 @@
     FROM TBLSEMAKANHANTAR B
 	WHERE b.id_permohonan=$P!{ID_PERMOHONAN} AND B.ID_SEMAKANSENARAI=SN.ID_SEMAKANSENARAI
 ) FLAG
-FROM tblsemakan A,TBLSEMAKANSENARAI SN
+FROM tblsemakan A,TBLSEMAKANSENARAI SN, TBLSEMAKANHANTAR SH
 WHERE sn.ID_SEMAKAN=a.ID_SEMAKAN
+AND SN.ID_SEMAKANSENARAI = SH.ID_SEMAKANSENARAI(+)
 AND  sn.KOD_FORM='htpjrperakuan'
 AND sn.aturan IN ($P!{ATURAN})
 --group BY SN.ATURAN
-ORDER BY sn.aturan]]>
+ORDER BY sn.aturan*/
+
+--PERUBAHAN 03082021--
+SELECT DISTINCT A.ID_SEMAKAN,TRIM(A.PERIHAL) PERIHAL, SN.ATURAN, F.CATATAN, F.FLAG
+FROM TBLSEMAKAN A, TBLSEMAKANSENARAI SN,
+( SELECT B.CATATAN, B.ID_SEMAKANSENARAI,
+    	CASE WHEN B.ID_SEMAKANSENARAI IS NULL THEN ''
+    		ELSE '/'
+    		END AS FLAG
+    FROM TBLSEMAKANHANTAR B, TBLSEMAKANSENARAI SN
+    WHERE B.ID_PERMOHONAN = $P{ID_PERMOHONAN}
+    AND B.ID_SEMAKANSENARAI=SN.ID_SEMAKANSENARAI ) F
+WHERE SN.ID_SEMAKAN=A.ID_SEMAKAN
+AND SN.ID_SEMAKANSENARAI = F.ID_SEMAKANSENARAI(+)
+AND  SN.KOD_FORM='htpjrperakuan'
+AND SN.ATURAN IN ($P!{ATURAN})
+ORDER BY SN.ATURAN]]>
 	</queryString>
 	<field name="ID_SEMAKAN" class="java.math.BigDecimal"/>
 	<field name="PERIHAL" class="java.lang.String"/>
 	<field name="ATURAN" class="java.math.BigDecimal"/>
+	<field name="CATATAN" class="java.lang.String"/>
 	<field name="FLAG" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
@@ -52,26 +72,26 @@ ORDER BY sn.aturan]]>
 		<band height="18" splitType="Stretch">
 			<printWhenExpression><![CDATA[new Boolean( !$P{skrin}.equals("keputusan"))]]></printWhenExpression>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="956fc20c-fe81-4f9f-99ec-2f38e23f5f33" key="textField-1" positionType="Float" mode="Transparent" x="0" y="0" width="330" height="18"/>
+				<reportElement uuid="956fc20c-fe81-4f9f-99ec-2f38e23f5f33" key="textField-1" positionType="Float" isPrintRepeatedValues="false" mode="Transparent" x="0" y="0" width="330" height="18"/>
 				<box leftPadding="2" rightPadding="2">
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.25"/>
 					<bottomPen lineWidth="0.0"/>
 					<rightPen lineWidth="0.25"/>
 				</box>
-				<textElement>
+				<textElement textAlignment="Justified" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($P{skrin}.equals("ulasan")
-    ?"Berdasarkan kepada butiran Carian Rasmi hakmilik tanah "
-        +$P{TANAH}
-        +"\n"
+    ?"Berdasarkan kepada butiran Carian Rasmi hakmilik tanah <style isBold='true'>"
+        +$P{TANAH} + "</style> bertarikh " + ($P{TARIKH_CARIAN_RASMI}!=null?$P{TARIKH_CARIAN_RASMI}:"")
+        +" didapati tanah ini :\n"
     :"Penyewaan Ruang Pejabat Baru ("
         +$P{SUBURUSAN}+") oleh:"
-        +"\n"
+        +"\n<style isBold='true'>"
         +$P{AGENSI}+", "+$P{KEMENTERIAN}
-        +"\n\nMaklumat ruang pejabat di alamat:"
-        +"\n\nTempoh"
+        +"</style>\n\nMaklumat ruang pejabat di alamat: " + ($P{ALAMAT}!=null?$P{ALAMAT}:"")
+        +"\n\nTempoh:"
 )]]></textFieldExpression>
 			</textField>
 		</band>
@@ -83,38 +103,29 @@ ORDER BY sn.aturan]]>
 		<band splitType="Prevent"/>
 	</columnHeader>
 	<detail>
-		<band height="18" splitType="Stretch">
+		<band height="21" splitType="Stretch">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="956fc20c-fe81-4f9f-99ec-2f38e23f5f33" key="textField-1" positionType="Float" isPrintRepeatedValues="false" mode="Transparent" x="30" y="0" width="300" height="15"/>
-				<box leftPadding="2" rightPadding="2">
-					<topPen lineWidth="0.0"/>
-					<leftPen lineWidth="0.0"/>
-					<bottomPen lineWidth="0.5"/>
-					<rightPen lineWidth="0.25"/>
-				</box>
-				<textElement>
+				<reportElement uuid="956fc20c-fe81-4f9f-99ec-2f38e23f5f33" key="textField-1" positionType="Float" isPrintRepeatedValues="false" mode="Transparent" x="35" y="5" width="290" height="15"/>
+				<box leftPadding="0" rightPadding="0"/>
+				<textElement textAlignment="Justified" markup="styled">
 					<font fontName="Bookman Old Style" size="11" isBold="false" pdfFontName="Helvetica"/>
 				</textElement>
-				<textFieldExpression><![CDATA["\n"+
-(   String.valueOf($F{ATURAN}).equals("1")?
+				<textFieldExpression><![CDATA[(   String.valueOf($F{ATURAN}).equals("1")?
 $F{PERIHAL}
 +" "+$P{MULA}
 +" hingga "+$P{TAMAT}
-+" ("+$P{TAHUN}+" Tahun)"
++" ("+$P{TAHUN}+" Tahun)"  + " \n\natau;"
     :(  String.valueOf($F{ATURAN}).equals("2")?
     $P{TAHUN}+" "+$F{PERIHAL}
     :(  String.valueOf($F{ATURAN}).equals("5")?
-        "Berdasarkan kepada butiran Carian Rasmi hakmilik tanah"
-        +$P{TANAH}
-        +" didapati tanah ini :\n"
-        +$F{PERIHAL}
-        + " "+$P{AGENSI}+", "+$P{KEMENTERIAN}+" menyewa ruang pejabat di alamat seperti di atas. "
+        $F{PERIHAL}+" (tiada gadaian/ kaveat). Sehubungan itu, JKPTG <style isBold='true'>tiada halangan</style> ke atas permohonan "
+        + "<style isBold='true'>"+$P{AGENSI}+", "+$P{KEMENTERIAN}+"</style> menyewa ruang pejabat di alamat seperti di atas.\n\natau;"
         :(  String.valueOf($F{ATURAN}).equals("6")?
-        $F{PERIHAL}
-        +" "+$P{AGENSI}+", "+$P{KEMENTERIAN}
-        +" menyewa ruang pejabat di alamat seperti di atas dengan syarat perlu mendapat kebenaran daripada *pemegang gadai/ *pengkaveat terlebih dahulu."
+        $F{PERIHAL} + "Sehubungan itu, JKPTG <style isBold='true'>tiada halangan</style> ke atas permohonan "
+        +"<style isBold='true'>"+$P{AGENSI}+", "+$P{KEMENTERIAN}
+        +"</style> menyewa ruang pejabat di alamat seperti di atas dengan syarat perlu mendapat kebenaran daripada *pemegang gadai/ *pengkaveat terlebih dahulu.\n\natau;"
         :(  String.valueOf($F{ATURAN}).equals("7")?
-            "Ulasan "
+            "(Ulasan selain di atas) \n" + ($F{CATATAN}!=null?$F{CATATAN}:"")
             :$F{PERIHAL}
         )
         )
@@ -124,7 +135,7 @@ $F{PERIHAL}
 +"\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="163038b6-6cb2-44c3-be34-e2c69157849f" key="textField-4" positionType="Float" stretchType="RelativeToBandHeight" x="5" y="6" width="15" height="7" isRemoveLineWhenBlank="true"/>
+				<reportElement uuid="163038b6-6cb2-44c3-be34-e2c69157849f" key="textField-4" positionType="Float" x="4" y="5" width="25" height="15"/>
 				<box>
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.5"/>
@@ -135,19 +146,6 @@ $F{PERIHAL}
 					<font fontName="Bookman Old Style" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($F{FLAG}==null?"":$F{FLAG})]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="163038b6-6cb2-44c3-be34-e2c69157849f" key="textField-4" isPrintRepeatedValues="false" x="0" y="0" width="30" height="15" isRemoveLineWhenBlank="true"/>
-				<box>
-					<topPen lineWidth="0.5"/>
-					<leftPen lineWidth="0.5"/>
-					<bottomPen lineWidth="0.5"/>
-					<rightPen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Bookman Old Style" size="11"/>
-				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 				<reportElement uuid="956fc20c-fe81-4f9f-99ec-2f38e23f5f33" key="textField-1" positionType="Float" isPrintRepeatedValues="false" mode="Transparent" x="0" y="16" width="330" height="0"/>
@@ -171,10 +169,10 @@ $F{PERIHAL}
 		<band splitType="Prevent"/>
 	</pageFooter>
 	<summary>
-		<band height="90" splitType="Prevent">
+		<band height="76" splitType="Prevent">
 			<printWhenExpression><![CDATA[new Boolean( $P{skrin}.equals("ulasan"))]]></printWhenExpression>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-				<reportElement uuid="956fc20c-fe81-4f9f-99ec-2f38e23f5f33" key="textField-1" positionType="Float" mode="Transparent" x="0" y="0" width="330" height="90"/>
+				<reportElement uuid="956fc20c-fe81-4f9f-99ec-2f38e23f5f33" key="textField-1" positionType="Float" isPrintRepeatedValues="false" mode="Transparent" x="0" y="0" width="330" height="76"/>
 				<box leftPadding="2" rightPadding="2">
 					<topPen lineWidth="0.5"/>
 					<leftPen lineWidth="0.25"/>
@@ -186,24 +184,8 @@ $F{PERIHAL}
 				</textElement>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
-			<staticText>
-				<reportElement uuid="23ec83b3-510d-4525-b7b7-886e01eefba1" key="staticText-19" x="0" y="18" width="90" height="18"/>
-				<box leftPadding="1"/>
-				<textElement>
-					<font fontName="Bookman Old Style" size="9" isBold="false" pdfFontName="Helvetica"/>
-				</textElement>
-				<text><![CDATA[Tandatangan]]></text>
-			</staticText>
-			<staticText>
-				<reportElement uuid="d7bdd52a-139c-4753-baf1-f8dbe5d71715" key="staticText-20" x="0" y="54" width="90" height="18"/>
-				<box leftPadding="1"/>
-				<textElement>
-					<font fontName="Bookman Old Style" size="9" isBold="false" pdfFontName="Helvetica"/>
-				</textElement>
-				<text><![CDATA[Tarikh            ]]></text>
-			</staticText>
 			<textField isBlankWhenNull="false">
-				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" stretchType="RelativeToTallestObject" x="95" y="36" width="190" height="18"/>
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="106" y="22" width="190" height="18"/>
 				<box>
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.0"/>
@@ -213,53 +195,138 @@ $F{PERIHAL}
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Bookman Old Style"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$P{NAMAPEGAWAI}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($P{NAMAPEGAWAI}!=null?$P{NAMAPEGAWAI}:"")]]></textFieldExpression>
 			</textField>
-			<staticText>
-				<reportElement uuid="0993385a-e053-404c-8d9a-d64ad5e04510" key="staticText-21" x="0" y="36" width="90" height="18"/>
-				<box leftPadding="1"/>
-				<textElement>
-					<font fontName="Bookman Old Style" size="9" isBold="false" pdfFontName="Helvetica"/>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="106" y="40" width="190" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
 				</textElement>
-				<text><![CDATA[Nama   ]]></text>
-			</staticText>
-			<staticText>
-				<reportElement uuid="0bb1bf36-e7df-4f8d-84e1-923e97a7702a" key="staticText-22" x="0" y="72" width="90" height="18"/>
-				<box leftPadding="1"/>
-				<textElement>
-					<font fontName="Bookman Old Style" size="9" isBold="false" pdfFontName="Helvetica"/>
+				<textFieldExpression><![CDATA[".............................................."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" isPrintRepeatedValues="false" x="106" y="4" width="190" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
 				</textElement>
-				<text><![CDATA[Cop Rasmi Jabatan
-]]></text>
-			</staticText>
-			<staticText>
-				<reportElement uuid="0bb1bf36-e7df-4f8d-84e1-923e97a7702a" key="staticText-22" x="90" y="72" width="5" height="18"/>
-				<textElement textAlignment="Justified">
-					<font fontName="Bookman Old Style" size="9" isBold="false" pdfFontName="Helvetica"/>
+				<textFieldExpression><![CDATA[".............................................."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" isPrintRepeatedValues="false" x="4" y="4" width="89" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
 				</textElement>
-				<text><![CDATA[:]]></text>
-			</staticText>
-			<staticText>
-				<reportElement uuid="0bb1bf36-e7df-4f8d-84e1-923e97a7702a" key="staticText-22" x="90" y="54" width="5" height="18"/>
-				<textElement textAlignment="Justified">
-					<font fontName="Bookman Old Style" size="9" isBold="false" pdfFontName="Helvetica"/>
+				<textFieldExpression><![CDATA["Tandatangan"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" isPrintRepeatedValues="false" x="4" y="22" width="89" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
 				</textElement>
-				<text><![CDATA[:]]></text>
-			</staticText>
-			<staticText>
-				<reportElement uuid="0bb1bf36-e7df-4f8d-84e1-923e97a7702a" key="staticText-22" x="90" y="36" width="5" height="18"/>
-				<textElement textAlignment="Justified">
-					<font fontName="Bookman Old Style" size="9" isBold="false" pdfFontName="Helvetica"/>
+				<textFieldExpression><![CDATA["Nama"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" isPrintRepeatedValues="false" x="4" y="40" width="89" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
 				</textElement>
-				<text><![CDATA[:]]></text>
-			</staticText>
-			<staticText>
-				<reportElement uuid="0bb1bf36-e7df-4f8d-84e1-923e97a7702a" key="staticText-22" x="90" y="18" width="5" height="18"/>
-				<textElement textAlignment="Justified">
-					<font fontName="Bookman Old Style" size="9" isBold="false" pdfFontName="Helvetica"/>
+				<textFieldExpression><![CDATA["Tarikh"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" isPrintRepeatedValues="false" x="4" y="58" width="115" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
 				</textElement>
-				<text><![CDATA[:]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["Cop Rasmi Jabatan"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" isPrintRepeatedValues="false" x="93" y="4" width="13" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
+				</textElement>
+				<textFieldExpression><![CDATA[":"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" isPrintRepeatedValues="false" x="93" y="22" width="13" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
+				</textElement>
+				<textFieldExpression><![CDATA[":"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" isPrintRepeatedValues="false" x="93" y="40" width="13" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
+				</textElement>
+				<textFieldExpression><![CDATA[":"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0da44cc5-7b31-44fd-9a5f-8cdb81830570" key="textField-6" positionType="Float" isPrintRepeatedValues="false" x="119" y="58" width="13" height="18"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style"/>
+				</textElement>
+				<textFieldExpression><![CDATA[":"]]></textFieldExpression>
+			</textField>
 		</band>
 	</summary>
 </jasperReport>

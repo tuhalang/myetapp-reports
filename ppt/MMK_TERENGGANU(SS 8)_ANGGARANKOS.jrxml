@@ -24,15 +24,16 @@
 	<import value="net.sf.jasperreports.engine.data.*" />
 
 	<parameter name="idMMK" isForPrompting="true" class="java.lang.String"/>
-	<queryString><![CDATA[SELECT B.ID_SUBMMK, REPLACE(REPLACE(REPLACE(TO_CHAR(B.KETERANGAN_SUBMMK),'\r','&#x0D;'),'\n',''),'\t','&#x2409;') AS KETERANGAN_SUBMMK
-    FROM TBLPPTMMK A, TBLPPTSUBMMK B
-    WHERE A.ID_MMK = B.ID_MMK
-    AND B.FLAG_JENIS_MMK = 'ANGGARANKOS'
-    AND A.ID_MMK = $P!{idMMK}
-    ORDER BY B.ID_SUBMMK ASC]]></queryString>
+	<queryString><![CDATA[SELECT REPLACE(REPLACE(REPLACE(TO_CHAR(A.KETERANGAN_SUBMMK),'\r','&#x0D;'),'\n',''),'\t','&#x2409;') AS KETERANGAN_SUBMMK,
+(SELECT COUNT(C.ID_SUBMMK) FROM TBLPPTSUBMMK C WHERE C.ID_MMK(+) = B.ID_MMK 
+AND C.FLAG_JENIS_MMK = 'ANGGARANKOS')AS TOTALNUM
+    FROM TBLPPTSUBMMK A, TBLPPTMMK B
+    WHERE A.ID_MMK(+) = B.ID_MMK 
+    AND B.ID_MMK = $P!{idMMK}
+    AND A.FLAG_JENIS_MMK = 'ANGGARANKOS' ORDER BY A.ID_SUBMMK]]></queryString>
 
-	<field name="ID_SUBMMK" class="java.math.BigDecimal"/>
 	<field name="KETERANGAN_SUBMMK" class="java.lang.String"/>
+	<field name="TOTALNUM" class="java.math.BigDecimal"/>
 
 		<background>
 			<band height="0"  isSplitAllowed="true" >
@@ -54,12 +55,14 @@
 			<band height="25"  isSplitAllowed="true" >
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="35"
+						x="0"
 						y="0"
-						width="375"
+						width="410"
 						height="15"
-						key="textField-113"
-						positionType="Float"/>
+						key="textField-1"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($F{TOTALNUM}.intValue()==1)]]></printWhenExpression>
+						</reportElement>
 					<box></box>
 					<textElement textAlignment="Justified" markup="styled">
 						<font fontName="Bookman Old Style" size="11"/>
@@ -69,10 +72,10 @@
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="18"
+						y="14"
 						width="451"
 						height="3"
-						key="textField-115"
+						key="textField-2"
 						positionType="Float"/>
 					<box></box>
 					<textElement textAlignment="Justified">
@@ -86,12 +89,30 @@
 						y="0"
 						width="35"
 						height="15"
-						key="textField-116"/>
+						key="textField-3">
+							<printWhenExpression><![CDATA[new Boolean($F{TOTALNUM}.intValue()>1)]]></printWhenExpression>
+						</reportElement>
 					<box></box>
 					<textElement>
 						<font fontName="Bookman Old Style" size="11"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA["6."+$V{COLUMN_COUNT}]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA["7."+$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="35"
+						y="0"
+						width="375"
+						height="15"
+						key="textField-4"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($F{TOTALNUM}.intValue()>1)]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Bookman Old Style" size="11"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{KETERANGAN_SUBMMK} != null ? $F{KETERANGAN_SUBMMK}:"")]]></textFieldExpression>
 				</textField>
 			</band>
 		</detail>
