@@ -1,0 +1,981 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="APBLaporanPelesenPasirAktifBulanan"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="1005"
+		 pageHeight="595"
+		 columnWidth="945"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="BULANTAHUN" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="BULANTAHUNSE" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT
+	A.NO_FAIL,
+	B.ID_PERMOHONAN,
+	C.NO_LESEN,
+	TO_CHAR(C.TARIKH_MULA_LESEN, 'DD/MM/YYYY') AS TARIKH_MULA_LESEN,
+	TO_CHAR(C.TARIKH_TAMAT_LESEN, 'DD/MM/YYYY') AS TARIKH_TAMAT_LESEN,
+	TO_NUMBER (NVL (C.ISIPADU, 0)) AS ISIPADU,
+	TO_CHAR(NVL(C.JUMLAH_FEELESEN, 0), '999,999.99') AS JUMLAH_FEELESEN ,
+	TO_CHAR(NVL(C.JUMLAH_ROYALTI_SELURUH, 0), '999,999.99') AS JUMLAH_ROYALTI,
+CASE
+		WHEN C.LUAS_KAWASAN IS NOT NULL THEN TO_NUMBER (C.LUAS_KAWASAN) || ' ' || INITCAP(H.KETERANGAN)
+	END AS LUAS,
+	INITCAP (D.LOKASI) AS LOKASI,
+	D.CATATAN,
+	INITCAP (E.NAMA) AS NAMA,
+	INITCAP (E.ALAMAT1_TETAP) AS ALAMAT1,
+	INITCAP (E.ALAMAT2_TETAP) AS ALAMAT2,
+	INITCAP (E.ALAMAT3_TETAP) AS ALAMAT3,
+	E.POSKOD_TETAP,
+	INITCAP (F.KETERANGAN) AS BANDAR_TETAP,
+	INITCAP (G.NAMA_NEGERI) AS NEGERI_TETAP,
+CASE
+		WHEN I.TEMPOH_DILULUSKAN IS NOT NULL
+		AND I.ID_TEMPOH IS NOT NULL THEN
+	CASE
+			WHEN I.ID_TEMPOH = 1 THEN TO_NUMBER (I.TEMPOH_DILULUSKAN) || ' ' || 'Bulan'
+			WHEN I.ID_TEMPOH = 2 THEN TO_NUMBER (I.TEMPOH_DILULUSKAN) || ' ' || 'Tahun'
+			ELSE ''
+		END
+	END AS TEMPOH
+FROM
+	TBLPFDFAIL A,
+	TBLPERMOHONAN B,
+	TBLPHPBYRNSYRTKLLSNLESENAPB C,
+	TBLPHPJADUALKEDUALESENAPB D,
+	TBLPHPPEMEGANG E,
+	TBLRUJBANDAR F,
+	TBLRUJNEGERI G,
+	TBLRUJLUAS H,
+	TBLPHPPMOHONNJDUALPERTAMA I
+WHERE
+	A.ID_FAIL = B.ID_FAIL
+	AND B.ID_PERMOHONAN = C.ID_PERMOHONAN
+	AND B.ID_PERMOHONAN = D.ID_PERMOHONAN
+	AND D.ID_JADUALKEDUALESENAPB = E.ID_JADUALKEDUALESENAPB
+	AND B.ID_PERMOHONAN = I.ID_PERMOHONAN
+	AND E.ID_BANDARTETAP = F.ID_BANDAR(+)
+	AND E.ID_NEGERITETAP = G.ID_NEGERI(+)
+	AND C.ID_LUAS = H.ID_LUAS(+)
+	AND C.FLAG_AKTIF = 'Y'
+	AND C.TARIKH_TAMAT_LESEN BETWEEN TO_DATE($P!{BULANTAHUN},'MM/YYYY') AND ADD_MONTHS(TO_DATE($P!{BULANTAHUNSE},'MM/YYYY'),1)
+ORDER BY
+	C.TARIKH_TAMAT_LESEN DESC]]></queryString>
+
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
+	<field name="NO_LESEN" class="java.lang.String"/>
+	<field name="TARIKH_MULA_LESEN" class="java.lang.String"/>
+	<field name="TARIKH_TAMAT_LESEN" class="java.lang.String"/>
+	<field name="ISIPADU" class="java.math.BigDecimal"/>
+	<field name="JUMLAH_FEELESEN" class="java.lang.String"/>
+	<field name="JUMLAH_ROYALTI" class="java.lang.String"/>
+	<field name="LUAS" class="java.lang.String"/>
+	<field name="LOKASI" class="java.lang.String"/>
+	<field name="CATATAN" class="java.lang.String"/>
+	<field name="NAMA" class="java.lang.String"/>
+	<field name="ALAMAT1" class="java.lang.String"/>
+	<field name="ALAMAT2" class="java.lang.String"/>
+	<field name="ALAMAT3" class="java.lang.String"/>
+	<field name="POSKOD_TETAP" class="java.lang.String"/>
+	<field name="BANDAR_TETAP" class="java.lang.String"/>
+	<field name="NEGERI_TETAP" class="java.lang.String"/>
+	<field name="TEMPOH" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="50"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="10"
+						width="945"
+						height="28"
+						key="textField-10"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="12" isBold="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["SENARAI PELESEN AKTIF DI BAWAH AKTA PELANTAR BENUA 1966 BERMULA " 
++ (!$P{BULANTAHUN}.trim().equalsIgnoreCase("") && $P{BULANTAHUN} != null ? $P{BULANTAHUN} : new SimpleDateFormat("MM/yyyy").format(new Date()).toString())
++ " SEHINGGA "
++ (!$P{BULANTAHUNSE}.trim().equalsIgnoreCase("") && $P{BULANTAHUNSE} != null ? $P{BULANTAHUNSE} : new SimpleDateFormat("MM/yyyy").format(new Date()).toString())]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="46"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="0"
+						width="30"
+						height="46"
+						forecolor="#000000"
+						backcolor="#CCCCCC"
+						key="staticText-1"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BIL]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="129"
+						y="0"
+						width="161"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-2"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[NAMA PELESEN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="30"
+						y="0"
+						width="99"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-3"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[NO. LESEN/ NO. FAIL]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="290"
+						y="0"
+						width="60"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-4"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TARIKH MULA LESEN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="470"
+						y="0"
+						width="100"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-5"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[KAWASAN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="570"
+						y="0"
+						width="60"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-7"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[LUAS (km²)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="630"
+						y="0"
+						width="195"
+						height="23"
+						backcolor="#CCCCCC"
+						key="staticText-8"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[KOORDINAT KAWASAN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="825"
+						y="0"
+						width="120"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-9"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[STATUS TERKINI]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="410"
+						y="0"
+						width="60"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-19"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TARIKH TAMAT LESEN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="630"
+						y="23"
+						width="35"
+						height="23"
+						backcolor="#CCCCCC"
+						key="staticText-20"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TITIK]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="665"
+						y="23"
+						width="80"
+						height="23"
+						backcolor="#CCCCCC"
+						key="staticText-21"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[LATITUD]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="745"
+						y="23"
+						width="80"
+						height="23"
+						backcolor="#CCCCCC"
+						key="staticText-22"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[LONGITUD]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="350"
+						y="0"
+						width="60"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-23"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TEMPOH LESEN]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="50"  isSplitAllowed="false" >
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="630"
+						y="0"
+						width="195"
+						height="50"
+						key="subreport-1"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<subreportParameter  name="ReportDir">
+						<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="ID_PERMOHONAN">
+						<subreportParameterExpression><![CDATA[$F{ID_PERMOHONAN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir} + "//php2//APB//LAPORAN//APBLaporanPelesenPasirAktif_1.jasper"]]></subreportExpression>
+				</subreport>
+				<elementGroup><!--  Start: 1 !-->
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="129"
+						y="0"
+						width="161"
+						height="50"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement>
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA} != null ? $F{NAMA} + "\n\n" : "")
++ ($F{ALAMAT1} != null ? $F{ALAMAT1} + "\n" : "")
++ ($F{ALAMAT2} != null ? $F{ALAMAT2} + "\n" : "")
++ ($F{ALAMAT3} != null ? $F{ALAMAT3} + "\n" : "")
++ ($F{POSKOD_TETAP} != null ? $F{POSKOD_TETAP} + " " : "")
++ ($F{BANDAR_TETAP} != null ? $F{BANDAR_TETAP} + ", " : "")
++ ($F{NEGERI_TETAP} != null ? $F{NEGERI_TETAP} + "." : "")
++ "\n\nKuantiti pasir diluluskan:\n"
++ ($F{ISIPADU} != null ? new java.text.DecimalFormat("#,###,##0.00").format($F{ISIPADU})  + " m³" : "")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="30"
+						y="0"
+						width="99"
+						height="50"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_LESEN} != null ? $F{NO_LESEN} + "\n\n" : "")
++ ($F{NO_FAIL} != null ? "(" + $F{NO_FAIL} + ")" : "")]]></textFieldExpression>
+				</textField>
+				</elementGroup><!-- End 1 !-->
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="290"
+						y="0"
+						width="60"
+						height="50"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_MULA_LESEN} != null ? $F{TARIKH_MULA_LESEN} : "")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="470"
+						y="0"
+						width="100"
+						height="50"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{LOKASI} != null ? $F{LOKASI} : "" )]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="570"
+						y="0"
+						width="60"
+						height="50"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{LUAS} != null ? $F{LUAS} : "" )]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="825"
+						y="0"
+						width="120"
+						height="50"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement>
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{CATATAN} != null ? $F{CATATAN} : "")]]></textFieldExpression>
+				</textField>
+				<elementGroup><!--  Start: 2 !-->
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="30"
+						height="50"
+						key="textField-1"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				</elementGroup><!-- End 2 !-->
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="410"
+						y="0"
+						width="60"
+						height="50"
+						key="textField-11"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_TAMAT_LESEN} != null ? $F{TARIKH_TAMAT_LESEN} : "")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="630"
+						y="0"
+						width="35"
+						height="50"
+						key="textField-13"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement>
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="665"
+						y="0"
+						width="80"
+						height="50"
+						key="textField-14"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement>
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="745"
+						y="0"
+						width="80"
+						height="50"
+						key="textField-15"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement>
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="350"
+						y="0"
+						width="60"
+						height="50"
+						key="textField-16"
+						stretchType="RelativeToBandHeight"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TEMPOH} != null ? $F{TEMPOH} : "")]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+		<noData>
+			<band height="127"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="99"
+						width="945"
+						height="28"
+						key="staticText-18"/>
+					<box>					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TIADA REKOD]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="9"
+						width="945"
+						height="28"
+						key="textField-17"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="12" isBold="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["SENARAI PELESEN AKTIF DI BAWAH AKTA PELANTAR BENUA 1966 BERMULA " 
++ (!$P{BULANTAHUN}.trim().equalsIgnoreCase("") && $P{BULANTAHUN} != null ? $P{BULANTAHUN} : new SimpleDateFormat("MM/yyyy").format(new Date()).toString())
++ " SEHINGGA "
++ (!$P{BULANTAHUNSE}.trim().equalsIgnoreCase("") && $P{BULANTAHUNSE} != null ? $P{BULANTAHUNSE} : new SimpleDateFormat("MM/yyyy").format(new Date()).toString())]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="53"
+						width="30"
+						height="46"
+						forecolor="#000000"
+						backcolor="#CCCCCC"
+						key="staticText-24"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BIL]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="129"
+						y="53"
+						width="161"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-25"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[NAMA PELESEN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="30"
+						y="53"
+						width="99"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-26"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[NO. LESEN/ NO. FAIL]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="290"
+						y="53"
+						width="60"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-27"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TARIKH MULA LESEN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="470"
+						y="53"
+						width="100"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-28"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[KAWASAN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="570"
+						y="53"
+						width="60"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-29"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[LUAS (km²)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="630"
+						y="53"
+						width="195"
+						height="23"
+						backcolor="#CCCCCC"
+						key="staticText-30"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[KOORDINAT KAWASAN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="825"
+						y="53"
+						width="120"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-31"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[STATUS TERKINI]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="410"
+						y="53"
+						width="60"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-32"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TARIKH TAMAT LESEN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="630"
+						y="76"
+						width="35"
+						height="23"
+						backcolor="#CCCCCC"
+						key="staticText-33"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TITIK]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="665"
+						y="76"
+						width="80"
+						height="23"
+						backcolor="#CCCCCC"
+						key="staticText-34"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[LATITUD]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="745"
+						y="76"
+						width="80"
+						height="23"
+						backcolor="#CCCCCC"
+						key="staticText-35"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[LONGITUD]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="350"
+						y="53"
+						width="60"
+						height="46"
+						backcolor="#CCCCCC"
+						key="staticText-36"/>
+					<box leftPadding="2" rightPadding="2" topPadding="2" bottomPadding="2">					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TEMPOH LESEN]]></text>
+				</staticText>
+			</band>
+		</noData>
+</jasperReport>
