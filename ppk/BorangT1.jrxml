@@ -2,9 +2,9 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangT1" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="0eefb193-756b-4739-949b-35c8d8fb492f">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
-	<property name="ireport.zoom" value="1.3310000000000004"/>
+	<property name="ireport.zoom" value="1.2100000000000006"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.y" value="1"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -18,6 +18,7 @@
 	<parameter name="kpPemohon" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="idPermohonan" class="java.lang.String"/>
 	<parameter name="statusFail" class="java.lang.String"/>
+	<parameter name="flag_keb_kemaskini" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT DISTINCT
         CASE
@@ -126,7 +127,8 @@ WHEN G.no_kp_baru IS NULL AND G.no_kp_lama IS NOT NULL and G.no_kp_lain IS NULL 
 		OR J.CATATAN LIKE '%<div%'
 		OR J.CATATAN LIKE '%&nbsp;%' THEN 1
        	  ELSE 2
-        END AS CATATAN_PERINTAH
+        END AS CATATAN_PERINTAH,
+        HIS.NO_PINDAAN, TO_CHAR(HIS.TARIKH_KEMASKINI,'DD/MM/YYYY') AS TARIKH_PINDAAN
 FROM   TBLPPKPERMOHONAN A,
        TBLPFDFAIL B,
        TBLRUJNEGERI NEGERIMHN,
@@ -139,7 +141,13 @@ FROM   TBLPPKPERMOHONAN A,
        TBLPPKPERINTAH J,
        TBLRUJBANDAR BANDARPEMOHON,
        TBLRUJNEGERI NEGERIPEMOHON,
-       TBLRUJNEGERI NEGERIBICARA
+       TBLRUJNEGERI NEGERIBICARA,
+       (SELECT ID_FAIL, NO_PINDAAN, TARIKH_KEMASKINI
+          FROM (SELECT H.ID_FAIL, H.NO_PINDAAN, H.TARIKH_KEMASKINI
+		FROM TBLPPKBORANG_HISTORY H
+        		WHERE H.ID_FAIL = 99201228654
+        		ORDER BY H.TARIKH_KEMASKINI DESC)
+	WHERE ROWNUM = 1)  HIS
 WHERE   B.ID_FAIL = A.ID_FAIL
     AND A.ID_NEGERIMHN = NEGERIMHN.ID_NEGERI
     AND A.ID_DAERAHMHN = DAERAHMHN.ID_DAERAH
@@ -153,6 +161,7 @@ WHERE   B.ID_FAIL = A.ID_FAIL
     AND J.ID_PERBICARAAN = H.ID_PERBICARAAN
     AND A.ID_PERMOHONAN = E.ID_PERMOHONAN
     AND J.FLAG_JENIS_KEPUTUSAN = 0
+    AND A.ID_FAIL = HIS.ID_FAIL(+)
     AND A.ID_FAIL = $P!{idfail}]]>
 	</queryString>
 	<field name="BUKTI_MATI" class="java.lang.String"/>
@@ -181,6 +190,8 @@ WHERE   B.ID_FAIL = A.ID_FAIL
 	<field name="NOBULAN_BICARA" class="java.lang.String"/>
 	<field name="ID_PERINTAH" class="java.math.BigDecimal"/>
 	<field name="CATATAN_PERINTAH" class="java.math.BigDecimal"/>
+	<field name="NO_PINDAAN" class="java.lang.String"/>
+	<field name="TARIKH_PINDAAN" class="java.lang.String"/>
 	<background>
 		<band height="400" splitType="Stretch">
 			<image vAlign="Middle">
@@ -202,6 +213,16 @@ WHERE   B.ID_FAIL = A.ID_FAIL
 					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{NO_FAIL}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement uuid="a742e6e1-95d5-4303-b697-05a88e443150" key="textField-11" positionType="Float" x="0" y="0" width="165" height="20" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[new Boolean($P{flag_keb_kemaskini}.equals("Y")?true:false)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Top" rotation="None">
+					<font fontName="Times New Roman" size="7" isBold="true" pdfFontName="Courier-Bold" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Pembetulan/pindaan ke atas perintah ini telah dibuat bagi Daerah " +$F{NAMA_DAERAH}+
+".\nNo Daftar "+$F{NO_PINDAAN}+" bertarikh "+$F{TARIKH_PINDAAN}]]></textFieldExpression>
 			</textField>
 		</band>
 	</pageHeader>
