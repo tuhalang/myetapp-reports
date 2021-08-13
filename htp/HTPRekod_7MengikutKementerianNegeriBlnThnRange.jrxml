@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPRekodSenaraiTanahPembangunanMengikutNegeri" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="d15aa04e-278d-4810-b1f4-a5c0d662c9a6">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HTPRekodSenaraiRizabKementerian" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="828" leftMargin="7" rightMargin="7" topMargin="3" bottomMargin="3" uuid="d15aa04e-278d-4810-b1f4-a5c0d662c9a6">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
@@ -8,18 +8,17 @@
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="ID_NEGERI" class="java.lang.String" isForPrompting="false"/>
-	<parameter name="ID_URUSAN" class="java.lang.String"/>
-	<parameter name="TANAH" class="java.lang.String"/>
-	<parameter name="BULANSEMASA" class="java.lang.String" isForPrompting="false"/>
-	<parameter name="BULANHINGGA" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="LAPORAN" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ID_KEMENTERIAN" class="java.lang.Integer"/>
+	<parameter name="BULAN" class="java.lang.String"/>
 	<parameter name="BULANMM" class="java.lang.String"/>
-	<parameter name="BULANTAMAT" class="java.lang.String"/>
 	<parameter name="TAHUN" class="java.lang.String"/>
+	<parameter name="TANAH" class="java.lang.String"/>
 	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
+	<parameter name="BULANTAMAT" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT DISTINCT RN.KOD_MAMPU,RN.ID_NEGERI
+		<![CDATA[SELECT DISTINCT TPH.ID_KEMENTERIAN,RK.NAMA_KEMENTERIAN
 FROM TBLHTPHAKMILIK TPH
 ,TBLRUJLOT RL,TBLRUJJENISHAKMILIK RJH
 ,TBLRUJMUKIM RM,TBLRUJDAERAH RD,TBLRUJNEGERI RN
@@ -27,7 +26,10 @@ FROM TBLHTPHAKMILIK TPH
 ,TBLHTPHAKMILIKAGENSI TPHA
 ,TBLRUJKEMENTERIAN RK,TBLRUJKEMENTERIANMAPPING RKME
 ,TBLRUJSEKSYENUPI SEK
-,TBLHTPHAKMILIKPERIHAL TP
+ ,	(SELECT P.ID_PERMOHONAN,NVL(PP.NO_RUJUKAN_UPT,'TIADA') NO_FAILCEROBOH
+ 	FROM	TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
+ 	WHERE P.ID_FAIL=F.ID_FAIL 	AND P.ID_PERMOHONAN=PP.ID_PERMOHONAN 	AND PP.ID_JENISTANAH =3
+ ) FC
 WHERE TPH.ID_HAKMILIK = TPHA.ID_HAKMILIK
 AND TPHA.STATUS ='Y'
 AND TPHA.ID_KEMENTERIAN=RKME.ID_KEMENTERIANLAMA
@@ -43,30 +45,31 @@ AND TPH.STATUS_SAH IN (
     SELECT STATUS_SAH FROM TBLHTPRUJSTATUSAH
    	WHERE AKTIF=1
 )
-AND TPH.ID_HAKMILIK = TP.ID_HAKMILIK
+AND TPH.ID_PERMOHONAN = FC.ID_PERMOHONAN
 AND TPH.ID_SEKSYENUPI = SEK.ID_SEKSYENUPI(+)
 -- local ID_KEMENTERIAN = 3, 12/2014
---AND TPH.ID_NEGERI = '$P!{ID_NEGERI}'
-AND TO_CHAR(TP.TARIKH_BINAAN,'yyyy') = '$P!{TAHUN}'
 --
+AND TPH.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
+AND TO_CHAR(TPH.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}'
+AND TO_CHAR(TPH.TARIKH_TERIMA,'MM') = '$P!{BULANMM}'
 $P!{TANAH}
-ORDER BY RN.KOD_MAMPU]]>
+ORDER BY RK.NAMA_KEMENTERIAN]]>
 	</queryString>
-	<field name="KOD_MAMPU" class="java.lang.String"/>
-	<field name="ID_NEGERI" class="java.math.BigDecimal"/>
+	<field name="ID_KEMENTERIAN" class="java.math.BigDecimal"/>
+	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
 		<band height="25" splitType="Stretch">
-			<textField isStretchWithOverflow="true">
+			<textField>
 				<reportElement uuid="71371294-cfea-42b1-bdca-7e96e2142c68" key="staticText-1" x="0" y="0" width="828" height="20"/>
 				<textElement textAlignment="Center" markup="none">
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["SENARAI TANAH PERSEKUTUAN TERLIBAT PEMBANGUNAN SEMUA NEGERI"
-+"\nBAGI BULAN "+$P{BULANSEMASA}+" TAHUN "+$P{TAHUN}]]></textFieldExpression>
+				<textFieldExpression><![CDATA["SENARAI TANAH PERSEKUTUAN PEGAMBILAN MENGIKUT KEMENTERIAN"
++"\nBAGI BULAN TAHUN "+$P{TAHUN}+" "]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -80,11 +83,11 @@ ORDER BY RN.KOD_MAMPU]]>
 		<band height="20" splitType="Stretch">
 			<subreport isUsingCache="true">
 				<reportElement uuid="4ad5656b-6e7e-45ca-867e-068edb3eca93" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="45" height="20" isPrintWhenDetailOverflows="true"/>
-				<subreportParameter name="ID_NEGERI">
-					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_NEGERI})]]></subreportParameterExpression>
+				<subreportParameter name="BULANTAMAT">
+					<subreportParameterExpression><![CDATA[$P{BULANTAMAT}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="TANAH">
-					<subreportParameterExpression><![CDATA[$P{TANAH}]]></subreportParameterExpression>
+				<subreportParameter name="ID_KEMENTERIAN">
+					<subreportParameterExpression><![CDATA[$F{ID_KEMENTERIAN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="TAHUN">
 					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
@@ -92,8 +95,11 @@ ORDER BY RN.KOD_MAMPU]]>
 				<subreportParameter name="BULANMM">
 					<subreportParameterExpression><![CDATA[$P{BULANMM}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="TAHUNTAMAT">
+					<subreportParameterExpression><![CDATA[$P{TAHUNTAMAT}]]></subreportParameterExpression>
+				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{ReportDir} + "/htp/HTPRekod_8MengikutNegeriBlnThnSR.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "/htp/HTPRekod_7MengikutKementerianBlnThnSR.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</detail>
@@ -143,7 +149,7 @@ ORDER BY RN.KOD_MAMPU]]>
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<text><![CDATA[SENARAI TANAH PERSEKUTUAN TERLIBAT PEMBANGUNAN MENGIKUT SEMUA NEGERI]]></text>
+				<text><![CDATA[SENARAI TANAH PERSEKUTUAN PENGAMBILAN MENGIKUT KEMENTERIAN]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="54397e3f-7d82-4b07-9684-f208a2fc1010" key="staticText-225" x="0" y="55" width="828" height="25"/>
