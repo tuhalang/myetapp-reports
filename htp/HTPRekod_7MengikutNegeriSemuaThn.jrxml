@@ -8,8 +8,8 @@
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="ID_URUSAN" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="TAHUN" class="java.lang.String"/>
+	<parameter name="ID_URUSAN" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="TANAH" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
 	<queryString>
@@ -21,7 +21,10 @@ FROM TBLHTPHAKMILIK TPH
 ,TBLHTPHAKMILIKAGENSI TPHA
 ,TBLRUJKEMENTERIAN RK,TBLRUJKEMENTERIANMAPPING RKME
 ,TBLRUJSEKSYENUPI SEK
-,TBLHTPHAKMILIKPERIHAL TP
+ ,	(SELECT P.ID_PERMOHONAN,NVL(PP.NO_RUJUKAN_UPT,'TIADA') NO_FAILCEROBOH
+ 	FROM	TBLPFDFAIL F,TBLPERMOHONAN P,TBLHTPPERMOHONAN PP
+ 	WHERE P.ID_FAIL=F.ID_FAIL 	AND P.ID_PERMOHONAN=PP.ID_PERMOHONAN 	AND PP.ID_JENISTANAH =3
+ ) FC
 WHERE TPH.ID_HAKMILIK = TPHA.ID_HAKMILIK
 AND TPHA.STATUS ='Y'
 AND TPHA.ID_KEMENTERIAN=RKME.ID_KEMENTERIANLAMA
@@ -37,10 +40,10 @@ AND TPH.STATUS_SAH IN (
     SELECT STATUS_SAH FROM TBLHTPRUJSTATUSAH
    	WHERE AKTIF=1
 )
-AND TPH.ID_HAKMILIK = TP.ID_HAKMILIK
+AND TPH.ID_PERMOHONAN = FC.ID_PERMOHONAN
 AND TPH.ID_SEKSYENUPI = SEK.ID_SEKSYENUPI(+)
 -- local ID_KEMENTERIAN = 3, 12/2014
-AND TO_CHAR(TP.TARIKH_BINAAN,'yyyy') = '$P!{TAHUN}'
+AND TO_CHAR(TPH.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}'
 --
 $P!{TANAH}
 ORDER BY RN.KOD_MAMPU]]>
@@ -58,7 +61,7 @@ ORDER BY RN.KOD_MAMPU]]>
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["SENARAI TANAH PERSEKUTUAN PENGAMBILAN MENGIKUT NEGERI"
+				<textFieldExpression><![CDATA["SENARAI TANAH PERSEKUTUAN PENGAMBILAN MENGIKUT SEMUA NEGERI"
 +"\nBAGI TAHUN "+$P{TAHUN}+" "]]></textFieldExpression>
 			</textField>
 		</band>
@@ -73,13 +76,13 @@ ORDER BY RN.KOD_MAMPU]]>
 		<band height="20" splitType="Stretch">
 			<subreport isUsingCache="true">
 				<reportElement uuid="4ad5656b-6e7e-45ca-867e-068edb3eca93" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="45" height="20" isPrintWhenDetailOverflows="true"/>
-				<subreportParameter name="ID_NEGERI">
-					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_NEGERI})]]></subreportParameterExpression>
-				</subreportParameter>
 				<subreportParameter name="TANAH">
 					<subreportParameterExpression><![CDATA[($P{ID_URUSAN}.equals("1")?" AND NVL(TPH.NO_HAKMILIK,' ') <> ' '"
 :($P{ID_URUSAN}.equals("0")?" AND NVL(TPH.NO_WARTA,' ') <> ' '":"")
 )]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ID_NEGERI">
+					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_NEGERI})]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="TAHUN">
 					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
@@ -135,7 +138,7 @@ ORDER BY RN.KOD_MAMPU]]>
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<text><![CDATA[SENARAI TANAH PERSEKUTUAN PENGAMBILAN MENGIKUT NEGERI]]></text>
+				<text><![CDATA[SENARAI TANAH PERSEKUTUAN PENGAMBILAN MENGIKUT SEMUA NEGERI]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="54397e3f-7d82-4b07-9684-f208a2fc1010" key="staticText-225" x="0" y="55" width="828" height="25"/>
