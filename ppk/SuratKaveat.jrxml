@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.1000000000000005"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="305"/>
+	<property name="ireport.y" value="294"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -16,8 +16,7 @@
 	<parameter name="namaPejabat" class="java.lang.String" isForPrompting="false"/>
 	<queryString>
 		<![CDATA[SELECT DISTINCT
-    P.ID_PERMOHONAN,
-    F.ID_FAIL,
+    P.ID_PERMOHONAN, F.ID_FAIL,
     NVL(P.SEKSYEN,' ') AS SEKSYENPERMOHONAN,
     TO_CHAR(P."TARIKH_MOHON",'dd/mm/yyyy') AS TARIKH_MOHON,
     CASE
@@ -31,11 +30,11 @@
     NVL(PE.POSKOD_SURAT,'') AS POSKOD_PEMOHON,
     CASE
         WHEN UPPER(TRIM(RB.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(RB.KETERANGAN)),'')
-            ELSE ''
+        ELSE ''
     END AS BANDAR_PEMOHON,
     UPPER(RN.NAMA_NEGERI) AS NEGERI_PEMOHON
     ,GETNAMASIMATI(S.NAMA_SIMATI,S.NAMA_LAIN) NAMA_SIMATI
-      ,GETMYIDFORMAT( GETMYID(S.NO_KP_BARU,S.NO_KP_LAMA,S.NO_KP_LAIN) ) KP_SIMATI
+    ,GETMYIDFORMAT( GETMYID(S.NO_KP_BARU,S.NO_KP_LAMA,S.NO_KP_LAIN) ) KP_SIMATI
     ,TO_CHAR(S.TARIKH_MATI,'dd/mm/yyyy') AS TARIKH_MATI,
     REPLACE(KVT.NAMA_KAVEAT,'&','&#38;') AS NAMA_KAVEAT,
     REPLACE(KVT.NO_KAVEAT,'&','&#38;') AS NO_KAVEAT,
@@ -58,32 +57,33 @@
         WHEN TO_CHAR(sysdate, 'MM')='11' THEN 'November'
         WHEN TO_CHAR(sysdate, 'MM')='12' THEN 'Disember'
     END || ' ' || TO_CHAR(sysdate, 'YYYY') AS BULAN_TODAY
-    ,
-    PEJ.PEJABAT,
-       REPLACE(UPPER(KVT.NAMA_FIRMA),',') AS NAMA_FIRMA,
-       REPLACE(UPPER(TRIM(KVT.alamat1)),',') AS ALAMAT_FIRMA1,
-       REPLACE(UPPER(TRIM(KVT.alamat2)),',') AS ALAMAT_FIRMA2,
-       REPLACE(UPPER(TRIM(KVT.alamat3)),',') AS ALAMAT_FIRMA3,
-       KVT.NO_TEL,
-       CASE
-            WHEN KVT.POSKOD IS NULL THEN '' ELSE KVT.POSKOD
-       END AS POSKOD_FIRMA,
-       CASE
-       		WHEN UPPER(TRIM(RB.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(RB.KETERANGAN)),'')
-       		ELSE ''
-       END AS BANDAR_FIRMA,
-       CASE
-       		WHEN UPPER(TRIM(RN.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(RN.NAMA_NEGERI)),'')
-       		ELSE ''
-       END AS NEGERI_FIRMA
+    ,PEJ.PEJABAT,
+    REPLACE(UPPER(KVT.NAMA_FIRMA),',') AS NAMA_FIRMA,
+    REPLACE(UPPER(TRIM(KVT.alamat1)),',') AS ALAMAT_FIRMA1,
+    REPLACE(UPPER(TRIM(KVT.alamat2)),',') AS ALAMAT_FIRMA2,
+    REPLACE(UPPER(TRIM(KVT.alamat3)),',') AS ALAMAT_FIRMA3,
+    KVT.NO_TEL,
+    CASE
+        WHEN KVT.POSKOD IS NULL THEN '' ELSE KVT.POSKOD
+    END AS POSKOD_FIRMA,
+    CASE
+        WHEN UPPER(TRIM(FB.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(FB.KETERANGAN)),'')
+        ELSE ''
+    END AS BANDAR_FIRMA,
+    CASE
+        WHEN UPPER(TRIM(FN.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(FN.NAMA_NEGERI)),'')
+        ELSE ''
+    END AS NEGERI_FIRMA
 FROM
-	TBLPFDFAIL F,
+    TBLPFDFAIL F,
     TBLPPKPERMOHONAN P,
     TBLPPKPERMOHONANSIMATI PS,
     TBLPPKSIMATI S,
     TBLPPKPEMOHON PE,
     TBLRUJBANDAR RB,
     TBLRUJNEGERI RN,
+    TBLRUJBANDAR FB, --bandar firma
+    TBLRUJNEGERI FN, --negeri firma
     TBLPPKKAVEATPEGUAM KVT
     ,(
         SELECT REPLACE(REPLACE(TRIM(RJ.KETERANGAN),'&','&#38;'),',') JAWATAN
@@ -115,10 +115,12 @@ WHERE  F.ID_FAIL                = P.ID_FAIL
     AND P.ID_PERMOHONAN          = PS.ID_PERMOHONAN
     AND P.ID_PEMOHON             = PE.ID_PEMOHON
     AND PS.ID_SIMATI              = S.ID_SIMATI
-   	AND PE.ID_BANDARSURAT         = RB.ID_BANDAR(+)
-   	AND PE.ID_NEGERISURAT         = RN.ID_NEGERI(+)
-   	AND P.ID_PERMOHONAN          = KVT.ID_PERMOHONAN
-   	AND P.ID_DAERAHMHN = PEJ.ID_DAERAHURUS
+    AND PE.ID_BANDARSURAT         = RB.ID_BANDAR(+)
+    AND PE.ID_NEGERISURAT         = RN.ID_NEGERI(+)
+    AND KVT.ID_BANDAR = FB.ID_BANDAR(+) --bandar firma
+    AND KVT.ID_NEGERI = FN.ID_NEGERI(+) --negeri firma
+    AND P.ID_PERMOHONAN          = KVT.ID_PERMOHONAN
+    AND P.ID_DAERAHMHN = PEJ.ID_DAERAHURUS
 --  AND F.ID_FAIL                = 99191171211
     AND F.ID_FAIL                = $P!{idfail}]]>
 	</queryString>
