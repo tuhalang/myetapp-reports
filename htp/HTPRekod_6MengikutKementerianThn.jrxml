@@ -8,10 +8,15 @@
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="LAPORAN" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="ID_KEMENTERIAN" class="java.lang.Integer"/>
-	<parameter name="BULANMM" class="java.lang.String"/>
 	<parameter name="TAHUN" class="java.lang.String"/>
+	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
+	<parameter name="BULANMM" class="java.lang.String"/>
+	<parameter name="BULANTAMAT" class="java.lang.String"/>
+	<parameter name="BULANSEMASA" class="java.lang.String"/>
+	<parameter name="BULANHINGGA" class="java.lang.String"/>
+	<parameter name="ID_URUSAN" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="TANAH" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT RL.KETERANGAN AS JENIS_LOT,TPH.NO_LOT
 ,RJH.KOD_JENIS_HAKMILIK,TPH.NO_HAKMILIK,TPH.NO_WARTA
@@ -21,20 +26,6 @@
 ,RK.NAMA_KEMENTERIAN,RA.NAMA_AGENSI
 ,RM.NAMA_MUKIM,RD.NAMA_DAERAH,RN.NAMA_NEGERI
 ,NVL(SEK.NAMA_SEKSYENUPI,'TIADA') NAMA_SEKSYEN
-,   CASE
-        WHEN $P!{BULANMM}='01' THEN 'JANUARI'
-        WHEN $P!{BULANMM}='02' THEN 'FEBRUARI'
-        WHEN $P!{BULANMM}='03' THEN 'MAC'
-        WHEN $P!{BULANMM}='04' THEN 'APRIL'
-        WHEN $P!{BULANMM}='05' THEN 'MEI'
-        WHEN $P!{BULANMM}='06' THEN 'JUN'
-        WHEN $P!{BULANMM}='07' THEN 'JULAI'
-        WHEN $P!{BULANMM}='08' THEN 'OGOS'
-        WHEN $P!{BULANMM}='09' THEN 'SEPTEMBER'
-        WHEN $P!{BULANMM}='10' THEN 'OKTOBER'
-        WHEN $P!{BULANMM}='11' THEN 'NOVEMBER'
-        WHEN $P!{BULANMM}='12' THEN 'DISEMBER'
-    END AS BULAN_SEBELUM
 ,TPH.ID_KEMENTERIAN,FC.ID_FAIL ID_FAILCEROBOH,FC.NO_FAILCEROBOH NO_FAIL,FC.TARIKH_TERIMA
 FROM TBLHTPHAKMILIK TPH
 ,TBLRUJLOT RL,TBLRUJJENISHAKMILIK RJH
@@ -70,6 +61,8 @@ AND TPH.ID_SEKSYENUPI = SEK.ID_SEKSYENUPI(+)
 AND TPH.ID_KEMENTERIAN = $P!{ID_KEMENTERIAN}
 AND TO_CHAR(FC.TARIKH_TERIMA,'yyyy') = '$P!{TAHUN}'
 --AND TO_CHAR(FC.TARIKH_TERIMA,'MM') = '$P!{BULANMM}'
+--
+$P!{TANAH}
 ORDER BY RN.KOD_MAMPU,TPH.ID_DAERAH,RM.ID_MUKIM]]>
 	</queryString>
 	<field name="JENIS_LOT" class="java.lang.String"/>
@@ -86,7 +79,6 @@ ORDER BY RN.KOD_MAMPU,TPH.ID_DAERAH,RM.ID_MUKIM]]>
 	<field name="NAMA_DAERAH" class="java.lang.String"/>
 	<field name="NAMA_NEGERI" class="java.lang.String"/>
 	<field name="NAMA_SEKSYEN" class="java.lang.String"/>
-	<field name="BULAN_SEBELUM" class="java.lang.String"/>
 	<field name="ID_KEMENTERIAN" class="java.math.BigDecimal"/>
 	<field name="ID_FAILCEROBOH" class="java.math.BigDecimal"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
@@ -100,14 +92,22 @@ ORDER BY RN.KOD_MAMPU,TPH.ID_DAERAH,RM.ID_MUKIM]]>
 	</background>
 	<title>
 		<band height="55" splitType="Stretch">
-			<textField>
+			<textField isStretchWithOverflow="true">
 				<reportElement uuid="71371294-cfea-42b1-bdca-7e96e2142c68" key="staticText-1" x="0" y="0" width="828" height="20"/>
 				<textElement textAlignment="Center" markup="none">
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["SENARAI TANAH PERSEKUTUAN TERLIBAT TUKARGUNA MENGIKUT KEMENTERIAN"
-+"\nBAGI TAHUN "+$P{TAHUN}+" "]]></textFieldExpression>
+				<textFieldExpression><![CDATA["SENARAI TANAH "+($P{ID_URUSAN}.equals("1")?"MILIK ":($P{ID_URUSAN}.equals("2")?"RIZAB ":""))
++" PERSEKUTUAN TERLIBAT TUKARGUNA MENGIKUT KEMENTERIAN"
++( $P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00")
+    ?" \nBAGI TAHUN "+$P{TAHUN}
+    :(!$P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00")
+        ? " \nBAGI BULAN "+$P{BULANSEMASA} +" TAHUN "+$P{TAHUN}
+            :" \nDARI BULAN "+$P{BULANSEMASA} +" TAHUN "+$P{TAHUN}
+            +" SEHINGGA BULAN "+$P{BULANHINGGA} +" TAHUN "+$P{TAHUNTAMAT}
+    )
+)]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="false">
 				<reportElement uuid="7474702a-191f-4492-b927-66f70e214861" key="textField-22" x="95" y="25" width="500" height="20"/>

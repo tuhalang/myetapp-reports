@@ -3,18 +3,29 @@
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
-	<property name="ireport.x" value="0"/>
+	<property name="ireport.x" value="17"/>
 	<property name="ireport.y" value="0"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="ID_NEGERI" class="java.lang.String"/>
+	<parameter name="ID_NEGERI" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="BULANMM" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["00"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BULANSEMASA" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["00"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BULANTAMAT" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["00"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BULANHINGGA" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["00"]]></defaultValueExpression>
+	</parameter>
 	<parameter name="TAHUN" class="java.lang.String"/>
-	<parameter name="BULANMM" class="java.lang.String"/>
+	<parameter name="TAHUNTAMAT" class="java.lang.String"/>
 	<parameter name="TANAH" class="java.lang.String"/>
 	<parameter name="ID_URUSAN" class="java.lang.String"/>
 	<parameter name="ReportDir" class="java.lang.String"/>
-	<parameter name="PEROLEHAN" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT
 --
@@ -71,8 +82,16 @@ AND TO_CHAR(MTP.TARIKH_PILIH,'YYYY') = '$P!{TAHUN}'
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<textFieldExpression><![CDATA["SENARAI TANAH MILIK PERSEKUTUAN TERLIBAT PELEPASAN / PENYERAHANBALIK SEMUA NEGERI"
-+"\nBAGI TAHUN "+$P{TAHUN}+" "]]></textFieldExpression>
+				<textFieldExpression><![CDATA["SENARAI TANAH "+($P{ID_URUSAN}.equals("1")?"MILIK ":($P{ID_URUSAN}.equals("2")?"RIZAB ":""))
++" PERSEKUTUAN TERLIBAT PELEPASAN / PENYERAHANBALIK SEMUA NEGERI"
++( $P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00")
+    ?" BAGI TAHUN "+$P{TAHUN}
+    :(!$P{BULANMM}.equals("00") && $P{BULANTAMAT}.equals("00")
+        ? " BAGI BULAN "+$P{BULANSEMASA} +" TAHUN "+$P{TAHUN}
+            :" DARI BULAN "+$P{BULANSEMASA} +" TAHUN "+$P{TAHUN}
+            +" SEHINGGA BULAN "+$P{BULANHINGGA} +" TAHUN "+$P{TAHUNTAMAT}
+    )
+)]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -83,26 +102,26 @@ AND TO_CHAR(MTP.TARIKH_PILIH,'YYYY') = '$P!{TAHUN}'
 		<band splitType="Prevent"/>
 	</columnHeader>
 	<detail>
-		<band height="20" splitType="Stretch">
+		<band height="21" splitType="Stretch">
 			<subreport isUsingCache="true">
 				<reportElement uuid="4ad5656b-6e7e-45ca-867e-068edb3eca93" key="subreport-2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="45" height="20" isPrintWhenDetailOverflows="true"/>
-				<subreportParameter name="ID_NEGERI">
-					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_NEGERI})]]></subreportParameterExpression>
-				</subreportParameter>
 				<subreportParameter name="TANAH">
 					<subreportParameterExpression><![CDATA[($P{ID_URUSAN}.equals("1")?"AND NVL(TPH.NO_HAKMILIK,' ') <> ' '"
 :($P{ID_URUSAN}.equals("0")?"AND NVL(TPH.NO_WARTA,' ') <> ' '":"")
 )]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="ID_NEGERI">
+					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_NEGERI})]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="TAHUN">
 					<subreportParameterExpression><![CDATA[$P{TAHUN}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="PEROLEHAN">
-					<subreportParameterExpression><![CDATA[$P{PEROLEHAN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{ReportDir} + "/htp/HTPRekod_4MengikutNegeriThnSR.jasper"]]></subreportExpression>
 			</subreport>
+			<break>
+				<reportElement uuid="081b56bb-fa4e-486e-b32d-2265371c98b8" key="element-1" positionType="Float" x="0" y="20" width="828" height="1"/>
+			</break>
 		</band>
 	</detail>
 	<columnFooter>
@@ -151,7 +170,7 @@ AND TO_CHAR(MTP.TARIKH_PILIH,'YYYY') = '$P!{TAHUN}'
 					<font fontName="Arial" size="11" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="1_1_2"/>
 				</textElement>
-				<text><![CDATA[SENARAI TANAH MILIK PERSEKUTUAN TERLIBAT PELEPASAN / PENYERAHANBALIK SEMUA NEGERI]]></text>
+				<text><![CDATA[SENARAI TANAH PERSEKUTUAN TERLIBAT PELEPASAN / PENYERAHANBALIK SEMUA NEGERI]]></text>
 			</staticText>
 			<staticText>
 				<reportElement uuid="54397e3f-7d82-4b07-9684-f208a2fc1010" key="staticText-225" x="0" y="55" width="828" height="25"/>
