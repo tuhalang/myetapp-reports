@@ -60,6 +60,10 @@ REPLACE(INITCAP(NVL(S.ALAMAT3,'')),'&','&#38;') AS ALAMAT_SIASAT3,
 NVL(S.POSKOD,'') AS POSKOD_SIASAT,
 INITCAP(B.KETERANGAN) AS NAMA_BANDAR_SIASAT,
 INITCAP(NG.NAMA_NEGERI) AS NAMA_NEGERI_SIASAT,
+CASE
+    WHEN S.STATUS_SIASATAN = '6' THEN 'T'
+    ELSE 'F'
+END AS STATUS_SIASATAN2,
 TO_CHAR(S.TARIKH_SIASATAN,'DD.MM.YYYY') AS TARIKH_SIASAT,
 CASE
     WHEN TO_CHAR(S.TARIKH_SIASATAN, 'FMDAY') = 'MONDAY' THEN 'Isnin'
@@ -80,9 +84,9 @@ CASE
     WHEN S.JENIS_WAKTU_SIASATAN = 2 THEN 'tengahari'
     WHEN S.JENIS_WAKTU_SIASATAN = 3 THEN 'petang'
 END AS JENIS_WAKTU,
-
+--
 --      TO_CHAR(NA.TARIKH_KELUAR,'DD.MM.YYYY') AS TARIKH_KELUAR,
-
+--
 --     CASE
 --        WHEN NA.JENIS_TEMPAT_TAMPAL = 1 THEN TO_CHAR(NA.TARIKH_TAMPAL,'DD.MM.YYYY')
 --
@@ -135,7 +139,6 @@ CASE
      WHEN T.FLAG_PBT = 2 THEN 'Di luar'
      ELSE '-'
 END AS PBT,
-
 T.JARAK_BANDAR, INITCAP(T.NAMA_TEMPAT) AS NAMA_TEMPAT,
 INITCAP(K.KETERANGAN) AS KETERANGAN,
 TO_CHAR(S.TEMPOH_MILIK_TANAH) AS TEMPOH_MILIK_TANAH, S.CARA_MILIK, TO_CHAR(S.HARGA_BELI) AS HARGA_BELI,
@@ -171,7 +174,7 @@ CASE
     ELSE ''
 END AS UNIT_NILAIAN_JPPH,
 TO_CHAR(UT.BIL_SURAT_JT) AS BIL_SURAT_JT, /*TO_CHAR(UT.TARIKH_SURATJT) AS TARIKH_SURATJT,*/
-TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT,
+TO_CHAR(SYSDATE, 'DD') AS HARI_SURAT1,
 CASE
     WHEN TO_CHAR (SYSDATE, 'MM') = '01' THEN 'Januari'
     WHEN TO_CHAR (SYSDATE, 'MM') = '02' THEN 'Februari'
@@ -186,8 +189,8 @@ CASE
     WHEN TO_CHAR (SYSDATE, 'MM') = '11' THEN 'November'
     WHEN TO_CHAR (SYSDATE, 'MM') = '12' THEN 'Disember'
     ELSE 'TIADA'
-END AS BULAN_SURAT,
-TO_CHAR(SYSDATE, 'YYYY') AS TAHUN_SURAT,
+END AS BULAN_SURAT1,
+TO_CHAR(SYSDATE, 'YYYY') AS TAHUN_SURAT1,
 INITCAP(NG.NAMA_NEGERI) AS NEGERI_JPPH,
 --TO_CHAR(S.ULASAN_PERINTAH)as ULASAN_PERINTAH,
 --cast(substr(S.ULASAN_PERINTAH,1,2000) as varchar(4000 byte)) ULASAN_PERINTAH,
@@ -232,7 +235,6 @@ END AS BULAN_PERINTAH, TO_CHAR(S.TARIKH_PERINTAH,'YYYY') AS TAHUN_PERINTAH
 FROM TBLPFDFAIL F, TBLPPTPERMOHONAN P, TBLPPTSIASATAN S, TBLPPTWARTA W, --TBLPPTNOTISAWAM NA, TBLPPTNOTISAWAMHAKMILIK NAH,
 TBLRUJNEGERI NG, TBLRUJDAERAH D, TBLRUJMUKIM M, TBLRUJBANDAR B,TBLRUJLOT JL, TBLRUJJENISHAKMILIK J,TBLRUJKATEGORI K, TBLPPTULASANTEKNIKAL UT,
 TBLPPTHAKMILIK HM, TBLPPTTANAH T, USERS U
-
 WHERE F.ID_FAIL = P.ID_FAIL
 AND F.ID_NEGERI = NG.ID_NEGERI(+)
 AND HM.ID_DAERAH = D.ID_DAERAH(+)
@@ -260,18 +262,18 @@ AND W.ID_WARTA = (SELECT MAX(ID_WARTA) FROM TBLPPTWARTA WHERE P.ID_PERMOHONAN = 
 AND S.ID_SIASATAN = $P!{id_siasatan}
 AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 
-	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="ID_FAIL" class="java.lang.String"/>
 	<field name="NO_FAIL" class="java.lang.String"/>
-	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
+	<field name="ID_PERMOHONAN" class="java.lang.String"/>
 	<field name="TUJUAN" class="java.lang.String"/>
 	<field name="NO_RUJUKAN_PTG" class="java.lang.String"/>
 	<field name="ID_HAKMILIK" class="java.lang.String"/>
 	<field name="NAMA_DAERAH" class="java.lang.String"/>
-	<field name="ID_SIASATAN" class="java.math.BigDecimal"/>
+	<field name="ID_SIASATAN" class="java.lang.String"/>
 	<field name="NO_KES" class="java.lang.String"/>
 	<field name="BIL_SIASATAN" class="java.lang.String"/>
 	<field name="NO_SIASATAN" class="java.lang.String"/>
-	<field name="STATUS_SIASATAN" class="java.math.BigDecimal"/>
+	<field name="STATUS_SIASATAN" class="java.lang.String"/>
 	<field name="HARI_SURAT" class="java.lang.String"/>
 	<field name="BULAN_SURAT" class="java.lang.String"/>
 	<field name="TAHUN_SURAT" class="java.lang.String"/>
@@ -284,6 +286,7 @@ AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 	<field name="POSKOD_SIASAT" class="java.lang.String"/>
 	<field name="NAMA_BANDAR_SIASAT" class="java.lang.String"/>
 	<field name="NAMA_NEGERI_SIASAT" class="java.lang.String"/>
+	<field name="STATUS_SIASATAN2" class="java.lang.String"/>
 	<field name="TARIKH_SIASAT" class="java.lang.String"/>
 	<field name="HARI_SIASAT" class="java.lang.String"/>
 	<field name="MASA_SIASATAN" class="java.lang.String"/>
@@ -295,7 +298,7 @@ AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 	<field name="NAMA_MUKIM" class="java.lang.String"/>
 	<field name="LUAS_LOT" class="java.lang.String"/>
 	<field name="UNIT_LUAS_LOT" class="java.lang.String"/>
-	<field name="LUAS_AMBIL" class="java.math.BigDecimal"/>
+	<field name="LUAS_AMBIL" class="java.lang.String"/>
 	<field name="UNIT_LUAS_AMBIL" class="java.lang.String"/>
 	<field name="LUAS_MUKTAMAD" class="java.lang.String"/>
 	<field name="UNIT_LUAS_MUKTAMAD" class="java.lang.String"/>
@@ -327,6 +330,9 @@ AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 	<field name="HARGA_SEUNIT_JPPH" class="java.lang.String"/>
 	<field name="UNIT_NILAIAN_JPPH" class="java.lang.String"/>
 	<field name="BIL_SURAT_JT" class="java.lang.String"/>
+	<field name="HARI_SURAT1" class="java.lang.String"/>
+	<field name="BULAN_SURAT1" class="java.lang.String"/>
+	<field name="TAHUN_SURAT1" class="java.lang.String"/>
 	<field name="NEGERI_JPPH" class="java.lang.String"/>
 	<field name="ULASAN_PERINTAH1" class="java.lang.String"/>
 	<field name="ULASAN_PERINTAH2" class="java.lang.String"/>
@@ -339,7 +345,7 @@ AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 	<field name="TARIKH_TAMPAL1" class="java.lang.String"/>
 	<field name="TARIKH_TAMPAL2" class="java.lang.String"/>
 	<field name="TARIKH_TAMPAL3" class="java.lang.String"/>
-	<field name="ID_DAERAH" class="java.math.BigDecimal"/>
+	<field name="ID_DAERAH" class="java.lang.String"/>
 	<field name="HARI_PERINTAH" class="java.lang.String"/>
 	<field name="BULAN_PERINTAH" class="java.lang.String"/>
 	<field name="TAHUN_PERINTAH" class="java.lang.String"/>
@@ -1148,7 +1154,7 @@ AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="3"
+						x="2"
 						y="495"
 						width="451"
 						height="3"
@@ -1162,14 +1168,14 @@ AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="27"
+						x="26"
 						y="475"
 						width="427"
 						height="15"
 						key="textField-195"
 						positionType="Float"/>
 					<box></box>
-					<textElement textAlignment="Justified" markup="styled">
+					<textElement textAlignment="Justified">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="12" isBold="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>Ulasan Pentadbir Tanah</style>\n\n"
@@ -1192,7 +1198,7 @@ AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="27"
+						x="26"
 						y="503"
 						width="427"
 						height="15"
@@ -1206,7 +1212,7 @@ AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="3"
+						x="2"
 						y="522"
 						width="451"
 						height="3"
@@ -1230,7 +1236,7 @@ AND HM.ID_HAKMILIK = $P!{id_hakmilik}]]></queryString>
 					<textElement textAlignment="Justified">
 						<font fontName="Bookman Old Style" pdfFontName="Helvetica" size="12" isBold="false"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TARIKH_PERINTAH} != null ? "Tarikh Perintah : "+($F{TARIKH_PERINTAH} != null ? $F{TARIKH_PERINTAH}:"")+""
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{STATUS_SIASATAN}.equals("T") ? "Tarikh Perintah : "+($F{TARIKH_PERINTAH} != null ? $F{TARIKH_PERINTAH}:"")+""
 +"\nSaya berpuashati dengan keterangan yang diberi. Berdasarkan kepada prinsip-prinsip seperti yang telah dalam Jadual Pertama Akta "
 +"Pengambilan Tanah, 1960 dan setelah mengambilkira pandangan dan nasihat yang diberi oleh Pengarah Jabatan Penilaian dan Perkhidmatan Harta Negeri "+($F{NEGERI_JPPH} != null ? $F{NEGERI_JPPH}:"")+", nilai tanah yang "
 +"berpatutan dan mencukupi ialah RM "+($F{NILAI_SEUNIT} != null ? $F{NILAI_SEUNIT}+($F{UNIT_TANAH} != null ? " "+$F{UNIT_TANAH}:""):"")+". "
