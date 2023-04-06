@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="REVSenaraiAkaunBelumTerima" pageWidth="800" pageHeight="1200" whenNoDataType="NoDataSection" columnWidth="760" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="4f20e327-d7b8-4623-8197-80f7e81e48a0">
+	<property name="ireport.zoom" value="1.2100000000000017"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="USIA_ABT_DARI" class="java.lang.String"/>
+	<parameter name="USIA_ABT_HINGGA" class="java.lang.String"/>
+	<parameter name="ID_HASIL" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="ID_USIA_ABT" class="java.lang.String"/>
+	<parameter name="TARIKH_MULA" class="java.lang.String"/>
+	<parameter name="TARIKH_HINGGA" class="java.lang.String"/>
+	<parameter name="TAHUN" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT TBLPFDFAIL.NO_FAIL, TBLPHPPEMOHON.NAMA, TBLPHPHASIL.ID_HASIL,
+CASE
+    WHEN TBLPHPPEMOHON.ID_KATEGORIPEMOHON = 1 THEN 'JPN'
+    WHEN TBLPHPPEMOHON.ID_KATEGORIPEMOHON = 2 THEN 'SSM'
+END AS KATEGORI_PEMOHON,
+TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA,'DD/MM/YYYY') AS TARIKH_MULA,
+TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT,'DD/MM/YYYY') AS TARIKH_TAMAT,
+TO_CHAR (TBLPHPBAYARANPERLUDIBAYAR.BAYARAN, '999,999,990.99') AS BAYARAN,
+TO_CHAR (SUM (NVL (DEBIT, 0)), '999,999,990.99') AS JUMLAH_SEWA,
+TO_CHAR (SUM (NVL (KREDIT, 0)), '999,999,990.99') AS JUMLAH_BAYARAN,
+TO_CHAR ((SUM (NVL (DEBIT, 0)) - SUM (NVL (KREDIT, 0))),'999,999,990.99') AS TUNGGAKAN,
+TO_NUMBER (CEIL ((SUM (NVL (DEBIT, 0)) - SUM (NVL (KREDIT, 0)))/ TBLPHPBAYARANPERLUDIBAYAR.BAYARAN), '999,999,990.99') AS BULAN,
+TBLABT.USIAABT AS BIL_TUNGGAKAN, TBLRUJSUBURUSAN.NAMA_SUBURUSAN, TBLPHPRUJJENISTUJUAN.KETERANGAN, TBLPHPHASIL.TUJUAN, TBLRUJNEGERI.NAMA_NEGERI, TBLRUJKEMENTERIAN.NAMA_KEMENTERIAN,
+CASE
+       WHEN TBLPHPBAYARANPERLUDIBAYAR.FLAG_AKTIF = 'Y' THEN 'PERJANJIAN AKTIF'
+       ELSE 'PERJANJIAN TAMAT'
+END AS FLAG_AKTIF,
+UPPER(TBLPHPPEMOHON.ALAMAT1_TETAP) AS ALAMAT1_TETAP, UPPER(TBLPHPPEMOHON.ALAMAT2_TETAP) AS ALAMAT2_TETAP,
+UPPER(TBLPHPPEMOHON.ALAMAT3_TETAP) AS ALAMAT3_TETAP, TBLPHPPEMOHON.POSKOD_TETAP, UPPER(TBLRUJBANDAR.KETERANGAN) AS BANDAR_PEMOHON,
+UPPER(NN.NAMA_NEGERI) AS NEGERI_PEMOHON, TBLPHPPEMOHON.NO_RUJUKAN, (TAMAT.BULAN_TAMAT+TBLABT.USIAABT) AS USIA_ABT
+FROM TBLPHPAKAUN AKAUN, TBLPHPHASIL, TBLPFDFAIL,TBLPHPPEMOHON, TBLRUJURUSAN, TBLRUJSUBURUSAN,
+TBLPHPBAYARANPERLUDIBAYAR,
+(SELECT MONTHS_BETWEEN(SYSDATE,MAX(TARIKH)) AS USIAABT, ID_HASIL
+  FROM TBLPHPAKAUN WHERE ID_JENISBAYARAN = 10 AND FLAG_AKTIF = 'Y'
+  AND ID_JENISTRANSAKSI = 2 GROUP BY ID_HASIL
+) ABT,
+(SELECT TO_CHAR(MONTHS_BETWEEN(SYSDATE,MAX(TARIKH_TAMAT)),'9990') AS BULAN_TAMAT, ID_HASIL
+  FROM TBLPHPBAYARANPERLUDIBAYAR WHERE FLAG_AKTIF = 'Y'
+  GROUP BY ID_HASIL
+) TAMAT,
+(SELECT SUM (NVL (DEBIT, 0) - NVL (KREDIT, 0)) AS TOTAL, TBLPHPAKAUN.ID_HASIL FROM TBLPHPAKAUN
+  WHERE ID_JENISBAYARAN = 10 AND FLAG_AKTIF = 'Y'
+  GROUP BY TBLPHPAKAUN.ID_HASIL
+) TBLPHPAKAUN_TEMP,
+(SELECT TBLPHPHASIL.ID_HASIL, TBLPHPBAYARANPERLUDIBAYAR.BAYARAN,
+  TO_NUMBER (CEIL((SUM (NVL (AKAUN.DEBIT, 0)) - SUM (NVL (AKAUN.KREDIT, 0))) / TBLPHPBAYARANPERLUDIBAYAR.BAYARAN), '999,999,990.99') AS USIAABT
+  FROM TBLPHPAKAUN AKAUN, TBLPHPHASIL, TBLPFDFAIL, TBLPHPBAYARANPERLUDIBAYAR
+  WHERE TBLPHPHASIL.ID_FAIL = TBLPFDFAIL.ID_FAIL(+)
+  AND AKAUN.ID_HASIL = TBLPHPHASIL.ID_HASIL
+  AND TBLPHPHASIL.ID_HASIL = TBLPHPBAYARANPERLUDIBAYAR.ID_HASIL(+)
+  AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_PERJANJIAN = 'U'
+  AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_AKTIF = 'Y'
+  AND TBLPHPBAYARANPERLUDIBAYAR.BAYARAN > 0
+  AND AKAUN.ID_JENISBAYARAN = 10
+  AND AKAUN.FLAG_AKTIF = 'Y'
+  AND AKAUN.TARIKH BETWEEN TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA AND TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT
+  GROUP BY TBLPHPBAYARANPERLUDIBAYAR.BAYARAN, TBLPHPHASIL.ID_HASIL
+) TBLABT,
+TBLPHPRUJJENISTUJUAN, TBLPHPPERMOHONANTUJUAN, TBLPHPPERMOHONANSEWA, TBLPERMOHONAN,
+TBLRUJNEGERI, TBLRUJKEMENTERIAN, TBLRUJNEGERI NN, TBLRUJBANDAR
+WHERE TBLPHPHASIL.ID_FAIL = TBLPFDFAIL.ID_FAIL(+)
+AND TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL (+)
+AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPPERMOHONANSEWA.ID_PERMOHONAN(+)
+AND TBLPHPPERMOHONANSEWA.ID_PHPPERMOHONANSEWA = TBLPHPPERMOHONANTUJUAN.ID_PHPPERMOHONANSEWA(+)
+AND TBLPHPPERMOHONANTUJUAN.ID_JENISTUJUAN = TBLPHPRUJJENISTUJUAN.ID_JENISTUJUAN(+)
+AND AKAUN.ID_HASIL = TBLPHPHASIL.ID_HASIL
+AND TBLPHPHASIL.ID_HASIL = ABT.ID_HASIL(+)
+AND TBLPHPHASIL.ID_PEMOHON = TBLPHPPEMOHON.ID_PEMOHON(+)
+AND TBLPFDFAIL.ID_SUBURUSAN = TBLRUJSUBURUSAN.ID_SUBURUSAN(+)
+AND TBLRUJSUBURUSAN.ID_URUSAN = TBLRUJURUSAN.ID_URUSAN(+)
+AND TBLPHPHASIL.ID_HASIL = TBLPHPBAYARANPERLUDIBAYAR.ID_HASIL(+)
+AND TBLPHPAKAUN_TEMP.ID_HASIL = TBLPHPHASIL.ID_HASIL
+AND TBLPHPHASIL.ID_HASIL = TBLABT.ID_HASIL(+)
+AND TBLPFDFAIL.ID_NEGERI = TBLRUJNEGERI.ID_NEGERI(+)
+AND TBLPHPPEMOHON.ID_NEGERITETAP = NN.ID_NEGERI(+)
+AND TBLPHPPEMOHON.ID_BANDARTETAP = TBLRUJBANDAR.ID_BANDAR(+)
+AND TBLPFDFAIL.ID_KEMENTERIAN = TBLRUJKEMENTERIAN.ID_KEMENTERIAN(+)
+AND TBLPHPHASIL.ID_HASIL = TAMAT.ID_HASIL
+AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_PERJANJIAN = 'U'
+AND TBLPHPBAYARANPERLUDIBAYAR.FLAG_AKTIF = 'Y'
+AND TBLPHPBAYARANPERLUDIBAYAR.BAYARAN > 0
+AND AKAUN.ID_JENISBAYARAN = 10
+AND AKAUN.FLAG_AKTIF = 'Y'
+AND TBLPHPAKAUN_TEMP.TOTAL > 0
+AND TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT < SYSDATE
+AND TBLPHPBAYARANPERLUDIBAYAR.BAYARAN > 0
+AND TBLABT.USIAABT > 0
+AND ((CAST(1 AS INT) = 1 AND CAST(1 AS INT) NOT IN('7', '8')
+      AND CEIL(TBLPHPAKAUN_TEMP.TOTAL / TBLPHPBAYARANPERLUDIBAYAR.BAYARAN) > $P!{USIA_ABT_DARI}
+      AND (TAMAT.BULAN_TAMAT+TBLABT.USIAABT) <= $P!{USIA_ABT_HINGGA})
+      OR (CAST(1 AS INT) = '7' AND TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT BETWEEN TO_DATE('','DD/MM/YYYY') AND TO_DATE('','DD/MM/YYYY'))
+      OR (CAST(1 AS INT) = '8' AND TO_CHAR(TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA,'YYYY') = ''))
+GROUP BY TBLPFDFAIL.NO_FAIL, TBLPHPHASIL.ID_HASIL, TBLPHPPEMOHON.NAMA, TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA,
+TBLPHPBAYARANPERLUDIBAYAR.TARIKH_TAMAT, TBLPHPBAYARANPERLUDIBAYAR.BAYARAN,
+TBLRUJSUBURUSAN.NAMA_SUBURUSAN, TBLPHPRUJJENISTUJUAN.KETERANGAN,
+TBLPHPHASIL.TUJUAN, ABT.USIAABT, TBLRUJNEGERI.NAMA_NEGERI, TBLRUJKEMENTERIAN.NAMA_KEMENTERIAN,
+TBLPHPBAYARANPERLUDIBAYAR.FLAG_AKTIF, TBLPHPPEMOHON.ALAMAT1_TETAP, TBLPHPPEMOHON.ALAMAT2_TETAP,
+TBLPHPPEMOHON.ALAMAT3_TETAP, TBLPHPPEMOHON.POSKOD_TETAP, TBLRUJBANDAR.KETERANGAN, NN.NAMA_NEGERI,
+TBLPHPPEMOHON.ID_KATEGORIPEMOHON, TBLPHPPEMOHON.NO_RUJUKAN, TBLABT.USIAABT, TAMAT.BULAN_TAMAT
+ORDER BY TBLRUJNEGERI.NAMA_NEGERI ASC, TBLPHPBAYARANPERLUDIBAYAR.TARIKH_MULA DESC]]>
+	</queryString>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NAMA" class="java.lang.String"/>
+	<field name="ID_HASIL" class="java.math.BigDecimal"/>
+	<field name="KATEGORI_PEMOHON" class="java.lang.String"/>
+	<field name="TARIKH_MULA" class="java.lang.String"/>
+	<field name="TARIKH_TAMAT" class="java.lang.String"/>
+	<field name="BAYARAN" class="java.lang.String"/>
+	<field name="JUMLAH_SEWA" class="java.lang.String"/>
+	<field name="JUMLAH_BAYARAN" class="java.lang.String"/>
+	<field name="TUNGGAKAN" class="java.lang.String"/>
+	<field name="BULAN" class="java.math.BigDecimal"/>
+	<field name="BIL_TUNGGAKAN" class="java.math.BigDecimal"/>
+	<field name="NAMA_SUBURUSAN" class="java.lang.String"/>
+	<field name="KETERANGAN" class="java.lang.String"/>
+	<field name="TUJUAN" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="NAMA_KEMENTERIAN" class="java.lang.String"/>
+	<field name="FLAG_AKTIF" class="java.lang.String"/>
+	<field name="ALAMAT1_TETAP" class="java.lang.String"/>
+	<field name="ALAMAT2_TETAP" class="java.lang.String"/>
+	<field name="ALAMAT3_TETAP" class="java.lang.String"/>
+	<field name="POSKOD_TETAP" class="java.lang.String"/>
+	<field name="BANDAR_PEMOHON" class="java.lang.String"/>
+	<field name="NEGERI_PEMOHON" class="java.lang.String"/>
+	<field name="NO_RUJUKAN" class="java.lang.String"/>
+	<field name="USIA_ABT" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="35" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement key="staticText" x="0" y="0" width="750" height="16" uuid="b59004b5-b93c-48bf-a805-ece579030996"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bookman Old Style" isBold="true" isUnderline="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["SENARAI PENDEPOSIT PENYEWA BAGI TAHUN "+($P{TAHUN}!=null ? $P{TAHUN}:"")]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="47" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText" mode="Opaque" x="137" y="0" width="151" height="47" backcolor="#CCCCCC" uuid="4e5c6d2d-045e-48be-8d87-9c2f523339bc"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NAMA PENYEWA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText" mode="Opaque" x="0" y="0" width="25" height="47" backcolor="#CCCCCC" uuid="509c0446-811e-44e6-a4f1-46e3ac8419de"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[BIL.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText" mode="Opaque" x="25" y="0" width="112" height="47" backcolor="#CCCCCC" uuid="c050aa28-3a44-4ec4-85cc-8ab056fee9bb"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO. FAIL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-3" mode="Opaque" x="681" y="0" width="79" height="47" backcolor="#CCCCCC" uuid="d01775d4-a135-4da0-b3c5-7386ca034ce0"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[JUMLAH (RM)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText" mode="Opaque" x="288" y="0" width="112" height="47" backcolor="#CCCCCC" uuid="6550de6d-6c0b-4b0a-8e71-83469bc4cfa0"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NO PENGENALAN / PENDAFTARAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText" mode="Opaque" x="400" y="0" width="112" height="47" backcolor="#CCCCCC" uuid="6550de6d-6c0b-4b0a-8e71-83469bc4cfa0"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[TEMPOH PERJANJIAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText" mode="Opaque" x="512" y="0" width="169" height="47" backcolor="#CCCCCC" uuid="6550de6d-6c0b-4b0a-8e71-83469bc4cfa0"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ALAMAT SURAT-MENYURAT]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="50" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="0" width="25" height="50" uuid="907d3fd4-9301-40ba-bd26-354af75d1432"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" x="137" y="0" width="151" height="50" uuid="3c890dc2-8b0c-4ed1-9f28-e6e528d6c5cc"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA} == null ? "" : "" + $F{NAMA})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" x="25" y="0" width="112" height="50" uuid="de020654-6590-457a-9e5c-702441fd5d55"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_FAIL} == null ? "" : " " + $F{NO_FAIL})]]></textFieldExpression>
+			</textField>
+			<textField pattern="RM (#,###,###.##)" isBlankWhenNull="true">
+				<reportElement key="textField-4" x="681" y="0" width="79" height="50" uuid="006281e8-e25c-4bf7-b979-97506d1f0570"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{JUMLAH_BAYARAN}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement key="textField" x="288" y="0" width="112" height="50" uuid="82cc88de-9a34-4f2d-94a1-232d31eced49"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NAMA_SUBURUSAN}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement key="textField" x="400" y="0" width="112" height="50" uuid="82cc88de-9a34-4f2d-94a1-232d31eced49"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{TARIKH_MULA} + " - " + $F{TARIKH_TAMAT}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement key="textField" x="512" y="0" width="169" height="50" uuid="82cc88de-9a34-4f2d-94a1-232d31eced49"/>
+				<box topPadding="5" leftPadding="2" bottomPadding="5" rightPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{ALAMAT1_TETAP} != null ? $F{ALAMAT1_TETAP} + "\n" : "")
++($F{ALAMAT2_TETAP} != null ? $F{ALAMAT2_TETAP} + "\n" : "")
++($F{ALAMAT3_TETAP} !=null ? $F{ALAMAT3_TETAP} + "\n" : "")
++($F{POSKOD_TETAP} != null ? $F{POSKOD_TETAP} + " ": "")
++($F{BANDAR_PEMOHON} != null ? $F{BANDAR_PEMOHON} + "\n": "")
++($F{NEGERI_PEMOHON} != null ? $F{NEGERI_PEMOHON} : "")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="20" splitType="Stretch"/>
+	</noData>
+</jasperReport>
