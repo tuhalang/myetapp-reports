@@ -3,8 +3,8 @@
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="2.1435888100000065"/>
-	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="405"/>
+	<property name="ireport.x" value="1"/>
+	<property name="ireport.y" value="288"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -41,19 +41,13 @@ CASE WHEN $P!{JENISNOFAIL} = 1 THEN TBLPFDFAIL.NO_FAIL WHEN $P!{JENISNOFAIL} = 2
         WHEN SUBSTR(ROUND(TBLPHPHAKMILIK.LUAS,4),1,1) = '.' THEN '0'|| ROUND(TBLPHPHAKMILIK.LUAS,4)
         WHEN SUBSTR(ROUND(TBLPHPHAKMILIK.LUAS,4),1,1) != '.' THEN '' || ROUND(TBLPHPHAKMILIK.LUAS,4)
     END AS LUAS_BERSAMAAN,
-    CASE
-        WHEN TBLPHPHAKMILIK.ID_LOT = '1' THEN 'No. Lot'
-        WHEN TBLPHPHAKMILIK.ID_LOT = '3' THEN 'No. PT'
-       END AS JENIS_LOT,
+    TBLRUJLOT.KETERANGAN AS JENIS_LOT,
     TBLPHPHAKMILIK.NO_LOT AS LOT,
     CASE
         WHEN TBLPHPHAKMILIK.NO_WARTA IS NULL THEN TBLRUJJENISHAKMILIK.KOD_JENIS_HAKMILIK ||' '||TBLPHPHAKMILIK.NO_HAKMILIK
         WHEN TBLPHPHAKMILIK.NO_HAKMILIK IS NULL THEN TBLPHPHAKMILIK.NO_WARTA
        END AS NO_HAK,
-     CASE
-        WHEN TBLPHPHAKMILIK.NO_WARTA IS NULL THEN 'No. Hakmilik'
-        WHEN TBLPHPHAKMILIK.NO_HAKMILIK IS NULL THEN 'No. Rizab'
-       END AS JENIS_TANAH,
+       TBLRUJJENISHAKMILIK.KOD_JENIS_HAKMILIK AS JENIS_TANAH,
        REPLACE(INITCAP(REPLACE(TRIM(TBLRUJPEJABAT.NAMA_PEJABAT),'&','&#38;')),',')  AS NAMAPEJABAT_JPPH,
        REPLACE(INITCAP(REPLACE(TRIM(TBLRUJPEJABAT.ALAMAT1),'&','&#38;')),',')  AS ALAMAT1_JPPH,
        REPLACE(INITCAP(REPLACE(TRIM(TBLRUJPEJABAT.ALAMAT2),'&','&#38;')),',')  AS ALAMAT2_JPPH,
@@ -75,7 +69,13 @@ CASE WHEN $P!{JENISNOFAIL} = 1 THEN TBLPFDFAIL.NO_FAIL WHEN $P!{JENISNOFAIL} = 2
             WHEN TO_CHAR(SYSDATE,'MM')=10 THEN 'Oktober' ||' '|| TO_CHAR(SYSDATE,'YYYY')
             WHEN TO_CHAR(SYSDATE,'MM')=11 THEN 'November' ||' '|| TO_CHAR(SYSDATE,'YYYY')
             WHEN TO_CHAR(SYSDATE,'MM')=12 THEN 'Disember' ||' '|| TO_CHAR(SYSDATE,'YYYY')
-         END AS TARIKH_HARI_INI
+         END AS TARIKH_HARI_INI,
+       'Jabatan Perancangan Bandar'  AS NAMAPEJABAT_DBKL,
+       'Dewan Bandaraya Kuala Lumpur'  AS ALAMAT1_DBKL,
+       'Tingkat 7-10, Menara DBKL 1'  AS ALAMAT2_DBKL,
+       'Jalan Raja Laut' AS ALAMAT3_DBKL,
+       '50350' AS POSKOD_DBKL
+
 FROM TBLPFDFAIL,
 TBLPERMOHONAN,
 TBLPHPHAKMILIKPERMOHONAN,
@@ -92,8 +92,10 @@ TBLRUJLUAS,
 TBLRUJDAERAH DAERAHJPPH,
 TBLRUJNEGERI NEGERIJPPH,
 TBLRUJNEGERI PEMOHONNEGERI,
-TBLRUJBANDAR PEMOHONBANDAR
+TBLRUJBANDAR PEMOHONBANDAR,
+TBLRUJLOT
 WHERE TBLPFDFAIL.ID_FAIL = TBLPERMOHONAN.ID_FAIL
+AND TBLRUJLOT.ID_LOT = TBLPHPHAKMILIK.ID_LOT
 AND TBLPERMOHONAN.ID_PERMOHONAN = TBLPHPHAKMILIKPERMOHONAN.ID_PERMOHONAN
 AND TBLPHPHAKMILIKPERMOHONAN.ID_HAKMILIKPERMOHONAN = TBLPHPHAKMILIK.ID_HAKMILIKPERMOHONAN
 AND TBLPHPHAKMILIK.ID_NEGERI = TBLRUJPEJABATURUSAN.ID_NEGERIURUS
@@ -143,6 +145,11 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]>
 	<field name="DAERAH_JPPH" class="java.lang.String"/>
 	<field name="NEGERI_JPPH" class="java.lang.String"/>
 	<field name="TARIKH_HARI_INI" class="java.lang.String"/>
+	<field name="NAMAPEJABAT_DBKL" class="java.lang.String"/>
+	<field name="ALAMAT1_DBKL" class="java.lang.String"/>
+	<field name="ALAMAT2_DBKL" class="java.lang.String"/>
+	<field name="ALAMAT3_DBKL" class="java.lang.String"/>
+	<field name="POSKOD_DBKL" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -154,12 +161,12 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]>
 					<font fontName="Bookman Old Style" size="9" isBold="false" pdfFontName="Helvetica"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Pengarah Penilaian Negeri\n"
-+($F{NAMAPEJABAT_JPPH}!=null ? $F{NAMAPEJABAT_JPPH}+"\n":"")
-+($F{ALAMAT1_JPPH}!=null ? $F{ALAMAT1_JPPH}+"\n":"")
-+($F{ALAMAT2_JPPH}!=null ? $F{ALAMAT2_JPPH}+"\n":"")
-+($F{ALAMAT3_JPPH}!=null ? $F{ALAMAT3_JPPH}+"\n":"")
-+"<style isBold='true' isUnderline='true' pdfFontName='Helvetica-Bold'>"+($F{POSKOD}!=null ? $F{POSKOD}+" ":"")+($F{NEGERI_JPPH}!=null ? "WILAYAH PERSEKUTUAN KUALA LUMPUR"+"\n":"\n")+"</style>"
+				<textFieldExpression><![CDATA["Pengarah\n"
++($F{NAMAPEJABAT_DBKL}!=null ? $F{NAMAPEJABAT_DBKL}+"\n":"")
++($F{ALAMAT1_DBKL}!=null ? $F{ALAMAT1_DBKL}+"\n":"")
++($F{ALAMAT2_DBKL}!=null ? $F{ALAMAT2_DBKL}+"\n":"")
++($F{ALAMAT3_DBKL}!=null ? $F{ALAMAT3_DBKL}+"\n":"")
++"<style isBold='true' isUnderline='true' pdfFontName='Helvetica-Bold'>"+($F{POSKOD_DBKL}!=null ? $F{POSKOD_DBKL}+" ":"")+($F{NEGERI_JPPH}!=null ? "WILAYAH PERSEKUTUAN KUALA LUMPUR"+"\n":"\n")+"</style>"
 +"\n\nTuan/ Puan,\n"]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
@@ -210,9 +217,12 @@ AND TBLPFDFAIL.ID_FAIL = $P!{ID_FAIL}]]>
 					<font fontName="Bookman Old Style" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA["PT "+
+				<textFieldExpression><![CDATA[($F{JENIS_LOT}!=null?$F{JENIS_LOT}:"")+
+" "+
 ($F{LOT}!=null?$F{LOT}:"")+
-" HSD"+
+" "+
+($F{JENIS_TANAH}!=null?$F{JENIS_TANAH}:"")+
+" "+
 ($F{NO_HAK}!=null?$F{NO_HAK}:"")]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
