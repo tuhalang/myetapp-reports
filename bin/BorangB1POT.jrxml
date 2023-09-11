@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangB1POT" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="326397b7-fd5a-4458-9362-53d05398fb8f">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="idfail" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="os" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["1"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT DISTINCT
+                a.NO_FAIL,
+                UPPER(g.nama_simati) AS nama_simati,
+                NVL (g.nama_lain, '') AS nama_lain_simati,
+                CASE
+                   WHEN g.no_kp_baru IS NOT NULL
+                   AND LENGTH (RTRIM (g.no_kp_baru)) = 12
+                      THEN    SUBSTR (g.no_kp_baru, 1, 6)
+                           || '-'
+                           || SUBSTR (g.no_kp_baru, 7, 2)
+                           || '-'
+                           || SUBSTR (g.no_kp_baru, 9, 4)
+                END AS no_kp_baru,
+                CASE
+                   WHEN g.no_kp_lama IS NOT NULL
+                   --AND LENGTH (RTRIM (g.no_kp_lama)) = 8
+                      THEN g.no_kp_lama
+                END AS no_kp_lama,
+                CASE
+                   WHEN g.no_kp_lain IS NOT NULL
+                   AND g.no_kp_baru IS NULL
+                   AND g.no_kp_lama IS NULL
+                      THEN g.no_kp_lain
+                END AS no_kp_lain,
+               TO_CHAR (g.tarikh_mati, 'DD/MM/YYYY') AS tarikh_mati,
+               TO_CHAR (e.tarikh_perintah, 'DD/MM/YYYY') AS tarikh_perintah,
+               e.id_perintah,
+               CASE
+                    WHEN k.id_ob is not null AND l.id_ob is not null
+                    THEN
+                    (select nama_ob from tblppkob where id_ob=k.id_ob and rownum<=1 )
+                    ||'  (' || (select keterangan from tblppkrujjenisperintah where id_jenisperintah=H.ID_JENISPERINTAH) ||')'
+                    WHEN k.id_ob is not null AND l.id_ob is null
+                    THEN
+                    (select nama_ob from tblppkob where id_ob=k.id_ob and rownum<=1 )
+                    ||'  (' || (select keterangan from tblppkrujjenisperintah where id_jenisperintah=H.ID_JENISPERINTAH) ||')'
+                    ELSE
+                    (select nama_ob from tblppkob where id_ob=l.id_ob and rownum<=1 )
+                    ||'  (' || (select keterangan from tblppkrujjenisperintah where id_jenisperintah=I.ID_JENISPERINTAH) ||')'
+               END as NAMA_OB_HA_PERINTAH,  b.ID_DAERAHMHN
+FROM        tblpfdfail a,
+            tblppkpermohonan b,
+            tblppkkeputusanpermohonan c,
+            tblppkperbicaraan d,
+            tblppkperintah e,
+            tblppkpermohonansimati f,
+            tblppksimati g,
+            tblppkperintahhtaobmst h,
+            tblppkperintahhaobmst i,
+            tblppkrujjenisperintah j,
+            tblppkperintahhtaobdtl k,
+            tblppkperintahhaobdtl l
+            --tblppkob n
+WHERE       a.id_fail                   =   b.id_fail
+        and b.id_permohonan             =   c.ID_PERMOHONAN
+        and c.id_keputusanpermohonan    =   d.id_keputusanpermohonan
+        and d.id_perbicaraan            =   e.id_perbicaraan
+        and b.id_permohonan             =   f.ID_PERMOHONAN
+        and f.id_simati                 =   g.id_simati
+        and e.id_perintah               =   h.id_perintah(+)
+        and e.id_perintah               =   i.id_perintah(+)
+        and i.id_jenisperintah          =   j.id_jenisperintah(+)
+        and h.id_perintahhtaobmst       =   k.id_perintahhtaobmst(+)
+        and i.id_perintahhaobmst        =   l.id_perintahhaobmst(+)
+        and e.flag_jenis_keputusan      =   0
+        and b.id_fail=$P!{idfail}]]>
+	</queryString>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="NAMA_LAIN_SIMATI" class="java.lang.String"/>
+	<field name="NO_KP_BARU" class="java.lang.String"/>
+	<field name="NO_KP_LAMA" class="java.lang.String"/>
+	<field name="NO_KP_LAIN" class="java.lang.String"/>
+	<field name="TARIKH_MATI" class="java.lang.String"/>
+	<field name="TARIKH_PERINTAH" class="java.lang.String"/>
+	<field name="ID_PERINTAH" class="java.math.BigDecimal"/>
+	<field name="NAMA_OB_HA_PERINTAH" class="java.lang.String"/>
+	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="488" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-1" x="102" y="105" width="284" height="17" uuid="a52ebd53-1358-463f-b992-cae8cc015562"/>
+				<textElement>
+					<font fontName="Verdana" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_SIMATI}!=null ? $F{NAMA_SIMATI}:"")]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="false">
+				<reportElement key="textField-2" x="94" y="204" width="204" height="17" uuid="c8cfc468-9b41-47ea-877c-b4ab95911131"/>
+				<textElement>
+					<font fontName="Verdana" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TARIKH_MATI}!=null ? $F{TARIKH_MATI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-3" x="210" y="228" width="285" height="16" uuid="dbfda2ce-1704-46ff-8f77-dc1b85b9b3b6"/>
+				<textElement>
+					<font fontName="Verdana" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_FAIL}!=null ? $F{NO_FAIL}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-5" x="140" y="129" width="262" height="16" uuid="33fa4ebb-fd80-4e5b-9c6b-eed8004ede64"/>
+				<textElement>
+					<font fontName="Verdana" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_LAIN_SIMATI}!=null ? $F{NAMA_LAIN_SIMATI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-6" x="182" y="152" width="235" height="18" uuid="dd8419aa-1025-4339-9f89-2efa9f9f9129"/>
+				<textElement>
+					<font fontName="Verdana" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_KP_LAMA}!=null ? $F{NO_KP_LAMA}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-7" x="298" y="179" width="205" height="18" uuid="42e53f30-89b0-48c7-862c-a7cd7fc58544"/>
+				<textElement>
+					<font fontName="Verdana" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_KP_BARU}!=null ? $F{NO_KP_BARU}:"")]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
+				<reportElement key="textField-8" x="62" y="375" width="110" height="19" uuid="74302cf9-e01d-4425-8203-7bd2b4e695d2"/>
+				<textElement>
+					<font fontName="Verdana" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="363" y="251" width="161" height="17" uuid="469a947c-c05e-4115-ac57-9d102ccad6c7"/>
+				<textElement>
+					<font fontName="Verdana" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TARIKH_PERINTAH}!=null ? $F{TARIKH_PERINTAH}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement key="textField" x="73" y="290" width="458" height="13" isPrintWhenDetailOverflows="true" uuid="ef1b65f8-b896-446a-bf34-819f6e7c52cf"/>
+				<textElement>
+					<font fontName="Verdana" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA_OB_HA_PERINTAH}!=null ? $F{NAMA_OB_HA_PERINTAH}:"")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-1" x="163" y="11" width="235" height="20" uuid="4f5279b7-4738-43cf-9a2d-a1157d46f13c"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[PROBET DAN PENTADBIRAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-2" x="163" y="32" width="236" height="18" uuid="fa3da09b-26f4-469b-9414-5cc3da39488a"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NOTIS PENGELUARAN GERAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-3" x="11" y="105" width="91" height="17" uuid="6cd47d50-4d15-4755-b89a-e62b3bcfcca0"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[1. Nama si mati ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-4" x="11" y="129" width="129" height="16" uuid="73b31864-8696-435b-a4c8-6f7ffaff0c14"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[    Nama lain (jika ada)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-5" x="11" y="152" width="171" height="17" uuid="cbcdd180-e8a7-45b1-b828-e6104faf7e3b"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[2. No Kad Pengenalan si mati]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-6" x="11" y="179" width="287" height="18" uuid="170cdf5a-b3a5-4478-a9c7-a587000846c9"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[3. No Kad Pengenalan Mutu Tinggi si mati (jika ada)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-7" x="11" y="204" width="83" height="17" uuid="14f89b6a-b674-468d-8d5f-9663c04f0c5c"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[4. Tarikh mati]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-8" x="11" y="228" width="199" height="16" uuid="3dfccabd-6763-4f37-b05c-b9b8711ba7fd"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[5. Nombor Petisyen dan Mahkamah]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-9" x="11" y="251" width="352" height="17" uuid="8bd9cece-bc8f-4e99-a8ac-819c3b5c65fd"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[6. Tarikh yang Geran dikeluarkan/Perintah Pembahagian dibuat]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-10" x="10" y="275" width="524" height="36" uuid="4347cfa7-63db-469f-a1cb-971a1d48a3fb"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[7. Nama dan hak orang yang geran dikeluarkan atau Perintah Pembahagian dibuat memihak   kepadanya]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-11" x="13" y="374" width="49" height="19" uuid="6e104b28-51c6-4c6c-8f63-ef130daf0ff2"/>
+				<textElement>
+					<font fontName="Arial" size="12" isItalic="true" pdfFontName="Helvetica-Oblique"/>
+				</textElement>
+				<text><![CDATA[Tarikh :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-12" x="322" y="374" width="202" height="20" uuid="b2426e61-3ef7-4011-b000-bde14e3764aa"/>
+				<text><![CDATA[.................................................................]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-13" x="322" y="387" width="201" height="20" uuid="bd619569-1704-4fdc-8f65-350e49bc762a"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="12" isItalic="true" pdfFontName="Helvetica-Oblique"/>
+				</textElement>
+				<text><![CDATA[Pendaftar /PKP/ PTD/ PPK]]></text>
+			</staticText>
+			<image>
+				<reportElement key="image-1" positionType="Float" x="268" y="342" width="95" height="64" uuid="e616e95c-96d2-41c8-92f1-23910067f302"/>
+				<imageExpression><![CDATA[$P{os}.equals("0")
+? $P{ReportDir} +"//ppk//COP\\"+$F{ID_DAERAHMHN}+".png"
+: $P{ReportDir} + File.separator+"ppk"+File.separator+"COP"+File.separator+$F{ID_DAERAHMHN}+".png"]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Prevent"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BorangS_subreport"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idsimati" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idOB" isForPrompting="true" class="java.math.BigDecimal"/>
+	<parameter name="idperbicaraan" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT ROWNUM as NO_OB,a.* from (
+SELECT UPPER(NVL(TBLPPKOB.NAMA_OB,' ')) AS NAMA_OB,TBLPPKOB.UMUR,TBLPPKOB.ID_TARAFKPTG,
+         CASE
+            WHEN TBLPPKNOTISOB.ID_OB = $P!{idOB}
+            AND TBLPPKOB.ALAMAT1_SURAT IS NOT NULL
+               THEN REPLACE(UPPER(REPLACE(TRIM(TBLPPKOB.ALAMAT1_SURAT),'&','&#38;')),',')
+            ELSE ''
+         END AS ALAMAT1_SURAT,
+         CASE
+            WHEN TBLPPKNOTISOB.ID_OB = $P!{idOB}
+            AND TBLPPKOB.ALAMAT2_SURAT IS NOT NULL
+               THEN REPLACE(UPPER(REPLACE(TRIM(TBLPPKOB.ALAMAT2_SURAT),'&','&#38;')),',')
+            ELSE ' '
+         END AS ALAMAT2_SURAT,
+         CASE
+            WHEN TBLPPKNOTISOB.ID_OB = $P!{idOB}
+            AND TBLPPKOB.ALAMAT3_SURAT IS NOT NULL
+               THEN REPLACE(UPPER(REPLACE(TRIM(TBLPPKOB.ALAMAT3_SURAT),'&','&#38;')),',')
+            ELSE '' 
+         END AS ALAMAT3_SURAT,
+         CASE
+            WHEN TBLPPKNOTISOB.ID_OB = $P!{idOB}
+            AND TBLPPKOB.ID_BANDARSURAT IS NOT NULL AND TBLRUJBANDAR.KETERANGAN <> 'TIADA MAKLUMAT'
+               THEN UPPER(NVL(TRIM(TBLRUJBANDAR.KETERANGAN),''))
+            ELSE ''
+         END AS KETERANGAN,
+         CASE
+            WHEN TBLPPKNOTISOB.ID_OB = $P!{idOB}
+            AND TBLPPKOB.POSKOD_SURAT IS NOT NULL
+               THEN NVL(TRIM(TBLPPKOB.POSKOD_SURAT),'')
+            ELSE '' 
+         END AS POSKOD_SURAT,
+         CASE
+            WHEN TBLPPKNOTISOB.ID_OB = $P!{idOB}
+            AND TBLPPKOB.ID_NEGERISURAT IS NOT NULL AND TBLRUJNEGERI.NAMA_NEGERI <> 'TIADA MAKLUMAT'
+               THEN UPPER(NVL(TRIM(TBLRUJNEGERI.NAMA_NEGERI),''))
+            ELSE ''
+         END AS NAMA_NEGERI,
+         NVL(TBLPPKNOTISOB.FLAG_CETAK,'') AS FLAG_CETAK   
+    FROM TBLPPKOB,
+         TBLPPKPERMOHONAN,
+         TBLPFDFAIL,
+         TBLRUJNEGERI,
+         TBLRUJBANDAR,
+         TBLPPKKEPUTUSANPERMOHONAN,
+         TBLPPKNOTISOB,
+         TBLPPKPERBICARAAN,
+         TBLPPKPEMOHON
+   WHERE TBLPPKPEMOHON.ID_PEMOHON = TBLPPKPERMOHONAN.ID_PEMOHON
+         AND TBLPPKPERMOHONAN.ID_FAIL=TBLPFDFAIL.ID_FAIL
+         AND TBLPPKPERMOHONAN.ID_PERMOHONAN =TBLPPKKEPUTUSANPERMOHONAN.ID_PERMOHONAN
+         AND TBLPPKKEPUTUSANPERMOHONAN.ID_KEPUTUSANPERMOHONAN = TBLPPKPERBICARAAN.ID_KEPUTUSANPERMOHONAN
+         AND TBLPPKPERBICARAAN.ID_PERBICARAAN = TBLPPKNOTISOB.ID_PERBICARAAN
+         AND TBLPPKNOTISOB.ID_OB = TBLPPKOB.ID_OB
+         AND TBLPPKOB.ID_BANDARSURAT = TBLRUJBANDAR.ID_BANDAR(+)
+         AND TBLPPKOB.ID_NEGERI = TBLRUJNEGERI.ID_NEGERI(+)
+         AND (TBLPPKNOTISOB.FLAG_CETAK IS NULL OR  TBLPPKNOTISOB.FLAG_CETAK = 0)
+         AND (TBLPPKOB.UMUR IS NULL OR TBLPPKOB.UMUR >= 18)
+         AND TBLPFDFAIL.ID_FAIL = $P!{idfail}
+     AND TBLPPKPERBICARAAN.ID_PERBICARAAN =$P!{idperbicaraan}
+         GROUP BY TBLPPKOB.ID_BANDARSURAT,TBLPPKNOTISOB.ID_OB, TBLPPKOB.NAMA_OB,TBLPPKOB.ALAMAT1_SURAT,TBLPPKOB.ALAMAT2_SURAT,TBLPPKOB.UMUR,
+         TBLPPKOB.ALAMAT3_SURAT,TBLPPKOB.POSKOD_SURAT, TBLRUJBANDAR.KETERANGAN, TBLRUJNEGERI.NAMA_NEGERI,TBLPPKOB.ID_NEGERISURAT,TBLPPKNOTISOB.FLAG_CETAK, TBLPPKOB.ID_TARAFKPTG
+ORDER BY REPLACE(TBLPPKNOTISOB.ID_OB,$P!{idOB},1)
+)a]]></queryString>
+
+	<field name="NO_OB" class="java.math.BigDecimal"/>
+	<field name="NAMA_OB" class="java.lang.String"/>
+	<field name="UMUR" class="java.math.BigDecimal"/>
+	<field name="ID_TARAFKPTG" class="java.math.BigDecimal"/>
+	<field name="ALAMAT1_SURAT" class="java.lang.String"/>
+	<field name="ALAMAT2_SURAT" class="java.lang.String"/>
+	<field name="ALAMAT3_SURAT" class="java.lang.String"/>
+	<field name="KETERANGAN" class="java.lang.String"/>
+	<field name="POSKOD_SURAT" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="FLAG_CETAK" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="12"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="1"
+						width="450"
+						height="11"
+						key="textField-7"
+						isRemoveLineWhenBlank="true">
+							<printWhenExpression><![CDATA[new Boolean( (($F{NAMA_OB} != null)) || (!($F{NAMA_OB}.equals(" "))) )]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Kepada :"]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="99"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="11"
+						y="16"
+						width="450"
+						height="11"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NO_OB}+". "+($F{NAMA_OB}!= null ? $F{NAMA_OB}:" ")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="28"
+						width="400"
+						height="11"
+						key="textField-2"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ALAMAT1_SURAT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="40"
+						width="400"
+						height="10"
+						key="textField-3"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ALAMAT2_SURAT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="51"
+						width="400"
+						height="10"
+						key="textField-4"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ALAMAT3_SURAT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="62"
+						width="400"
+						height="13"
+						key="textField-5"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{POSKOD_SURAT}!= null ? $F{POSKOD_SURAT}:"")+" "+($F{KETERANGAN}!= null ? $F{KETERANGAN}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="21"
+						y="76"
+						width="400"
+						height="10"
+						key="textField-6"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement markup="styled">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["<style isBold='true' isUnderline='true' pdfFontName='Helvetica-Bold'>"+($F{NAMA_NEGERI}!= null ? $F{NAMA_NEGERI}:" ")+"</style>"]]></textFieldExpression>
+				</textField>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="21"
+						y="87"
+						width="400"
+						height="11"
+						key="subreport-1"
+						positionType="Float"
+						isRemoveLineWhenBlank="true">
+							<printWhenExpression><![CDATA[new Boolean(($F{ID_TARAFKPTG}.intValue()!=8))]]></printWhenExpression>
+						</reportElement>
+					<subreportParameter  name="idfail">
+						<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="idperbicaraan">
+						<subreportParameterExpression><![CDATA[""+$P{idperbicaraan}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{ReportDir} + "//ppk//BorangD_subreport0Count.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

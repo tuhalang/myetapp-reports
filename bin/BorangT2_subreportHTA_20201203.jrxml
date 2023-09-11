@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangT2_subreportHTA" pageWidth="535" pageHeight="802" columnWidth="535" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="4f78b02c-18e5-4782-b6db-b629f1bc1319">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="idPerintah" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="PAGE_NUMBER" class="java.lang.Integer" isForPrompting="false"/>
+	<parameter name="namaNegeri" class="java.lang.String"/>
+	<parameter name="idPerintahHTAOBMST" class="java.lang.String"/>
+	<parameter name="hariBicara" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="bulanBicara" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="tahunBicara" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ID_PERINTAHHAOBMST" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT DISTINCT to_char(A.ID_PERINTAHHTAOBMST) ID_PERINTAHHTAOBMST ,
+       C.KOD_JENIS_HAKMILIK, B.NO_HAKMILIK,B.NO_PT,
+       B.BA_SIMATI, B.BB_SIMATI, D.NAMA_DAERAH,B.ID_HTA,
+       E.NAMA_MUKIM,B.CATATAN,REPLACE(REPLACE(REPLACE(REPLACE((A.CATATAN),'<br />',''),'&nbsp;',' '),'<p>',''),'</p>','')AS CATATAN_B,
+  CASE
+	WHEN B.CATATAN IS NOT NULL AND B.JENIS_HTA = 'Y' AND A.FLAG_BATAL = 'BB' THEN C.KOD_JENIS_HAKMILIK || B.NO_HAKMILIK || chr(10) || B.NO_PT || chr(10) || A.BA_WARIS || '/' || A.BB_WARIS || 'bhg' || chr(10) || chr(10) || '(' || B.CATATAN || ')'
+	WHEN B.CATATAN IS NOT NULL AND B.JENIS_HTA = 'Y' AND A.FLAG_BATAL IS NULL THEN C.KOD_JENIS_HAKMILIK || B.NO_HAKMILIK || chr(10) || B.NO_PT || chr(10) || B.BA_SIMATI || '/' || B.BB_SIMATI || 'bhg' || chr(10) || chr(10) || '(' || B.CATATAN || ')'
+        WHEN B.CATATAN IS NOT NULL AND B.JENIS_HTA = 'T' THEN B.BA_SIMATI || '/' || B.BB_SIMATI || 'bhg' || chr(10) || chr(10) || '(' || B.CATATAN || ')'
+
+	WHEN B.CATATAN IS NULL AND B.JENIS_HTA = 'Y' AND A.FLAG_BATAL = 'BB' THEN C.KOD_JENIS_HAKMILIK || B.NO_HAKMILIK || chr(10) || B.NO_PT || chr(10) || A.BA_WARIS || '/' || A.BB_WARIS || 'bhg'
+	WHEN B.CATATAN IS NULL AND B.JENIS_HTA = 'Y' AND A.FLAG_BATAL IS NULL THEN C.KOD_JENIS_HAKMILIK || B.NO_HAKMILIK || chr(10) || B.NO_PT || chr(10) || B.BA_SIMATI || '/' || B.BB_SIMATI || 'bhg'
+ WHEN B.CATATAN IS NULL AND B.JENIS_HTA = 'Y' AND A.FLAG_BATAL = 'BL' THEN C.KOD_JENIS_HAKMILIK || B.NO_HAKMILIK || chr(10) || B.NO_PT || chr(10) || A.BA_WARIS || '/' || A.BB_WARIS || 'bhg'
+ WHEN B.CATATAN IS NULL AND B.JENIS_HTA = 'T' THEN B.BA_SIMATI || '/' || B.BB_SIMATI || 'bhg'
+  END AS MAKLUMAT_HTA,
+
+  F.STATUS_PEMILIKAN STATUS_PEMILIKAN, -- add on 16/12/2016
+  --F.ID_PERMOHONANSIMATI ID_PERMOHONANSIMATI, -- add on 16/12/2016
+  G.NAMA_SIMATI NAMA_SIMATI, -- add on 16/12/2016
+    CASE
+    WHEN LENGTH(AAA.NO_KP1)<12 THEN  ''||RTRIM(AAA.NO_KP1)||''
+    WHEN LENGTH(RTRIM(AAA.NO_KP1))=12 THEN SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4)
+    ELSE SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4)  ||' ('||SUBSTR(AAA.NO_KP1,13,LENGTH(AAA.NO_KP1))||')'
+    END  AS KP_SIMATI -- add on 16/12/2016
+
+  FROM TBLPPKPERINTAHHTAOBMST A,
+       TBLPPKHTA B,
+       TBLRUJJENISHAKMILIK C,
+       TBLRUJDAERAH D,
+       TBLRUJMUKIM E,
+
+       TBLPPKHTAPERMOHONAN F, -- add on 16/12/2016
+       TBLPPKSIMATI G, -- add on 16/12/2016
+       (SELECT
+        CASE
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAIN IS NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+         ELSE TBLPPKSIMATI.NO_KP_BARU
+        END || '' ||
+        CASE
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NOT NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN TBLPPKSIMATI.NO_KP_LAMA
+        END || '' ||
+        CASE
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS  NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN TBLPPKSIMATI.NO_KP_LAIN
+        END AS NO_KP1, ID_SIMATI
+       FROM TBLPPKSIMATI ) AAA, -- add on 16/12/2016
+ TBLPPKPERMOHONANSIMATI H, TBLPPKPERMOHONAN I, TBLPFDFAIL J --add 3/3/2017
+ WHERE A.ID_JENISPERINTAH IN (1,7)
+        AND B.ID_HTA = A.ID_HTA
+        AND B.ID_DAERAH = D.ID_DAERAH
+        AND B.ID_MUKIM = E.ID_MUKIM
+        AND B.ID_JENISHM = C.ID_JENISHAKMILIK(+)
+        AND A.FLAG_HARTA = 'B'
+        AND A.ID_PERINTAH LIKE  '$P!{idPerintah}'
+
+        AND F.ID_HTA = A.ID_HTA -- add on 16/12/2016
+ AND F.STATUS_PEMILIKAN = B.STATUS_PEMILIKAN
+        AND G.ID_SIMATI = B.ID_SIMATI -- add on 16/12/2016
+        AND G.ID_SIMATI = AAA.ID_SIMATI -- add on 16/12/2016
+
+
+
+        AND B.ID_SIMATI = H.ID_SIMATI --add 3/3/2017
+        AND H.ID_PERMOHONAN = I.ID_PERMOHONAN --add 3/3/2017
+        AND I.ID_FAIL = J.ID_FAIL --add 3/3/2017
+        AND (J.ID_URUSAN =382 AND J.ID_SUBURUSAN = 60) --add 3/3/2017
+        AND H.ID_PERMOHONANSIMATI = F.ID_PERMOHONANSIMATI --add 3/3/2017
+        --AND F.FLAG_SELESAI= 'T'   --commented on 26/04/2017 refer 2017_KEL_PPK_0034
+ order by B.ID_HTA]]>
+	</queryString>
+	<field name="ID_PERINTAHHTAOBMST" class="java.lang.String"/>
+	<field name="KOD_JENIS_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_HAKMILIK" class="java.lang.String"/>
+	<field name="NO_PT" class="java.lang.String"/>
+	<field name="BA_SIMATI" class="java.math.BigDecimal"/>
+	<field name="BB_SIMATI" class="java.math.BigDecimal"/>
+	<field name="NAMA_DAERAH" class="java.lang.String"/>
+	<field name="ID_HTA" class="java.math.BigDecimal"/>
+	<field name="NAMA_MUKIM" class="java.lang.String"/>
+	<field name="CATATAN" class="java.lang.String"/>
+	<field name="CATATAN_B" class="java.lang.String"/>
+	<field name="MAKLUMAT_HTA" class="java.lang.String"/>
+	<field name="STATUS_PEMILIKAN" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="KP_SIMATI" class="java.lang.String"/>
+	<variable name="PAGE_NUMBER_CURR" class="java.lang.Integer"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="16" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="d638ac63-14e5-4f4d-885e-505bc8a82e77" key="staticText-28" positionType="Float" x="0" y="0" width="450" height="16"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[HARTA TAK ALIH YANG KENA DIBAHAGIKAN]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="50" splitType="Stretch">
+			<rectangle>
+				<reportElement uuid="3e11eb67-203f-4955-87a4-79104bb470e1" key="rectangle-6" positionType="Float" mode="Transparent" x="1" y="1" width="450" height="48" isPrintWhenDetailOverflows="true"/>
+			</rectangle>
+			<staticText>
+				<reportElement uuid="cef285a1-dbe9-4979-bddc-0054cf414b44" key="staticText-31" positionType="Float" x="3" y="6" width="71" height="26" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[No. Hakmilik dan Lot]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="773f9b1b-fe21-4335-9ab3-e57645149e91" key="staticText-32" positionType="Float" x="77" y="6" width="64" height="26" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Mukim]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b029bc63-6c7b-4407-a4a8-fd2f42821266" key="staticText-33" positionType="Float" x="144" y="6" width="67" height="26" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Daerah]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="96e99c2c-4e58-4638-973c-0338d9bae7f0" key="staticText-34" positionType="Float" x="213" y="6" width="152" height="26" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Nama benefisiari dan No K/P]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e6761658-9191-4f4d-b8a9-6541441471aa" key="staticText-35" positionType="Float" x="380" y="6" width="69" height="38" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Bahagian yang kena didaftarkan]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="b7dab7fc-e431-49d6-b115-a41a927b7e6a" key="line-30" positionType="Float" x="75" y="1" width="1" height="48" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+			<line>
+				<reportElement uuid="8eba9871-371a-405f-b08e-c493217e55f7" key="line-31" positionType="Float" x="142" y="1" width="1" height="48" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+			<line>
+				<reportElement uuid="3204a15a-4179-4aa9-9307-273c00fb9292" key="line-32" positionType="Float" x="211" y="1" width="1" height="48" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+			<line>
+				<reportElement uuid="c6948d31-be53-4909-b834-c0cdf67d0224" key="line-33" positionType="Float" x="379" y="1" width="1" height="48" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="16" splitType="Stretch">
+			<rectangle>
+				<reportElement uuid="0843e9c1-7207-4342-917a-aee44509fdac" key="rectangle-9" stretchType="RelativeToBandHeight" mode="Transparent" x="1" y="-1" width="450" height="16" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true"/>
+			</rectangle>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="94bccfaf-4ca7-484e-8f78-12f9227194b0" key="textField-3" x="77" y="3" width="64" height="8"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NAMA_MUKIM}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="07c3c454-112e-4768-8007-0060c4cfebbb" key="textField-4" x="144" y="3" width="67" height="8"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NAMA_DAERAH}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement uuid="d97cded5-87a9-49a2-840d-67a54d45e87a" key="line-23" stretchType="RelativeToBandHeight" mode="Transparent" x="142" y="0" width="1" height="15" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+			<line>
+				<reportElement uuid="158ff645-4d78-423f-abd5-a264cf223ea6" key="line-24" stretchType="RelativeToBandHeight" mode="Transparent" x="211" y="0" width="1" height="15" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+			<line>
+				<reportElement uuid="8fe81b80-f1ea-4ad3-8db4-19fde3ccfd27" key="line-25" stretchType="RelativeToBandHeight" mode="Transparent" x="379" y="0" width="1" height="15" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="4128f0a2-5dea-4970-afe9-3356a1c79e75" key="textField" x="3" y="3" width="71" height="8" isRemoveLineWhenBlank="true"/>
+				<textElement>
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MAKLUMAT_HTA}]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement uuid="b0a6c938-e199-469a-9c4a-e395e15ef9a4" key="subreport-2" positionType="Float" x="218" y="11" width="159" height="0" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PAGE_NUMBER">
+					<subreportParameterExpression><![CDATA[$P{PAGE_NUMBER}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$P{namaNegeri}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWaris4OBHilang.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="eaefcde1-b570-4447-a0d0-7402d7ed7e5a" key="subreport-3" positionType="Float" x="218" y="10" width="159" height="0" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PAGE_NUMBER">
+					<subreportParameterExpression><![CDATA[$P{PAGE_NUMBER}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$P{namaNegeri}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWarisTripleOBHilang.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="4efffeb2-5bcf-4243-93ba-f6f09cbca807" key="subreport-4" positionType="Float" x="218" y="9" width="159" height="0" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PAGE_NUMBER">
+					<subreportParameterExpression><![CDATA[$P{PAGE_NUMBER}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$P{namaNegeri}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWarisDoubleOBHilang.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="4f3a1a1c-15a4-4b76-8d2c-ef5ef49f42ee" key="subreport-5" positionType="Float" x="218" y="8" width="159" height="0" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PAGE_NUMBER">
+					<subreportParameterExpression><![CDATA[$P{PAGE_NUMBER}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$P{namaNegeri}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangE_subreportWarisSinglePAOBHilang.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="d0f518ab-991e-48cc-8f9e-e6413a376492" key="subreport-6" positionType="Float" x="218" y="7" width="159" height="0" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PAGE_NUMBER">
+					<subreportParameterExpression><![CDATA[$P{PAGE_NUMBER}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$P{namaNegeri}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWaris4.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="8c640575-c1f2-4c55-a16c-db8c54cadfb3" key="subreport-7" positionType="Float" x="218" y="6" width="159" height="0" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PAGE_NUMBER">
+					<subreportParameterExpression><![CDATA[$P{PAGE_NUMBER}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$P{namaNegeri}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWarisTriple.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="25d1ad0d-d9f5-4ff2-883d-97a5bb9481ed" key="subreport-8" positionType="Float" x="218" y="5" width="159" height="0" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PAGE_NUMBER">
+					<subreportParameterExpression><![CDATA[$P{PAGE_NUMBER}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$P{namaNegeri}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWarisDouble.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="3fc99192-e505-4947-a146-721db378a1ae" key="subreport-9" positionType="Float" x="218" y="4" width="159" height="0" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$P{idPerintah}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PAGE_NUMBER">
+					<subreportParameterExpression><![CDATA[$P{PAGE_NUMBER}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$P{namaNegeri}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$P{hariBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$P{bulanBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$P{tahunBicara}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangT2_subreportWarisSinglePA.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="7a6b6548-d35a-41f8-adcb-53d4aa27b466" key="textField-15" positionType="Float" x="218" y="12" width="147" height="1" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[new Boolean ((!$F{CATATAN_B}.equals("")))]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Catatan :\n"+
+$F{CATATAN_B}]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement uuid="c966e970-c720-4bd3-ae30-488d85492d53" key="subreport-1" positionType="Float" x="218" y="3" width="159" height="0" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaSimati">
+					<subreportParameterExpression><![CDATA[$F{NAMA_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bbSimati">
+					<subreportParameterExpression><![CDATA[$F{BB_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="statusPemilikan">
+					<subreportParameterExpression><![CDATA[$F{STATUS_PEMILIKAN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintahHTAOBMST">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAHHTAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="baSimati">
+					<subreportParameterExpression><![CDATA[$F{BA_SIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="kpSimati">
+					<subreportParameterExpression><![CDATA[String.valueOf($F{KP_SIMATI})]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"BorangT2_subreportWaris1.jasper"]]></subreportExpression>
+			</subreport>
+			<line>
+				<reportElement uuid="747205eb-7ce1-440b-b83e-e46e71d5273b" key="line-34" stretchType="RelativeToBandHeight" mode="Transparent" x="75" y="0" width="1" height="15" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF"/>
+			</line>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="27" splitType="Prevent">
+			<elementGroup>
+				<staticText>
+					<reportElement uuid="e9e913c7-bd8a-4bc0-88a1-1b1c8f36c5d0" key="staticText-36" positionType="Float" x="0" y="12" width="85" height="13"/>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+					<text><![CDATA[Bertarikh pada :]]></text>
+				</staticText>
+				<textField evaluationTime="Report" pattern="dd MMMMM yyyy" isBlankWhenNull="false">
+					<reportElement uuid="29355607-e83c-4656-ae6c-9ef84a5e1052" key="textField-13" positionType="Float" x="85" y="12" width="140" height="12"/>
+					<textElement textAlignment="Left">
+						<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{hariBicara}+ " " + $P{bulanBicara}+ " " +$P{tahunBicara}]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="12faec5c-5417-4b18-aa95-486e0dee1c98" key="textField-16" positionType="Float" isPrintRepeatedValues="false" x="303" y="13" width="180" height="8"/>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement uuid="7dad677a-91ad-4ac0-836d-31d251226f46" key="textField-17" positionType="Float" isPrintRepeatedValues="false" x="249" y="13" width="50" height="8"/>
+				<textElement textAlignment="Right" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+	<noData>
+		<band splitType="Stretch">
+			<break>
+				<reportElement uuid="3522e88c-a8a2-47c9-aaf7-86cae9b73c65" key="element-1" positionType="Float" x="0" y="-8" width="535" height="1" isPrintWhenDetailOverflows="true">
+					<printWhenExpression><![CDATA[new Boolean ((!$P{ID_PERINTAHHAOBMST}.equals("0")))]]></printWhenExpression>
+				</reportElement>
+			</break>
+		</band>
+	</noData>
+</jasperReport>

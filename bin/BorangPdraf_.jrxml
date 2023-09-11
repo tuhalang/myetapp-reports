@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangPdraf" pageWidth="595" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="0aff6998-eb05-4950-82b1-d93f6d0f447d">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="idfaillama" class="java.lang.String"/>
+	<parameter name="idfailbaru" class="java.lang.String"/>
+	<parameter name="idpermohonanbaru" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[--22/07/2020
+SELECT F_DULU.NO_FAIL AS NO_FAIL,N.NAMA_NEGERI AS NEGERI_MOHON
+, REPLACE(D.NAMA_DAERAH,'&','&#38;') AS DAERAH_MOHON
+,PM_DULU.NAMA_PEMOHON AS NAMA_PEMOHON,TO_CHAR(P_DULU.TARIKH_MOHON,'YYYY') AS TAHUN_MOHON
+,REPLACE(REPLACE(UPPER(TRIM(PM_DULU.ALAMAT1_SURAT)),'&','&#38;'),',') AS ALAMAT1_PM
+,REPLACE(REPLACE(UPPER(TRIM(PM_DULU.ALAMAT2_SURAT)),'&','&#38;'),',') AS ALAMAT2_PM
+,REPLACE(REPLACE(UPPER(TRIM(PM_DULU.ALAMAT3_SURAT)),'&','&#38;'),',') AS ALAMAT3_PM
+,REPLACE(UPPER(PM_DULU.POSKOD_SURAT),',') AS POSKOD_PM
+,GETMYIDFORMAT(GETMYID(PM_DULU.NO_KP_BARU,PM_DULU.NO_KP_LAMA,PM_DULU.NO_KP_LAIN)) KP_PEMOHON
+,GETMYIDFORMAT(GETMYID(SM.NO_KP_BARU,SM.NO_KP_LAMA,SM.NO_KP_LAIN)) KP_SIMATI
+,CASE
+       WHEN UPPER(TRIM(B_DULU.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(REPLACE(TRIM(B_DULU.KETERANGAN),'&','&#38;')),'')
+       ELSE ''
+END AS BANDAR_PM
+,CASE
+	WHEN UPPER(TRIM(N_DULU.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(N_DULU.NAMA_NEGERI)),'')
+	ELSE ''
+END AS NEGERI_PM
+,SM.NAMA_SIMATI
+,TO_CHAR(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(P_DULU.PERINTAH_BARU,'&','&#38;'),'<br />',''),'&nbsp;',' '),'<p>',''),'</p>','')) AS PERINTAH_BARU
+,TO_CHAR(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(P_DULU.PERINTAH_LAMA,'&','&#38;'),'<br />',''),'&nbsp;',' '),'<p>',''),'</p>','')) AS PERINTAH_DAHULU
+,NVL(TO_CHAR (P.TARIKH_MOHON_ONLINE,'DD'),'') AS HARI_MOHON
+,CASE
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='01' THEN 'Januari'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='02' THEN 'Febuari'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='03' THEN 'Mac'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='04' THEN 'April'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='05' THEN 'Mei'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='06' THEN 'Jun'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='07' THEN 'Julai'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='08' THEN 'Ogos'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='09' THEN 'September'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='10' THEN 'Oktober'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='11' THEN 'November'
+                WHEN TO_CHAR(P.TARIKH_MOHON_ONLINE, 'MM')='12' THEN 'Disember' END || ' ' || TO_CHAR(P.TARIKH_MOHON_ONLINE, 'YYYY') AS  BULANTAHUN_MOHON
+,TO_CHAR(CASE
+        WHEN P.BATAL_KUASA_PENTADBIR='Y' THEN 'membatalkan kuasa pentadbir'
+        ELSE ''
+      END ||''||
+      CASE
+        WHEN P.LANTIK_PENTADBIR='Y' THEN
+          CASE
+            WHEN P.BATAL_KUASA_PENTADBIR='Y' THEN ', '
+          ELSE ''
+          END || 'perlantikan kuasa pentadbir'
+        ELSE ''
+      END ||''||
+      CASE
+        WHEN P.BATAL_P_AMANAH='Y' THEN
+          CASE
+            WHEN P.LANTIK_PENTADBIR='Y' OR P.BATAL_KUASA_PENTADBIR='Y' THEN ', '
+            ELSE ''
+          END || 'membatalkan pemegang amanah'
+        ELSE ''
+      END||''||
+      CASE
+        WHEN P.LANTIK_P_AMANAH='Y' THEN
+          CASE
+            WHEN P.LANTIK_PENTADBIR='Y' OR P.BATAL_KUASA_PENTADBIR='Y' OR P.BATAL_P_AMANAH='Y' THEN ', '
+          ELSE ''
+          END || 'perlantikan pemegang amanah'
+        ELSE ''
+      END||''||
+      CASE
+        WHEN P.HARTA_TINGGAL='Y' THEN
+        CASE
+          WHEN P.LANTIK_PENTADBIR='Y' OR P.BATAL_KUASA_PENTADBIR='Y' OR P.BATAL_P_AMANAH='Y' OR P.LANTIK_P_AMANAH='Y' THEN ', '
+          ELSE ''
+        END ||'harta si mati tertinggal di permohonan awal'
+      END) AS SEBAB,
+       SM.NO_SIJIL_MATI AS NO_SIJIL_MATI,
+      TO_CHAR (SM.TARIKH_MATI, 'dd/mm/yyyy') AS TARIKH_MATI,
+       CASE
+        WHEN SM.ID_BUKTIMATI = 1 THEN '1'
+        WHEN SM.ID_BUKTIMATI = 2 THEN '2'
+        WHEN SM.ID_BUKTIMATI = 3  THEN '3'
+        WHEN SM.ID_BUKTIMATI = 4 THEN '4'
+ END AS BUKTI_MATI,'' AS HARI_PERINTAH,'' AS BULANTAHUN_PERINTAH
+ -- Pemohon
+,PE.NAMA_OB PEMOHON_BARU
+,REPLACE(REPLACE(UPPER(TRIM(PE.ALAMAT1_SURAT)),'&','&#38;'),',') AS ALAMAT1_PM2
+,REPLACE(REPLACE(UPPER(TRIM(PE.ALAMAT2_SURAT)),'&','&#38;'),',') AS ALAMAT2_PM2
+,REPLACE(REPLACE(UPPER(TRIM(PE.ALAMAT3_SURAT)),'&','&#38;'),',') AS ALAMAT3_PM2
+,REPLACE(UPPER(PE.POSKOD_SURAT),',') AS POSKOD_PM2
+,GETMYIDFORMAT(GETMYID(PE.NO_KP_BARU,PE.NO_KP_LAMA,PE.NO_KP_LAIN)) KP_PEMOHON2
+,CASE
+       WHEN UPPER(TRIM(PE.BANDAR_SURAT)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(REPLACE(TRIM(PE.BANDAR_SURAT),'&','&#38;')),'')
+       ELSE ''
+END AS BANDAR_PM2
+,CASE
+	WHEN UPPER(TRIM(PEN.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(PEN.NAMA_NEGERI)),'')
+	ELSE ''
+END AS NEGERI_PM2
+--
+FROM TBLPPKPERMOHONAN P,TBLPFDFAIL F,TBLRUJNEGERI N, TBLRUJDAERAH D,TBLPPKPERMOHONAN P_DULU
+,TBLPFDFAIL F_DULU,TBLPPKSIMATI SM,TBLPPKPERMOHONANSIMATI PS,TBLPPKPEMOHON PM_DULU,TBLRUJBANDAR B_DULU
+,TBLRUJNEGERI N_DULU ,TBLPPKOB PE,TBLRUJNEGERI PEN
+WHERE P.ID_FAIL = F.ID_FAIL
+AND P.ID_DAERAHMHN = D.ID_DAERAH
+AND P.ID_NEGERIMHN = N.ID_NEGERI
+AND P.ID_PERMOHONANTERDAHULU = P_DULU.ID_PERMOHONAN
+AND P_DULU.ID_FAIL = F_DULU.ID_FAIL
+AND P.ID_PERMOHONAN = PS.ID_PERMOHONAN
+AND SM.ID_SIMATI = PS.ID_SIMATI
+AND P_DULU.ID_PEMOHON = PM_DULU.ID_PEMOHON
+AND PM_DULU.ID_BANDAR = B_DULU.ID_BANDAR(+)
+AND PM_DULU.ID_NEGERI = N_DULU.ID_NEGERI(+)
+AND P.ID_PEMOHON = PE.ID_PEMOHON
+AND PE.ID_NEGERISURAT = PEN.ID_NEGERI(+)
+AND F.ID_FAIL = $P!{idfailbaru}
+--ID_FAILBARU]]>
+	</queryString>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NEGERI_MOHON" class="java.lang.String"/>
+	<field name="DAERAH_MOHON" class="java.lang.String"/>
+	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="TAHUN_MOHON" class="java.lang.String"/>
+	<field name="ALAMAT1_PM" class="java.lang.String"/>
+	<field name="ALAMAT2_PM" class="java.lang.String"/>
+	<field name="ALAMAT3_PM" class="java.lang.String"/>
+	<field name="POSKOD_PM" class="java.lang.String"/>
+	<field name="KP_PEMOHON" class="java.lang.String"/>
+	<field name="KP_SIMATI" class="java.lang.String"/>
+	<field name="BANDAR_PM" class="java.lang.String"/>
+	<field name="NEGERI_PM" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="PERINTAH_BARU" class="java.lang.String"/>
+	<field name="PERINTAH_DAHULU" class="java.lang.String"/>
+	<field name="HARI_MOHON" class="java.lang.String"/>
+	<field name="BULANTAHUN_MOHON" class="java.lang.String"/>
+	<field name="SEBAB" class="java.lang.String"/>
+	<field name="NO_SIJIL_MATI" class="java.lang.String"/>
+	<field name="TARIKH_MATI" class="java.lang.String"/>
+	<field name="BUKTI_MATI" class="java.lang.String"/>
+	<field name="HARI_PERINTAH" class="java.lang.String"/>
+	<field name="BULANTAHUN_PERINTAH" class="java.lang.String"/>
+	<field name="PEMOHON_BARU" class="java.lang.String"/>
+	<field name="ALAMAT1_PM2" class="java.lang.String"/>
+	<field name="ALAMAT2_PM2" class="java.lang.String"/>
+	<field name="ALAMAT3_PM2" class="java.lang.String"/>
+	<field name="POSKOD_PM2" class="java.lang.String"/>
+	<field name="KP_PEMOHON2" class="java.lang.String"/>
+	<field name="BANDAR_PM2" class="java.lang.String"/>
+	<field name="NEGERI_PM2" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="220" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="18ae28bd-0d96-4a73-a517-527f32eb9053" key="textField" x="42" y="34" width="450" height="11"/>
+				<textElement textAlignment="Right">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_FAIL}!= null ? $F{NO_FAIL}:"TIADA")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="9f6795a3-0ae2-4ab6-ad4d-5ba9c105adaa" key="staticText-30" positionType="Float" x="270" y="154" width="223" height="11"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<text><![CDATA[...........................................................................]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f5809960-cda0-4361-a62b-a52f2e9a9dae" key="staticText-31" positionType="Float" x="339" y="166" width="130" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<text><![CDATA[PEMOHON]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="31b38797-603f-411a-acdd-52e1f2738448" key="textField-19" positionType="Float" x="42" y="84" width="450" height="19"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>"+"BORANG P"+"</style>"
++"\n(Peraturan 12 (1))"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+"MALAYSIA"+"</style>"
++"\n\nNegeri <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NEGERI_MOHON}!= null ? $F{NEGERI_MOHON}:"TIADA")+"</style>"
++"\nDaerah <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{DAERAH_MOHON}!= null ? $F{DAERAH_MOHON}:"TIADA")+"</style>"
++"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+"AKTA HARTA PUSAKA KECIL (PEMBAHAGIAN), 1955"+"</style>"
++"\nGUAMAN PEMBAHAGIAN NO. <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NO_FAIL}!= null ? $F{NO_FAIL}:"TIADA")+"</style> TAHUN <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{TAHUN_MOHON}!= null ? $F{TAHUN_MOHON}:"TIADA")+"</style>"
++"\n"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="581f6eab-628e-4d75-a737-95bc1052d9a8" key="textField-20" positionType="Float" x="42" y="104" width="450" height="19"/>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam hal Harta Pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"TIADA")+($F{KP_SIMATI}!= null ? ", No. KP: "  +$F{KP_SIMATI}:"")  +  ", Tarikh Mati:  "+ ($F{TARIKH_MATI}!= null ? $F{TARIKH_MATI}:"TIADA")+(($F{BUKTI_MATI}.equals("1") && ($F{NO_SIJIL_MATI}!=null)) ? ", No. Sijil Mati: "+$F{NO_SIJIL_MATI}+"</style> si mati.":($F{BUKTI_MATI}.equals("2") ? ", Surat Sumpah Kematian "+"</style>si mati.":($F{BUKTI_MATI}.equals("3") ? ", Anggapan Kematian dari Mahkamah Tinggi "+"</style>si mati.":(($F{BUKTI_MATI}.equals("4") && ($F{NO_SIJIL_MATI}!=null)) ? ", No. Permit Kubur: "+$F{NO_SIJIL_MATI}+"</style> si mati.":"</style> si mati."))))
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null ? $F{NAMA_PEMOHON}:"TIADA") + ($F{KP_PEMOHON}!= null ? ", No. KP: "+$F{KP_PEMOHON}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{ALAMAT1_PM}!=null ? $F{ALAMAT1_PM}:"")+($F{ALAMAT2_PM}!=null ? ", "+$F{ALAMAT2_PM}:"")+($F{ALAMAT3_PM}!=null ? ", "+$F{ALAMAT3_PM}:"")+($F{POSKOD_PM}!=null ? ", "+$F{POSKOD_PM}:"")+($F{BANDAR_PM}!=null ? " "+$F{BANDAR_PM}:"")+(($F{NEGERI_PM}!=null) && ($F{BANDAR_PM}==null) ? " "+$F{NEGERI_PM}:(($F{NEGERI_PM}!=null) && ($F{BANDAR_PM}!=null) ? ", "+$F{NEGERI_PM}:"TIADA"))
++".</style>"
++"\n\n                                                                 <style isBold='true' pdfFontName='Helvetica-Bold'>PERMOHONAN BERIKUTNYA</style>"
++"\n                                                                                   (Seksyen 17)"
++"\n\nBAHAWASANYA pada <style pdfFontName='Helvetica-Bold'>"+($F{HARI_PERINTAH}!=null ? $F{HARI_PERINTAH}:".................................")+"</style> hari bulan <style pdfFontName='Helvetica-Bold'>"+($F{BULANTAHUN_PERINTAH}!=null ? $F{BULANTAHUN_PERINTAH}:".................................")+"</style> suatu perintah telah dibuat dalam hal ini bahawa (1) "
++"\n\n<style pdfFontName='Helvetica-Bold'>"+($F{PERINTAH_DAHULU}!=null ? $F{PERINTAH_DAHULU}:"TIADA")+"</style>"
++"\n\n"+"     DAN BAHAWASANYA adalah menjadi perlu untuk (2) <style isBold='true' pdfFontName='Helvetica-Bold'>Perbicaraan semula bagi "+($F{SEBAB}!= null?$F{SEBAB}: "TIADA")+".</style>"
++"\n\nSaya <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{PEMOHON_BARU}!= null ?$F{PEMOHON_BARU}: "TIADA")+($F{KP_PEMOHON2}!= null ? ", No. KP: "+$F{KP_PEMOHON2}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{ALAMAT1_PM2}!=null ? $F{ALAMAT1_PM2}:"")+($F{ALAMAT2_PM2}!=null ? ", "+$F{ALAMAT2_PM2}:"")+($F{ALAMAT3_PM2}!=null ? ", "+$F{ALAMAT3_PM2}:"")+($F{POSKOD_PM2}!=null ? ", "+$F{POSKOD_PM2}:"")+($F{BANDAR_PM2}!=null ? " "+$F{BANDAR_PM2}:"")+(($F{NEGERI_PM2}!=null) && ($F{BANDAR_PM2}==null) ? " "+$F{NEGERI_PM2}:(($F{NEGERI_PM2}!=null) && ($F{BANDAR_PM2}!=null) ? ", "+$F{NEGERI_PM2}:"TIADA"))
+ +"</style> memohon kepada (3) <style pdfFontName='Helvetica-Bold'>PENOLONG PENTADBIR TANAH</style> bagi Daerah tersebut di <style pdfFontName='Helvetica-Bold'>"+($F{NEGERI_MOHON}!=null ? $F{NEGERI_MOHON}:"TIADA")+"</style> bagi (4)"
++"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+ ($F{PERINTAH_BARU}!= null?$F{PERINTAH_BARU}: "TIADA")+"</style>"
++"\n\n"+"Dibuat pada <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{HARI_MOHON}!= null ? $F{HARI_MOHON}:"TIADA") +"</style> hari bulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{BULANTAHUN_MOHON}!= null ? $F{BULANTAHUN_MOHON}:"TIADA")+".</style>"]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement uuid="3ebfc119-c53e-4294-9f26-0080feb60cb3" key="line-1" positionType="Float" x="42" y="208" width="450" height="1"/>
+			</line>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="7f9daf7a-8335-41b9-aa2f-5be8c338ad23" key="textField-21" positionType="Float" x="42" y="209" width="450" height="11"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle">
+					<font fontName="Verdana" size="8"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["(1)"+"     Masukkan perintah dahulu berkenaan dengan permohonan yang sedang dibuat."
++"\n(2)"+"     Masukkan apa yang dikehendaki, misalnya, melantik pemegang amanah baharu, pentadbir baharu, menarik"
++"\n"+"         balik kaveat, dsb."
++"\n(3)"+"     Masukkan Pentadbir Tanah Daerah/Pemungut/Pegawai Daerah/Pegawai Tadbir Sarawak mengikut kehendak keadaan."
++"\n(4)"+"     Masukkan jenis perintah yang diminta"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="369cfbf9-8976-48a0-ad7e-06023d8e97ea" key="textField-23" positionType="Float" x="42" y="0" width="450" height="19"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled">
+					<font fontName="Verdana" size="14" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>"+"DERAF"+"</style>"]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Prevent"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Prevent"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="19" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="7927a3a7-0bde-44e3-8bc2-09f4136baca7" key="textField-22" positionType="Float" x="42" y="0" width="450" height="19"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled">
+					<font fontName="Verdana" size="14" isBold="false" pdfFontName="Helvetica"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>"+"DERAF"+"</style>"]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band splitType="Prevent"/>
+	</summary>
+</jasperReport>

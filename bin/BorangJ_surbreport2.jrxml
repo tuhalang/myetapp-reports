@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BorangJ_surbreport2"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idperbicaraan" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT
+     TBLPFDFAIL.NO_FAIL AS TBLPFDFAIL_NO_FAIL, TBLPPKOB.ID_OB,TBLPPKSIMATI.NAMA_SIMATI,
+     UPPER(NVL(TBLPPKOB.NAMA_OB,'')) AS TBLPPKOB_NAMA_OB,
+     UPPER(NVL(TBLPPKRUJSAUDARA.KETERANGAN,'')) AS TBLPPKRUJSAUDARA_KETERANGAN,    
+     CASE --UTK IC 
+	 WHEN LENGTH(AAA.NO_KP1) IS NULL THEN ''
+         WHEN LENGTH(AAA.NO_KP1)<12 THEN  ''||RTRIM(AAA.NO_KP1)||''
+         WHEN LENGTH(RTRIM(AAA.NO_KP1))=12 THEN SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4) 
+     ELSE SUBSTR(AAA.NO_KP1,1,6) || '-' || SUBSTR(AAA.NO_KP1,7,2) || '-' || SUBSTR(AAA.NO_KP1,9,4)  ||'  ('||TRIM(SUBSTR(AAA.NO_KP1,13,LENGTH(AAA.NO_KP1)))||')'
+     END  AS NO_KP_OB,    
+     NVL(REPLACE(UPPER(REPLACE(TRIM(TBLPPKOB.ALAMAT1_SURAT),'&','&#38;')),','),'') AS TBLPPKOB_ALAMAT1_SURAT,
+     NVL(REPLACE(UPPER(REPLACE(TRIM(TBLPPKOB.ALAMAT2_SURAT),'&','&#38;')),','),'') AS TBLPPKOB_ALAMAT2_SURAT,
+     NVL(REPLACE(UPPER(REPLACE(TRIM(TBLPPKOB.ALAMAT3_SURAT),'&','&#38;')),','),'') AS TBLPPKOB_ALAMAT3_SURAT,
+     CASE
+        WHEN UPPER(TRIM(TBLRUJBANDAR.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(TBLRUJBANDAR.KETERANGAN)),'')
+        ELSE ''
+     END AS TBLPPKOB_BANDAR_SURAT,
+     CASE
+        WHEN UPPER(TRIM(TBLRUJNEGERI.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(TBLRUJNEGERI.NAMA_NEGERI)),'')
+        ELSE ''
+     END AS TBLRUJNEGERI_NAMA_NEGERI,    
+     TBLPPKOB.POSKOD_SURAT AS TBLPPKOB_POSKOD_SURAT,TBLPPKOB.UMUR,NVL(UPPER(PARENTOB.NAMA_OB),'') AS NAMA_PARENT, NVL(PARENTSAUDARA.KETERANGAN,'') AS HUBUNGAN_PARENT 
+     FROM
+     TBLPPKOB, TBLPPKRUJSAUDARA, TBLPPKPERMOHONANSIMATI, TBLPPKSIMATI, TBLRUJNEGERI,
+     TBLPPKPERMOHONAN, TBLPFDFAIL, TBLRUJBANDAR,TBLPPKPEMOHON,TBLPPKKEPUTUSANPERMOHONAN,TBLPPKPERBICARAAN,TBLPPKBORANGJ,TBLPPKBORANGJDTL,
+     TBLPPKPERINTAH,TBLPPKHUBUNGANOB,TBLPPKOB PARENTOB,TBLPPKRUJSAUDARA PARENTSAUDARA,
+     (SELECT      
+      CASE 
+         WHEN TBLPPKOB.NO_KP_BARU IS NULL AND TBLPPKOB.NO_KP_LAMA IS NOT NULL THEN  TBLPPKOB.NO_KP_LAMA
+      WHEN TBLPPKOB.NO_KP_BARU IS NULL AND TBLPPKOB.NO_KP_LAMA IS NULL THEN  TBLPPKOB.NO_KP_LAIN
+        WHEN TBLPPKOB.NO_KP_BARU IS NULL AND TBLPPKOB.NO_KP_LAIN IS NULL THEN  TBLPPKOB.NO_KP_LAMA 
+         ELSE TBLPPKOB.NO_KP_BARU
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKOB.NO_KP_BARU IS NOT NULL AND TBLPPKOB.NO_KP_LAMA IS NOT NULL THEN  TBLPPKOB.NO_KP_LAMA
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKOB.NO_KP_BARU IS  NULL AND TBLPPKOB.NO_KP_LAMA IS NOT NULL THEN  TBLPPKOB.NO_KP_LAIN
+     END AS NO_KP1 , ID_OB      
+     FROM TBLPPKOB ) AAA    
+WHERE TBLPPKPEMOHON.ID_PEMOHON = TBLPPKPERMOHONAN.ID_PEMOHON
+     AND TBLPPKPERMOHONAN.ID_FAIL = TBLPFDFAIL.ID_FAIL
+     AND TBLPPKPERMOHONANSIMATI.ID_PERMOHONAN = TBLPPKPERMOHONAN.ID_PERMOHONAN
+     AND TBLPPKPERMOHONANSIMATI.ID_SIMATI = TBLPPKSIMATI.ID_SIMATI
+     AND TBLPPKPERMOHONAN.ID_PERMOHONAN = TBLPPKKEPUTUSANPERMOHONAN.ID_PERMOHONAN
+     AND TBLPPKKEPUTUSANPERMOHONAN.ID_KEPUTUSANPERMOHONAN = TBLPPKPERBICARAAN.ID_KEPUTUSANPERMOHONAN
+     AND TBLPPKPERBICARAAN.ID_PERBICARAAN = TBLPPKPERINTAH.ID_PERBICARAAN
+     AND TBLPPKPERBICARAAN.ID_PERBICARAAN = TBLPPKBORANGJ.ID_PERBICARAAN
+     AND TBLPPKBORANGJ.ID_BORANGJ = TBLPPKBORANGJDTL.ID_BORANGJ
+     AND TBLPPKOB.ID_OB = TBLPPKBORANGJDTL.ID_OB 
+     AND TBLPPKOB.ID_SAUDARA = TBLPPKRUJSAUDARA.ID_SAUDARA
+     AND TBLPPKOB.ID_OB = AAA.ID_OB
+     AND TBLPPKOB.ID_NEGERISURAT(+) = TBLRUJNEGERI.ID_NEGERI
+     AND TBLRUJBANDAR.ID_BANDAR(+)= TBLPPKOB.ID_BANDARSURAT
+     AND TBLPPKHUBUNGANOB.ID_OB(+) = TBLPPKOB.ID_OB
+     AND PARENTOB.ID_OB(+) = TBLPPKHUBUNGANOB.ID_PARENTOB
+     AND PARENTSAUDARA.ID_SAUDARA(+) = PARENTOB.ID_SAUDARA
+     AND TBLPFDFAIL.ID_FAIL = $P!{idfail}
+     AND TBLPPKPERBICARAAN.ID_PERBICARAAN = $P!{idperbicaraan}
+ORDER BY TBLPPKOB.UMUR DESC]]></queryString>
+
+	<field name="TBLPFDFAIL_NO_FAIL" class="java.lang.String"/>
+	<field name="ID_OB" class="java.math.BigDecimal"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="TBLPPKOB_NAMA_OB" class="java.lang.String"/>
+	<field name="TBLPPKRUJSAUDARA_KETERANGAN" class="java.lang.String"/>
+	<field name="NO_KP_OB" class="java.lang.String"/>
+	<field name="TBLPPKOB_ALAMAT1_SURAT" class="java.lang.String"/>
+	<field name="TBLPPKOB_ALAMAT2_SURAT" class="java.lang.String"/>
+	<field name="TBLPPKOB_ALAMAT3_SURAT" class="java.lang.String"/>
+	<field name="TBLPPKOB_BANDAR_SURAT" class="java.lang.String"/>
+	<field name="TBLRUJNEGERI_NAMA_NEGERI" class="java.lang.String"/>
+	<field name="TBLPPKOB_POSKOD_SURAT" class="java.lang.String"/>
+	<field name="UMUR" class="java.math.BigDecimal"/>
+	<field name="NAMA_PARENT" class="java.lang.String"/>
+	<field name="HUBUNGAN_PARENT" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="29"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="1"
+						y="0"
+						width="148"
+						height="29"
+						backcolor="#CCCCCC"
+						key="staticText-29"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="4" rightPadding="4" topPadding="4" bottomPadding="4">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Nama dan No.KP]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="149"
+						y="0"
+						width="191"
+						height="29"
+						backcolor="#CCCCCC"
+						key="staticText-30"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="4" rightPadding="4" topPadding="4" bottomPadding="4">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Alamat]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="340"
+						y="0"
+						width="120"
+						height="29"
+						backcolor="#CCCCCC"
+						key="staticText-31"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="4" rightPadding="4" topPadding="4" bottomPadding="4">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Pertalian dengan 
+si mati]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="30"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="149"
+						y="0"
+						width="191"
+						height="30"
+						key="textField-10"
+						stretchType="RelativeToTallestObject"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="4" rightPadding="4" topPadding="4" bottomPadding="4">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top" markup="styled">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="8" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TBLPPKOB_ALAMAT1_SURAT}!= null?$F{TBLPPKOB_ALAMAT1_SURAT}+"\n":"")
++($F{TBLPPKOB_ALAMAT2_SURAT}!= null?$F{TBLPPKOB_ALAMAT2_SURAT}+"\n":"")
++($F{TBLPPKOB_ALAMAT3_SURAT}!= null?$F{TBLPPKOB_ALAMAT3_SURAT}+"\n":"")
++($F{TBLPPKOB_POSKOD_SURAT}!=null?$F{TBLPPKOB_POSKOD_SURAT}+" ":"")+($F{TBLPPKOB_BANDAR_SURAT}!=null?$F{TBLPPKOB_BANDAR_SURAT}+"\n":"\n")
++"<style isBold='true' isUnderline='true' pdfFontName='Helvetica-Bold'>"+($F{TBLRUJNEGERI_NAMA_NEGERI}!= null? $F{TBLRUJNEGERI_NAMA_NEGERI}+"":"")+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="340"
+						y="0"
+						width="120"
+						height="30"
+						key="textField-9"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="4" rightPadding="4" topPadding="4" bottomPadding="4">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Verdana" size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TBLPPKRUJSAUDARA_KETERANGAN}!=null ?$F{TBLPPKRUJSAUDARA_KETERANGAN}:"")
++($F{NAMA_PARENT}!=null ? "KEPADA "+$F{NAMA_PARENT}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="0"
+						width="148"
+						height="30"
+						key="textField-7"
+						stretchType="RelativeToTallestObject"
+						isPrintRepeatedValues="false"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="4" rightPadding="4" topPadding="4" bottomPadding="4">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Verdana" size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{TBLPPKOB_NAMA_OB}!=null ?$F{TBLPPKOB_NAMA_OB}+"\n":"")+($F{NO_KP_OB}!=null ? $F{NO_KP_OB}:"")]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+		<noData>
+			<band height="60"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="1"
+						y="30"
+						width="459"
+						height="30"
+						key="staticText-9"/>
+					<box>					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TIADA]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="30"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="1"
+						y="0"
+						width="148"
+						height="30"
+						backcolor="#CCCCCC"
+						key="staticText-32"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="4" rightPadding="4" topPadding="4" bottomPadding="4">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Nama dan No.KP]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="149"
+						y="0"
+						width="191"
+						height="30"
+						backcolor="#CCCCCC"
+						key="staticText-33"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="4" rightPadding="4" topPadding="4" bottomPadding="4">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Alamat]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="340"
+						y="0"
+						width="120"
+						height="30"
+						backcolor="#CCCCCC"
+						key="staticText-34"
+						isPrintInFirstWholeBand="true"/>
+					<box leftPadding="4" rightPadding="4" topPadding="4" bottomPadding="4">					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Pertalian dengan
+si mati]]></text>
+				</staticText>
+			</band>
+		</noData>
+</jasperReport>

@@ -1,0 +1,532 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="NotaPerbicaraan_OBBicaraOnline" pageWidth="595" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="3abbb00c-ac7c-417f-95eb-8b61acc39546">
+	<property name="ireport.zoom" value="1.4641000000000006"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="idfail" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="idperbicaraan" class="java.lang.String"/>
+	<parameter name="idpemohon" class="java.lang.String"/>
+	<parameter name="idpermohonan" class="java.lang.String"/>
+	<parameter name="idpermohonansimati" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT
+(CASE WHEN ALL_MAIN.FLAG_KEHADIRAN = 'H' THEN CASE WHEN ALL_MAIN.JENIS_OB = '1' THEN  NAMA_HADIR || ' wakil kepada ' || UPPER(NAMA) ELSE UPPER(NAMA) END ELSE UPPER(NAMA) END) AS NAMA,
+(CASE WHEN ALL_MAIN.FLAG_KEHADIRAN = 'H' THEN CASE WHEN ALL_MAIN.JENIS_OB = '1' THEN  HUBUNGAN_HADIR ELSE UPPER(HUBUNGAN) END ELSE UPPER(HUBUNGAN) END) AS HUBUNGAN,
+(CASE WHEN ALL_MAIN.FLAG_KEHADIRAN = 'H' THEN CASE WHEN ALL_MAIN.JENIS_OB = '1' THEN  PENGENALAN_HADIR ELSE UPPER(PENGENALAN) END ELSE UPPER(PENGENALAN) END) AS PENGENALAN,
+(CASE WHEN ALL_MAIN.FLAG_KEHADIRAN = 'H' THEN CASE WHEN ALL_MAIN.JENIS_OB = '1' THEN  STATUS_HADIR ELSE UPPER(STATUS) END ELSE UPPER(STATUS) END) AS STATUS,
+(CASE WHEN ALL_MAIN.FLAG_KEHADIRAN = 'H' THEN CASE WHEN ALL_MAIN.JENIS_OB = '1' THEN  TO_CHAR(UMUR_HADIR) ELSE UMUR END ELSE UMUR END) AS UMUR,
+(CASE WHEN ALL_MAIN.FLAG_KEHADIRAN = 'H' THEN CASE WHEN ALL_MAIN.JENIS_OB = '1' THEN  '' ELSE NO_SURAT_BERANAK END ELSE NO_SURAT_BERANAK END) AS NO_SURAT_BERANAK,
+ALL_MAIN.* FROM (
+SELECT (CASE WHEN A.ID_BIKEHADIRAN IS NOT NULL THEN 'H' ELSE 'TH' END) AS FLAG_KEHADIRAN,
+CASE WHEN TO_NUMBER(NVL(A.UMUR,0)) < 18 AND TO_NUMBER(NVL(A.UMUR,0)) != 0 THEN PENJAGA.LISTPENJAGA ELSE ''END AS PENJAGA, A.*,
+TRIM(REGEXP_REPLACE(B.KETERANGAN, '([[:space:]][[:space:]]+)|([[:cntrl:]]+)', ' ')) AS KETERANGAN,
+TRIM(REGEXP_REPLACE(B.NOTA_PEGAWAI, '([[:space:]][[:space:]]+)|([[:cntrl:]]+)', ' ')) AS NOTA_PEGAWAI  FROM (
+SELECT SUPERMAIN.JENIS,  RTRIM (XMLAGG (XMLELEMENT (E, SUPERMAIN.HUBUNGAN || ' / ')).EXTRACT ('//text()'), ' / ') AS HUBUNGAN,
+SUPERMAIN.STATUS, MIN(SUPERMAIN.ID_OBPERMOHONAN) AS ID_OBPERMOHONAN, MIN(SUPERMAIN.ID_OB) AS ID_OB,
+MAX(CASE WHEN ID_PEMOHON = $P{idpemohon} THEN ID_PEMOHON END) AS ID_PEMOHON,
+SUPERMAIN.NAMA,
+HADIR.NAMA AS NAMA_HADIR, HADIR.PENGENALAN AS PENGENALAN_HADIR, HADIR.HUBUNGAN AS HUBUNGAN_HADIR, HADIR.UMUR AS UMUR_HADIR,
+HADIR.STATUS AS STATUS_HADIR, SUPERMAIN.JENIS_OB, SUPERMAIN.PENGENALAN,MAX(SUPERMAIN.UMUR) AS UMUR, NVL(SUPERMAIN.STATUS_HIDUP,0) AS STATUS_HIDUP,
+SUPERMAIN.STATUS_OB,  MAX(HADIR.ID_BIKEHADIRAN) AS ID_BIKEHADIRAN, SUPERMAIN.NO_SURAT_BERANAK, SUPERMAIN.TARIKH_MATI FROM (
+SELECT  TAR.KETERANGAN AS JENIS, SAU.KETERANGAN AS HUBUNGAN, CASE WHEN LISTOB.STATUS_OB = '1' THEN 'DEWASA / WARAS'
+WHEN LISTOB.STATUS_OB = '2' THEN 'BELUM DEWASA'  WHEN LISTOB.STATUS_OB = '3' THEN 'HILANG / MENINGGAL DUNIA / TIDAK DAPAT DIKESAN'
+WHEN LISTOB.STATUS_OB = '4' THEN 'TIDAK SEMPURNA AKAL'  ELSE '' END AS STATUS,   LISTOB.* FROM (
+SELECT 'OB' || OBMAIN.ID_OBPERMOHONAN AS ID_OBPERMOHONAN,  TO_CHAR(OBMAIN.ID_OB) AS ID_OB,
+(CASE WHEN HIS.ID_PEMOHON IS NOT NULL THEN TO_CHAR(HIS.ID_PEMOHON) ELSE TO_CHAR(OBMAIN.ID_PEMOHON) END) AS ID_PEMOHON,
+(CASE WHEN HIS.NAMA_OB IS NOT NULL THEN HIS.NAMA_OB ELSE TO_CHAR(OBMAIN.NAMA_OB) END) AS NAMA,
+(CASE WHEN HIS.JENIS_PEMIUTANG IS NOT NULL THEN HIS.NAMA_OB ELSE TO_CHAR(OBMAIN.JENIS_PEMIUTANG) END) AS JENIS_OB,
+(CASE WHEN (CASE WHEN HIS.NO_KP_BARU IS NOT NULL THEN HIS.NO_KP_BARU ELSE OBMAIN.NO_KP_BARU END) IS NOT NULL THEN (CASE WHEN HIS.NO_KP_BARU IS NOT NULL THEN HIS.NO_KP_BARU ELSE OBMAIN.NO_KP_BARU END)
+WHEN (CASE WHEN HIS.NO_KP_LAMA IS NOT NULL THEN HIS.NO_KP_LAMA ELSE OBMAIN.NO_KP_LAMA END) IS NOT NULL THEN (CASE WHEN HIS.NO_KP_LAMA IS NOT NULL THEN HIS.NO_KP_LAMA ELSE OBMAIN.NO_KP_LAMA END)
+WHEN (CASE WHEN HIS.NO_KP_LAIN IS NOT NULL THEN HIS.NO_KP_LAIN ELSE OBMAIN.NO_KP_LAIN END) IS NOT NULL THEN
+CASE  WHEN (CASE WHEN HIS.JENIS_KP IS NOT NULL THEN HIS.JENIS_KP ELSE TO_CHAR(OBMAIN.JENIS_KP) END) = '5' THEN 'TENTERA '
+WHEN (CASE WHEN HIS.JENIS_KP IS NOT NULL THEN HIS.JENIS_KP ELSE TO_CHAR(OBMAIN.JENIS_KP) END) = '6' THEN 'POLIS '
+WHEN (CASE WHEN HIS.JENIS_KP IS NOT NULL THEN HIS.JENIS_KP ELSE TO_CHAR(OBMAIN.JENIS_KP) END) = '4' THEN 'PASSPORT '
+WHEN (CASE WHEN HIS.JENIS_KP IS NOT NULL THEN HIS.JENIS_KP ELSE TO_CHAR(OBMAIN.JENIS_KP) END) = '7' THEN 'LAIN-LAIN '  ELSE '' END  ||
+(CASE WHEN HIS.NO_KP_LAIN IS NOT NULL THEN HIS.NO_KP_LAIN ELSE OBMAIN.NO_KP_LAIN END) ELSE '' END) AS PENGENALAN,
+(CASE WHEN HIS.ID_TARAFKPTG IS NOT NULL THEN HIS.ID_TARAFKPTG ELSE TO_CHAR(OBMAIN.ID_TARAFKPTG) END) AS ID_TARAFKPTG,
+(CASE WHEN HIS.ID_SAUDARA IS NOT NULL THEN HIS.ID_SAUDARA ELSE TO_CHAR(OBMAIN.ID_SAUDARA) END) AS ID_SAUDARA,
+(CASE WHEN HIS.STATUS_HIDUP IS NOT NULL THEN HIS.STATUS_HIDUP ELSE TO_CHAR(OBMAIN.STATUS_HIDUP) END) AS STATUS_HIDUP,
+(CASE WHEN HIS.STATUS_OB IS NOT NULL THEN HIS.STATUS_OB ELSE TO_CHAR(OBMAIN.STATUS_OB) END) AS STATUS_OB,  (CASE WHEN HIS.UMUR IS NOT NULL THEN HIS.UMUR ELSE TO_CHAR(OBMAIN.UMUR) END) AS UMUR,
+(CASE WHEN HIS.NO_SURAT_BERANAK IS NOT NULL THEN (CASE WHEN HIS.NO_SURAT_BERANAK != '-' THEN  HIS.NO_SURAT_BERANAK ELSE '' END) ELSE TO_CHAR(OBMAIN.NO_SURAT_BERANAK) END) AS NO_SURAT_BERANAK,
+(CASE WHEN HIS.TARIKH_MATI IS NOT NULL THEN (CASE WHEN HIS.TARIKH_MATI != '-' THEN  HIS.TARIKH_MATI ELSE '' END) ELSE TO_CHAR(OBMAIN.TARIKH_MATI) END) AS TARIKH_MATI  FROM (
+SELECT OB.* FROM   TBLPPKOBPERMOHONAN OB,   TBLPPKPERMOHONANSIMATI PSM
+WHERE OB.ID_PERMOHONANSIMATI = PSM.ID_PERMOHONANSIMATI   AND PSM.ID_PERMOHONAN = $P{idpermohonan}   ) OBMAIN,
+( SELECT TH.*, SAU.KETERANGAN AS SAUDARA FROM (  SELECT M.JENIS_AKTIVITI,M.ID_SEJARAHBIMAIN, M.ID_PERMOHONANSIMATI, M.NAMA_TABLE, M.NAMA_FIELD_PK,
+NULL AS NAMA_PARENT,  rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_OBPERMOHONAN' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_OBPERMOHONAN,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'JENIS_PEMIUTANG' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS JENIS_PEMIUTANG,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_PEMOHON' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS ID_PEMOHON,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'TARIKH_MATI' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS TARIKH_MATI,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_SURAT_BERANAK' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS NO_SURAT_BERANAK,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_SIMATI' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_SIMATI,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NAMA_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NAMA_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_BARU' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_BARU,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_LAMA' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_LAMA,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'JENIS_KP' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS JENIS_KP,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_LAIN' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_LAIN,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'UMUR' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS UMUR,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'STATUS_HIDUP' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS STATUS_HIDUP,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'STATUS_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS STATUS_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_TARAFKPTG' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_TARAFKPTG,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_SAUDARA' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_SAUDARA,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'LAPIS' THEN S.VALUE_SELEPAS END)) )).extract ('//text()')) AS LAPIS,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_PARENTOB' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS ID_PARENTOB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NILAI_HUTANG' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NILAI_HUTANG,  NULL AS ID_HUBUNGANOB
+FROM TBLPPKSEJARAHBIMAIN M,TBLPPKSEJARAHBISUB S  WHERE M.ID_SEJARAHBIMAIN = S.ID_SEJARAHBIMAIN   AND M.JENIS_AKTIVITI = 'UPDATE'  AND M.NAMA_TABLE = 'TBLPPKOBPERMOHONAN'
+AND ID_PERMOHONANSIMATI = $P{idpermohonansimati} AND ID_PERBICARAAN = $P{idperbicaraan}   GROUP BY M.JENIS_AKTIVITI, M.ID_SEJARAHBIMAIN,M.ID_PERMOHONANSIMATI, M.NAMA_TABLE, M.NAMA_FIELD_PK) TH,
+TBLPPKRUJSAUDARA SAU  WHERE TH.ID_SAUDARA = SAU.ID_SAUDARA(+) ) HIS  WHERE OBMAIN.ID_OBPERMOHONAN = HIS.ID_OBPERMOHONAN(+)  AND OBMAIN.ID_OBPERMOHONAN  NOT IN (SELECT NVL(ID_OBPERMOHONAN,'')
+FROM ( SELECT TH.*, SAU.KETERANGAN AS SAUDARA FROM (
+SELECT M.JENIS_AKTIVITI,M.ID_SEJARAHBIMAIN, M.ID_PERMOHONANSIMATI, M.NAMA_TABLE, M.NAMA_FIELD_PK,   NULL AS NAMA_PARENT,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_OBPERMOHONAN' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_OBPERMOHONAN,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'JENIS_PEMIUTANG' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS JENIS_PEMIUTANG,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_PEMOHON' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS ID_PEMOHON,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'TARIKH_MATI' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS TARIKH_MATI,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_SURAT_BERANAK' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS NO_SURAT_BERANAK,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_SIMATI' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_SIMATI,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NAMA_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NAMA_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_BARU' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_BARU,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_LAMA' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_LAMA,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'JENIS_KP' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS JENIS_KP,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_LAIN' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_LAIN,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'UMUR' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS UMUR,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'STATUS_HIDUP' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS STATUS_HIDUP,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'STATUS_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS STATUS_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_TARAFKPTG' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_TARAFKPTG,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_SAUDARA' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_SAUDARA,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'LAPIS' THEN S.VALUE_SELEPAS END)) )).extract ('//text()')) AS LAPIS,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_PARENTOB' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS ID_PARENTOB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NILAI_HUTANG' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NILAI_HUTANG,  NULL AS ID_HUBUNGANOB
+FROM TBLPPKSEJARAHBIMAIN M,TBLPPKSEJARAHBISUB S  WHERE M.ID_SEJARAHBIMAIN = S.ID_SEJARAHBIMAIN   AND M.JENIS_AKTIVITI = 'INSERT'  AND M.NAMA_TABLE = 'TBLPPKOBPERMOHONAN'
+AND ID_PERMOHONANSIMATI = $P{idpermohonansimati} AND ID_PERBICARAAN = $P{idperbicaraan}   GROUP BY M.JENIS_AKTIVITI, M.ID_SEJARAHBIMAIN,M.ID_PERMOHONANSIMATI, M.NAMA_TABLE, M.NAMA_FIELD_PK) TH,
+TBLPPKRUJSAUDARA SAU  WHERE TH.ID_SAUDARA = SAU.ID_SAUDARA(+) ))  UNION ALL  SELECT  'OB' || TO_CHAR(OBMAIN.ID_OBPERMOHONAN) AS ID_OBPERMOHONAN,
+TO_CHAR(OBMAIN.ID_OB) AS ID_OB,  OBMAIN.ID_PEMOHON AS ID_PEMOHON,  OBMAIN.NAMA_OB AS NAMA,  OBMAIN.JENIS_PEMIUTANG AS JENIS_OB,  (CASE WHEN OBMAIN.NO_KP_BARU IS NOT NULL THEN OBMAIN.NO_KP_BARU
+WHEN OBMAIN.NO_KP_LAMA IS NOT NULL THEN OBMAIN.NO_KP_LAMA  WHEN OBMAIN.NO_KP_LAIN IS NOT NULL THEN   CASE WHEN OBMAIN.JENIS_KP = '5' THEN 'TENTERA ' WHEN OBMAIN.JENIS_KP = '6' THEN 'POLIS '
+WHEN OBMAIN.JENIS_KP = '4' THEN 'PASSPORT '  WHEN OBMAIN.JENIS_KP = '7' THEN 'LAIN-LAIN ' ELSE '' END  || OBMAIN.NO_KP_LAIN ELSE '' END) AS PENGENALAN,  OBMAIN.ID_TARAFKPTG,   OBMAIN.ID_SAUDARA,
+OBMAIN.STATUS_HIDUP,   OBMAIN.STATUS_OB,   OBMAIN.UMUR, OBMAIN.NO_SURAT_BERANAK, TO_CHAR(REPLACE(OBMAIN.TARIKH_MATI, '-', ''),'DD/MM/YYYY')  AS TARIKH_MATI
+FROM ( SELECT TH.*, SAU.KETERANGAN AS SAUDARA FROM (  SELECT M.JENIS_AKTIVITI,M.ID_SEJARAHBIMAIN, M.ID_PERMOHONANSIMATI, M.NAMA_TABLE, M.NAMA_FIELD_PK,   NULL AS NAMA_PARENT,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_OBPERMOHONAN' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_OBPERMOHONAN,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'JENIS_PEMIUTANG' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS JENIS_PEMIUTANG,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_PEMOHON' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS ID_PEMOHON,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'TARIKH_MATI' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS TARIKH_MATI,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_SURAT_BERANAK' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS NO_SURAT_BERANAK,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_SIMATI' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_SIMATI,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NAMA_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NAMA_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_BARU' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_BARU,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_LAMA' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_LAMA,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'JENIS_KP' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS JENIS_KP,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_LAIN' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_LAIN,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'UMUR' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS UMUR,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'STATUS_HIDUP' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS STATUS_HIDUP,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'STATUS_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS STATUS_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_TARAFKPTG' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_TARAFKPTG,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_SAUDARA' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_SAUDARA,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'LAPIS' THEN S.VALUE_SELEPAS END)) )).extract ('//text()')) AS LAPIS,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_PARENTOB' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS ID_PARENTOB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NILAI_HUTANG' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NILAI_HUTANG,  NULL AS ID_HUBUNGANOB
+FROM TBLPPKSEJARAHBIMAIN M,TBLPPKSEJARAHBISUB S  WHERE M.ID_SEJARAHBIMAIN = S.ID_SEJARAHBIMAIN   AND M.JENIS_AKTIVITI IN ('INSERT','DELETE')  AND M.NAMA_TABLE = 'TBLPPKOBPERMOHONAN'
+AND ID_PERMOHONANSIMATI = $P{idpermohonansimati} AND ID_PERBICARAAN = $P{idperbicaraan}   GROUP BY M.JENIS_AKTIVITI, M.ID_SEJARAHBIMAIN,M.ID_PERMOHONANSIMATI, M.NAMA_TABLE, M.NAMA_FIELD_PK) TH,
+TBLPPKRUJSAUDARA SAU  WHERE TH.ID_SAUDARA = SAU.ID_SAUDARA(+) ) OBMAIN  ) LISTOB,   TBLPPKRUJTARAFKPTG TAR, TBLPPKRUJSAUDARA SAU   WHERE  LISTOB.ID_TARAFKPTG = TAR.ID_TARAFKPTG(+)
+AND LISTOB.ID_SAUDARA = SAU.ID_SAUDARA(+) AND NVL(LISTOB.STATUS_HIDUP,' ') <> '1'  AND ID_OBPERMOHONAN NOT IN (SELECT NVL('OB' || ID_OBPERMOHONAN,'')  FROM (
+SELECT TH.*, SAU.KETERANGAN AS SAUDARA FROM (  SELECT M.JENIS_AKTIVITI,M.ID_SEJARAHBIMAIN, M.ID_PERMOHONANSIMATI, M.NAMA_TABLE, M.NAMA_FIELD_PK,   NULL AS NAMA_PARENT,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_OBPERMOHONAN' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_OBPERMOHONAN,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'JENIS_PEMIUTANG' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS JENIS_PEMIUTANG,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_PEMOHON' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS ID_PEMOHON,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'TARIKH_MATI' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS TARIKH_MATI,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_SURAT_BERANAK' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS NO_SURAT_BERANAK,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_SIMATI' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_SIMATI,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NAMA_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NAMA_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_BARU' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_BARU,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_LAMA' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_LAMA,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'JENIS_KP' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS JENIS_KP,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NO_KP_LAIN' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NO_KP_LAIN,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'UMUR' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS UMUR,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'STATUS_HIDUP' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS STATUS_HIDUP,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'STATUS_OB' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS STATUS_OB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_TARAFKPTG' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_TARAFKPTG,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_SAUDARA' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS ID_SAUDARA,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'LAPIS' THEN S.VALUE_SELEPAS END)) )).extract ('//text()')) AS LAPIS,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'ID_PARENTOB' THEN  NVL(S.VALUE_SELEPAS,'-') END)) )).extract ('//text()')) AS ID_PARENTOB,
+rtrim (xmlagg (xmlelement (e, ((CASE WHEN S.NAMA_FIELD = 'NILAI_HUTANG' THEN  S.VALUE_SELEPAS END)) )).extract ('//text()')) AS NILAI_HUTANG,  NULL AS ID_HUBUNGANOB
+FROM TBLPPKSEJARAHBIMAIN M,TBLPPKSEJARAHBISUB S  WHERE M.ID_SEJARAHBIMAIN = S.ID_SEJARAHBIMAIN   AND M.JENIS_AKTIVITI = 'DELETE'  AND M.NAMA_TABLE = 'TBLPPKOBPERMOHONAN'
+AND ID_PERMOHONANSIMATI = $P{idpermohonansimati} AND ID_PERBICARAAN = $P{idperbicaraan}   GROUP BY M.JENIS_AKTIVITI, M.ID_SEJARAHBIMAIN,M.ID_PERMOHONANSIMATI, M.NAMA_TABLE,
+ M.NAMA_FIELD_PK) TH, TBLPPKRUJSAUDARA SAU  WHERE TH.ID_SAUDARA = SAU.ID_SAUDARA(+) ) )    ) SUPERMAIN,
+ (SELECT  TO_CHAR(BK.ID_HADIR) AS ID_HADIR,  BK.NAMA,BK.UMUR,BK.STATUS,BK.PENGENALAN,BK.HUBUNGAN,BK.ID_BIKEHADIRAN, BK.KETERANGAN
+ FROM TBLPPKBIKEHADIRAN BK WHERE BK.ID_PERBICARAAN = $P{idperbicaraan}) HADIR  WHERE TO_CHAR(SUPERMAIN.ID_OBPERMOHONAN) = HADIR.ID_HADIR(+)
+ GROUP BY SUPERMAIN.NAMA, HADIR.NAMA, HADIR.PENGENALAN, HADIR.HUBUNGAN, HADIR.UMUR, HADIR.STATUS, SUPERMAIN.JENIS_OB,SUPERMAIN.PENGENALAN,
+ SUPERMAIN.STATUS, SUPERMAIN.PENGENALAN, SUPERMAIN.JENIS,SUPERMAIN.STATUS_HIDUP,SUPERMAIN.STATUS_OB,SUPERMAIN.NO_SURAT_BERANAK, SUPERMAIN.TARIKH_MATI
+ ORDER BY STATUS_HIDUP,UMUR DESC,NAMA ASC  ) A, TBLPPKBIKEHADIRAN B ,  (SELECT PJ.ID_OBMINOR,
+ REGEXP_REPLACE(RTRIM (XMLAGG (XMLELEMENT (E, TRIM(UPPER(OB.NAMA_OB)) || ', ')).EXTRACT ('//text()'), ', '),'(,)([^,]*$)',' DAN\2') AS LISTPENJAGA
+ FROM TBLPPKPENJAGA PJ, TBLPPKOB OB  WHERE PJ.ID_OB = OB.ID_OB  GROUP BY PJ.ID_OBMINOR ) PENJAGA WHERE A.ID_BIKEHADIRAN = B.ID_BIKEHADIRAN(+) AND A.ID_OB = PENJAGA.ID_OBMINOR(+)
+ ORDER BY A.ID_PEMOHON
+) ALL_MAIN]]>
+	</queryString>
+	<field name="NAMA" class="java.lang.String"/>
+	<field name="HUBUNGAN" class="java.lang.String"/>
+	<field name="PENGENALAN" class="java.lang.String"/>
+	<field name="STATUS" class="java.lang.String"/>
+	<field name="UMUR" class="java.lang.String"/>
+	<field name="NO_SURAT_BERANAK" class="java.lang.String"/>
+	<field name="FLAG_KEHADIRAN" class="java.lang.String"/>
+	<field name="PENJAGA" class="java.lang.String"/>
+	<field name="JENIS" class="java.lang.String"/>
+	<field name="ID_OBPERMOHONAN" class="java.lang.String"/>
+	<field name="ID_OB" class="java.lang.String"/>
+	<field name="ID_PEMOHON" class="java.lang.String"/>
+	<field name="NAMA_HADIR" class="java.lang.String"/>
+	<field name="PENGENALAN_HADIR" class="java.lang.String"/>
+	<field name="HUBUNGAN_HADIR" class="java.lang.String"/>
+	<field name="UMUR_HADIR" class="java.math.BigDecimal"/>
+	<field name="STATUS_HADIR" class="java.lang.String"/>
+	<field name="JENIS_OB" class="java.lang.String"/>
+	<field name="STATUS_HIDUP" class="java.lang.String"/>
+	<field name="STATUS_OB" class="java.lang.String"/>
+	<field name="ID_BIKEHADIRAN" class="java.math.BigDecimal"/>
+	<field name="TARIKH_MATI" class="java.lang.String"/>
+	<field name="KETERANGAN" class="oracle.sql.CLOB"/>
+	<field name="NOTA_PEGAWAI" class="oracle.sql.CLOB"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="f3705fe1-d8b5-4a0b-9a19-4d84b241fabf" key="staticText-6" x="0" y="0" width="320" height="20"/>
+				<textElement>
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[4.   Senarai Waris Yang Berhak Dan Orang Berkepentingan]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="9440015b-9af8-49ee-95f7-8b940a04b72e" key="staticText-1" mode="Opaque" x="21" y="0" width="148" height="30" isPrintInFirstWholeBand="true" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Nama]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="815b3573-3972-4e30-8d93-b5d77dfb92cd" key="staticText-2" mode="Opaque" x="169" y="0" width="100" height="30" isPrintInFirstWholeBand="true" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[No. KPT/SB]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a56c7b61-31d2-4254-ba20-a9255ab7e0cb" key="staticText-3" mode="Opaque" x="269" y="0" width="100" height="30" isPrintInFirstWholeBand="true" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Kaitan/Hubungan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e13dae92-2f3b-47fd-9b29-835e55c6ea06" key="staticText-4" mode="Opaque" x="369" y="0" width="50" height="30" isPrintInFirstWholeBand="true" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Umur]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a290423d-41fe-4def-9a96-e1e4ab1444b7" key="staticText-5" mode="Opaque" x="419" y="0" width="80" height="30" isPrintInFirstWholeBand="true" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Kehadiran]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="46cf46a9-95fc-4686-9671-08f8ba3b3af4" key="staticText-7" mode="Opaque" x="1" y="0" width="20" height="30" isPrintInFirstWholeBand="true" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Bil]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="25" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="00abc322-51fb-43e4-895c-1ca9a02361a2" key="textField-1" stretchType="RelativeToTallestObject" x="1" y="0" width="20" height="25" isPrintWhenDetailOverflows="true"/>
+				<box topPadding="3" leftPadding="4" bottomPadding="3" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}+"."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="b35e8e0f-b256-4026-b647-17dc1c22b433" key="textField-2" stretchType="RelativeToTallestObject" x="21" y="0" width="148" height="25" isPrintWhenDetailOverflows="true"/>
+				<box topPadding="3" leftPadding="4" bottomPadding="3" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NAMA}!= null ? $F{NAMA}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="97fe8188-92ee-49fb-9230-6dceb53c6d9a" key="textField-3" stretchType="RelativeToTallestObject" x="169" y="0" width="100" height="25" isPrintWhenDetailOverflows="true"/>
+				<box topPadding="3" leftPadding="4" bottomPadding="3" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{PENGENALAN}!= null ? $F{PENGENALAN}:"")
++($F{NO_SURAT_BERANAK}!= null ? "\n("+$F{NO_SURAT_BERANAK}+")":"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="b7fcb197-b516-4c2f-b875-06ab0348ccbb" key="textField-5" stretchType="RelativeToTallestObject" x="369" y="0" width="50" height="25" isPrintWhenDetailOverflows="true"/>
+				<box topPadding="3" leftPadding="4" bottomPadding="3" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{UMUR}!= null ? $F{UMUR}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="138e0160-dc18-4b9e-a7c7-9a2c2157e973" key="textField-33" positionType="Float" stretchType="RelativeToBandHeight" x="419" y="0" width="80" height="25"/>
+				<box topPadding="3" leftPadding="3" bottomPadding="3" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[/*
+($F{STATUS_HIDUP}.equals("1")?"Meninggal dunia pada"
++" "+ $F{TARIKH_MATI}
+:"")
+*/
+($F{FLAG_KEHADIRAN} != null ?$F{FLAG_KEHADIRAN}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="d15a5104-a9aa-40e4-9969-ef10cbcbc50d" key="textField-34" stretchType="RelativeToTallestObject" x="269" y="0" width="100" height="25"/>
+				<box topPadding="3" leftPadding="4" bottomPadding="3" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{HUBUNGAN}!=null?$F{HUBUNGAN}:"")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="102" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="b8c2a2e8-4ef0-4fdd-a326-da2eaec41256" key="staticText-28" mode="Opaque" x="21" y="22" width="148" height="30" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Nama]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e16b2005-5c4b-4089-afa9-af0b78ac7945" key="staticText-29" mode="Opaque" x="169" y="22" width="100" height="30" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[No. KPT/SB]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="997d52d0-9106-4509-9c0e-5ed52d9d0b10" key="staticText-30" mode="Opaque" x="269" y="22" width="100" height="30" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Kaitan/Hubungan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="334b21db-611a-4fca-8b55-bb22ccc933ff" key="staticText-31" mode="Opaque" x="369" y="22" width="50" height="30" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Umur]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="126ab979-31dc-455c-b300-bdec00c7bb2f" key="staticText-32" mode="Opaque" x="419" y="22" width="80" height="30" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Kehadiran]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="cc5ef514-5622-413f-82af-763750553fd3" key="staticText-33" mode="Opaque" x="1" y="22" width="20" height="30" backcolor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Bil]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4c575036-fada-406a-863b-ddbb51e02308" key="staticText-39" x="2" y="2" width="320" height="20"/>
+				<textElement>
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[4.   Senarai Waris Yang Berhak Dan Orang Berkepentingan]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="c2327966-b4f7-40fe-a36b-6051d43fda2f" key="line" x="499" y="22" width="1" height="79"/>
+			</line>
+			<line>
+				<reportElement uuid="482f02a5-f129-4834-b761-e52abc453b2e" key="line" x="420" y="22" width="1" height="79"/>
+			</line>
+			<line>
+				<reportElement uuid="bc6164b7-04d9-4950-b299-c3769950af53" key="line" mode="Opaque" x="1" y="101" width="498" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="e2bc54ce-06aa-43c5-92a9-f6ca1d1bb3c8" key="line" mode="Opaque" x="1" y="76" width="498" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="7bbf57bf-6b80-465f-b828-52aedeb809f7" key="line" x="269" y="22" width="1" height="79"/>
+			</line>
+			<line>
+				<reportElement uuid="b2032cb1-f255-4cc4-9a82-a672aa0d86bc" key="line" x="21" y="22" width="1" height="79"/>
+			</line>
+			<line>
+				<reportElement uuid="8706c7a8-f061-4883-995c-83107e207db9" key="line" x="369" y="22" width="1" height="79"/>
+			</line>
+			<line>
+				<reportElement uuid="567f8e21-f024-41db-9697-773ddad3219d" key="line" x="170" y="22" width="1" height="79"/>
+			</line>
+			<line>
+				<reportElement uuid="465e7024-9677-4cb5-9ed7-39e0e5aa232c" key="line" x="1" y="22" width="1" height="79"/>
+			</line>
+			<line>
+				<reportElement uuid="8b3988b9-0f4c-475a-8a7e-b67e5f270a36" key="line" mode="Opaque" x="1" y="51" width="498" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="5c637d00-2235-494b-a91e-c31014f00751" key="line" mode="Opaque" x="1" y="22" width="498" height="1"/>
+			</line>
+		</band>
+	</noData>
+</jasperReport>

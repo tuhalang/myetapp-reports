@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangE_JADUAL2_subreport_WarisSinglePA" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="3dd6b767-def0-48b5-aa4f-9f1c2df8ae69">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="idPerintahHAOBMST" class="java.math.BigDecimal"/>
+	<parameter name="idHA" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="idPermohonanSimati" class="java.lang.String" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[SELECT DISTINCT
+A.STATUS_TADBIR, A.ID_PA1
+,B.NAMA_OB, B.NO_KP_BARU,B.ID_TARAFKPTG
+,B.NO_KP_LAMA, B.NO_KP_LAIN, nvl(B.JENIS_WARGA,'1') as JENIS_WARGA,B.CATATAN
+,CASE
+         WHEN B.NO_KP_BARU IS NULL AND B.NO_KP_LAMA IS NOT NULL THEN B.NO_KP_LAMA
+         WHEN B.NO_KP_BARU IS NULL AND B.NO_KP_LAMA IS NULL THEN B.NO_KP_LAIN
+         WHEN B.NO_KP_BARU IS NOT NULL AND B.NO_KP_LAMA IS NOT NULL THEN SUBSTR(B.NO_KP_BARU,1,6) || '-' || SUBSTR(B.NO_KP_BARU,7,2) || '-' || SUBSTR(B.NO_KP_BARU,9,4)
+         WHEN B.NO_KP_BARU IS NOT NULL AND B.NO_KP_LAMA IS NULL THEN SUBSTR(B.NO_KP_BARU,1,6) || '-' || SUBSTR(B.NO_KP_BARU,7,2) || '-' || SUBSTR(B.NO_KP_BARU,9,4)
+END  AS NO_KP
+,CASE
+        WHEN B.JENIS_WARGA IS NULL THEN 'MALAYSIA'
+        WHEN B.JENIS_WARGA = 1 THEN 'MALAYSIA'
+        WHEN B.JENIS_WARGA = 2 THEN 'BUKAN WARGANEGARA'
+        WHEN B.JENIS_WARGA = 3 THEN 'PEMASTAUTIN TETAP'
+        END AS WARGANEGARA
+,(SELECT COUNT(*)
+   FROM TBLPPKPERINTAHHAOBDTL A, TBLPPKOBPERMOHONAN B
+   WHERE B.ID_OB = A.ID_OB
+       AND A.ID_PERINTAHHAOBMST = $P!{idPerintahHAOBMST}
+       and b.id_permohonansimati =$P!{idPermohonanSimati}
+       AND A.ID_PA1 IS NULL
+       AND A.BA_WARIS != 0)
+AS singleWaris
+FROM TBLPPKPERINTAHHAOBDTL A, TBLPPKOBPERMOHONAN B
+WHERE A.ID_PA1 = B.ID_OB
+AND A.ID_PERINTAHHAOBMST = $P!{idPerintahHAOBMST}
+and b.id_permohonansimati =$P!{idPermohonanSimati}
+AND A.ID_PA1 IS NOT NULL
+AND A.ID_PA2 IS NULL
+AND A.ID_OB IS NOT NULL
+AND A.BA_WARIS != 0]]>
+	</queryString>
+	<field name="STATUS_TADBIR" class="java.lang.String"/>
+	<field name="ID_PA1" class="java.lang.String"/>
+	<field name="NAMA_OB" class="java.lang.String"/>
+	<field name="NO_KP_BARU" class="java.lang.String"/>
+	<field name="ID_TARAFKPTG" class="java.lang.String"/>
+	<field name="NO_KP_LAMA" class="java.lang.String"/>
+	<field name="NO_KP_LAIN" class="java.lang.String"/>
+	<field name="JENIS_WARGA" class="java.lang.String"/>
+	<field name="CATATAN" class="java.lang.String"/>
+	<field name="NO_KP" class="java.lang.String"/>
+	<field name="WARGANEGARA" class="java.lang.String"/>
+	<field name="SINGLEWARIS" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="36" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-2" positionType="Float" x="24" y="4" width="300" height="14" isRemoveLineWhenBlank="true" uuid="5e1f627c-227d-43a9-8e96-6fe6dbc5fb27"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="Verdana" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{ID_TARAFKPTG}.equals("1")?
+    ($F{NAMA_OB} != null ?
+        $F{NAMA_OB}
+     :"TIADA") +
+     ($F{JENIS_WARGA}.equals("1")
+     || $F{JENIS_WARGA}.equals("2")
+     || $F{JENIS_WARGA}.equals("3")?
+         ($F{NO_KP_BARU}!= null || $F{NO_KP_BARU}!= null ?
+                "\nNo. KP: " + $F{NO_KP}
+          : $F{NO_KP_LAIN}!= null ?
+                "\nNo. Pasport: " + $F{NO_KP}
+          : " ")
+      :"\nNo. Pasport: "+$F{NO_KP})
+     +($F{ID_TARAFKPTG}.equals("6")?
+         ""
+      :"\nWarganegara :"+$F{WARGANEGARA})
+  :$F{NAMA_OB})
++($F{STATUS_TADBIR}=="Y"?
+    "\nadalah wakil kepada:"
+ :"\nadalah pemegang amanah kepada:")]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-1" positionType="Float" x="20" y="18" width="300" height="14" uuid="ddc08b61-7bd6-4cee-8255-686f2f41ca91"/>
+				<subreportParameter name="idPerintahHAOBMST">
+					<subreportParameterExpression><![CDATA[$P{idPerintahHAOBMST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPA1">
+					<subreportParameterExpression><![CDATA[$F{ID_PA1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="statusTadbir">
+					<subreportParameterExpression><![CDATA[$F{STATUS_TADBIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPermohonanSimati">
+					<subreportParameterExpression><![CDATA[$P{idPermohonanSimati}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangE_JADUAL2_subreport_WarisSinglePADTL.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-6" positionType="Float" x="1" y="5" width="19" height="14" uuid="d39766a6-f9e5-4698-9051-ee49f601e76e"/>
+				<textElement>
+					<font fontName="Verdana" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.lang.Integer( ($V{COLUMN_COUNT}.intValue()) +  ($F{SINGLEWARIS}.intValue()))+"."]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

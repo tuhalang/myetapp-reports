@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangFFA_subreport" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="dacdf0f4-3feb-4378-80fa-d7a5b095a60d">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.3310000000000004"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="idfail" class="java.lang.String"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="NILAI_BERSIH_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="NILAI_BERSIH_2" class="java.lang.String" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[SELECT P.ID_PERMOHONAN,
+REPLACE(TO_CHAR((P.NILAI_TARIKHMOHON - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' ') NILAI_TARIKHMOHON_ASAL,
+TRUNC((P.NILAI_TARIKHMOHON - NVL(SI.NILAI_HUTANG,0)),0) NILAI_TARIKHMOHON,
+CASE
+	WHEN
+		SUBSTR(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '),
+		(LENGTH(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '))-1),
+		LENGTH(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '))) IS NULL THEN '00'
+	ELSE
+		SUBSTR(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '),
+		(LENGTH(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' '))-1),
+		LENGTH(REPLACE(TO_CHAR(((P.NILAI_TARIKHMOHON) - NVL(SI.NILAI_HUTANG,0)),'999,999,999.99'),' ')))
+END AS NILAI_TARIKHMOHON2
+FROM (
+		SELECT SUM(NILAI_TARIKHMOHON) NILAI_TARIKHMOHON, ID_FAIL, ID_PERMOHONAN
+		FROM (
+				SELECT * FROM (SELECT d.id_fail, d.no_fail, b.ID_PERMOHONAN, a.nilai_hta_tarikhmohon AS NILAI_TARIKHMOHON, a.ID_HTA AS ID
+				FROM TBLPPKHTAPERMOHONAN a, tblppkpermohonansimati b, tblppkpermohonan c, tblpfdfail d
+				WHERE a.id_simati = b.id_simati
+				AND b.id_permohonan = c.id_permohonan
+				AND c.id_fail = d.id_fail) HTA
+			UNION
+				SELECT * FROM (SELECT d.id_fail, d.no_fail, b.ID_PERMOHONAN, a.nilai_ha_tarikhmohon AS NILAI_TARIKHMOHON, a.id_ha AS ID
+		  		FROM TBLPPKHAPERMOHONAN a, tblppkpermohonansimati b, tblppkpermohonan c, tblpfdfail d
+		 		WHERE a.id_simati = b.id_simati
+		  		AND b.id_permohonan = c.id_permohonan
+		   		AND c.id_fail = d.id_fail) HA
+			 )
+		GROUP BY ID_FAIL, ID_PERMOHONAN
+) P
+,(SELECT
+	NVL(SUM(OB.NILAI_HUTANG),0) NILAI_HUTANG, SI.ID_PERMOHONAN
+	FROM TBLPPKOB OB,TBLPPKPERMOHONANSIMATI SI
+	WHERE OB.ID_PERMOHONANSIMATI= SI.ID_PERMOHONANSIMATI
+	AND OB.ID_TARAFKPTG = 2
+GROUP BY SI.ID_PERMOHONAN
+) SI
+WHERE
+P.ID_PERMOHONAN = SI.ID_PERMOHONAN(+)
+AND P.ID_FAIL = $P{idfail}]]>
+	</queryString>
+	<field name="ID_PERMOHONAN" class="java.math.BigDecimal"/>
+	<field name="NILAI_TARIKHMOHON_ASAL" class="java.lang.String"/>
+	<field name="NILAI_TARIKHMOHON" class="java.math.BigDecimal"/>
+	<field name="NILAI_TARIKHMOHON2" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="27" splitType="Stretch">
+			<line>
+				<reportElement uuid="2d76d946-e6d2-4012-8431-09dd42a1377b" key="line-1" x="0" y="1" width="466" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="e2d32f17-2679-4959-8b68-8619ea4f08d3" key="line-2" x="466" y="1" width="1" height="26"/>
+			</line>
+			<line>
+				<reportElement uuid="011e657b-39a3-4951-932c-d509fea1c23a" key="line-3" x="396" y="1" width="1" height="26"/>
+			</line>
+			<line>
+				<reportElement uuid="912b957c-e7f5-4634-b4bf-2e702b5ac35c" key="line-4" x="277" y="1" width="1" height="26"/>
+			</line>
+			<line>
+				<reportElement uuid="fc94537e-8cc4-459c-b8e0-64e327c86661" key="line-5" x="278" y="26" width="188" height="1"/>
+			</line>
+			<staticText>
+				<reportElement uuid="7a8a56ed-1512-4bda-847a-df2050cd6849" key="staticText-1" x="283" y="5" width="107" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[RM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="348caca2-ae52-4794-bd07-eb95f178b81e" key="staticText-2" x="401" y="5" width="59" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[CENT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="dcf866a7-a643-4cae-9890-6f19452fef24" key="staticText-3" x="2" y="8" width="161" height="15"/>
+				<textElement>
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Gross Value]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Prevent"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Prevent"/>
+	</columnHeader>
+	<detail>
+		<band height="26" splitType="Stretch">
+			<line>
+				<reportElement uuid="891753ac-2ed0-4dc5-83b9-e002eed9b81e" key="line-6" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="277" y="0" width="1" height="17" isPrintWhenDetailOverflows="true"/>
+			</line>
+			<line>
+				<reportElement uuid="01da2a24-d0ee-4f91-ac75-f768ad5d3dda" key="line-7" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="396" y="0" width="1" height="17" isPrintWhenDetailOverflows="true"/>
+			</line>
+			<line>
+				<reportElement uuid="05cbdf72-ed72-4df4-adae-c07e5bc347e7" key="line-8" positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="466" y="0" width="1" height="17" isPrintWhenDetailOverflows="true"/>
+			</line>
+			<subreport isUsingCache="true">
+				<reportElement uuid="6ebcb1a3-aa23-4fd6-a708-c99a4d262809" key="subreport-1" positionType="Float" x="2" y="0" width="269" height="8"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangF2_subreportHTA.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="23a07e18-cb63-4190-915b-83449a5cf1c3" key="subreport-2" positionType="Float" x="2" y="8" width="269" height="8" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangF2_subreportHA.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="78a4d461-6805-4b7c-9502-810c9b675643" key="subreport-3" positionType="Float" x="2" y="17" width="269" height="8"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangF2_subreportLiabiliti.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Prevent"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Prevent"/>
+	</pageFooter>
+	<summary>
+		<band height="27" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="7ab26797-9a44-412e-a04f-6064ed845555" key="staticText-6" positionType="Float" x="187" y="6" width="83" height="16" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Right">
+					<font fontName="Verdana" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Net Value]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="0f9573f2-7079-41e8-acbd-8107a11baf9e" key="line-11" positionType="Float" x="277" y="-36" width="1" height="62" isPrintWhenDetailOverflows="true"/>
+			</line>
+			<line>
+				<reportElement uuid="44cc223c-5f6c-401b-ba6c-bf67aae65c90" key="line-12" positionType="Float" x="396" y="-36" width="1" height="62" isPrintWhenDetailOverflows="true"/>
+			</line>
+			<line>
+				<reportElement uuid="4a89d92c-0366-4d5f-801f-890ff4581be1" key="line-13" positionType="Float" x="466" y="-36" width="1" height="62" isPrintWhenDetailOverflows="true"/>
+			</line>
+			<line>
+				<reportElement uuid="05e71df0-4b54-4e86-ad3a-71f781a2431e" key="line-14" x="278" y="25" width="188" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="6c89c04b-3319-4b8a-8ce7-4bb9ebd89231" key="line-15" x="278" y="1" width="188" height="1"/>
+			</line>
+			<textField pattern="###,###,##0" isBlankWhenNull="false">
+				<reportElement uuid="54565b84-5927-48f0-842e-abe2c500c56a" key="textField" positionType="Float" x="283" y="6" width="107" height="16" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Right">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NILAI_TARIKHMOHON} != null ? $F{NILAI_TARIKHMOHON}:"0"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="19a1cf84-ffad-4cff-8ed4-c80a30bb6af7" key="textField" positionType="Float" mode="Transparent" x="401" y="6" width="59" height="16" isPrintWhenDetailOverflows="true"/>
+				<textElement textAlignment="Center">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NILAI_TARIKHMOHON2}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

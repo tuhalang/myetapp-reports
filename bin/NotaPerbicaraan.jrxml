@@ -1,0 +1,1214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="NotaPerbicaraan" pageWidth="595" pageHeight="842" whenNoDataType="BlankPage" columnWidth="509" leftMargin="56" rightMargin="30" topMargin="28" bottomMargin="28" uuid="a9e4cd48-8a32-4573-8f63-2d6808935edc">
+	<property name="ireport.zoom" value="1.8181818181818181"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="34"/>
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="idperbicaraan" class="java.lang.String"/>
+	<parameter name="idfail" class="java.lang.String"/>
+	<parameter name="flag" class="java.lang.String"/>
+	<parameter name="idParentOB" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="flagBicaraOnline" class="java.lang.String">
+		<defaultValueExpression><![CDATA["N"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT DISTINCT
+	TO_CHAR(TBLPPKPEMOHON.ID_PEMOHON) AS ID_PEMOHON,TO_CHAR(TBLPPKPERMOHONAN.ID_PERMOHONAN) AS ID_PERMOHONAN,TO_CHAR(TBLPPKPERMOHONANSIMATI.ID_PERMOHONANSIMATI) AS ID_PERMOHONANSIMATI,
+    CASE
+       WHEN TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMOHON <= 0 THEN ' '
+       WHEN TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMOHON IS NOT NULL THEN (replace(to_char(TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMOHON,'999,999,999.99'),' ', ''))
+   	END AS TBLPPKPERMOHONN_JUM_HARTAMOHON,
+    CASE
+       WHEN TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMATI <= 0 THEN ' '
+       WHEN TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMATI IS NOT NULL THEN (replace(to_char(TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMATI,'999,999,999.99'),' ', ''))
+    END AS TBLPPKPERMOHONN_JUM_HARTAMATI,
+	REPLACE(TO_CHAR(GETJUMLAHFORMAT(
+		CASE
+	        --- /* untuk kes s8 */ ---
+			WHEN TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMOHON - NVL(ARB.TOTAL,0) <= 1000 THEN ROUND(10,1)
+	        WHEN TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMOHON - NVL(ARB.TOTAL,0) BETWEEN 1001 AND 50000 THEN ROUND(30,1)
+	        WHEN TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMOHON - NVL(ARB.TOTAL,0) >= 50001 THEN ROUND((0.2/100)*(TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMOHON - NVL(ARB.TOTAL,0)),2)
+		END
+	),'999,999,999.99'),' ') AS JUMLAH_BAYARAN_PERINTAH,
+	CASE
+	       WHEN LENGTH(TBLPFDFAIL.NO_FAIL)>=30 THEN ''||substr(TBLPFDFAIL.NO_FAIL,1,24)||''
+	       WHEN LENGTH(TBLPFDFAIL.NO_FAIL)<=25 THEN ''||rtrim(TBLPFDFAIL.NO_FAIL)||''
+     END AS TBLPFDFAIL_NO_FAIL,
+     NVL(REPLACE(UPPER(REPLACE(TRIM(TBLPPKPERBICARAAN.TEMPAT_BICARA),'&','&#38;')),','),'') AS  TBLPPKPERBICARAAN_TMPT_BICARA,
+     NVL(REPLACE(UPPER(REPLACE(TRIM(TBLPPKPERBICARAAN.ALAMAT_BICARA1),'&','&#38;')),','),'') AS  TBLPPKPERBICARAAN_ALAMAT_B1,
+     NVL(REPLACE(UPPER(REPLACE(TRIM(TBLPPKPERBICARAAN.ALAMAT_BICARA2),'&','&#38;')),','),'') AS  TBLPPKPERBICARAAN_ALAMAT_B2,
+     NVL(REPLACE(UPPER(REPLACE(TRIM(TBLPPKPERBICARAAN.ALAMAT_BICARA3),'&','&#38;')),','),'') AS  TBLPPKPERBICARAAN_ALAMAT_B3,
+     UPPER(nvl(TBLPPKPERBICARAAN.POSKOD, '')) AS TBLPPKPERBICARAAN_POSKOD,
+     CASE
+        WHEN UPPER(TRIM(TBLPPKPERBICARAAN.BANDAR)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(TBLPPKPERBICARAAN.BANDAR)),'')
+        ELSE ''
+     END AS TBLPPKPERBICARAAN_BANDAR,
+     CASE
+        WHEN UPPER(TRIM(TBLRUJNEGERI.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(TBLRUJNEGERI.NAMA_NEGERI)),'')
+        ELSE ''
+     END AS TBLRUJNEGERI_NAMA_NEGERI,
+     NVL(to_char(TBLPPKPERBICARAAN.TARIKH_BICARA,'dd/mm/yyyy'),'') AS TBLPPKPERBICARAAN_TKH_BICARA,
+    decode(substr(tblppkperbicaraan.masa_bicara,1,2),1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,
+    13,1,14,2,15,3,16,4,17,5,18,6,19,7,20,8,21,9,22,10,23,11,24,12)
+    || ':'
+    || substr(tblppkperbicaraan.masa_bicara,3,4)
+    || ' '
+    || case
+        when tblppkperbicaraan.JENIS_MASA_BICARA = 1 THEN 'Pagi'
+        when tblppkperbicaraan.JENIS_MASA_BICARA = 2 THEN 'Tengah Hari'
+        when tblppkperbicaraan.JENIS_MASA_BICARA = 3 THEN 'Petang'
+        else ''
+       end  as MASA_BICARA,
+     TBLPPKPERBICARAAN.MASA_BICARA AS TBLPPKPERBICARAAN_MASA_BICARA,
+     NVL(upper(U.NAMA_PEGAWAI),'') AS TBLPPKPERBICARAAN_PEG_PENGENDA,
+ 	CASE
+          WHEN TBLPPKSIMATI.NAMA_SIMATI IS NOT NULL AND TBLPPKSIMATI.NAMA_LAIN IS NULL THEN REPLACE(TBLPPKSIMATI.NAMA_SIMATI,'&','&#38;')
+          WHEN TBLPPKSIMATI.NAMA_SIMATI IS NOT NULL AND TBLPPKSIMATI.NAMA_LAIN IS NOT NULL THEN REPLACE(TBLPPKSIMATI.NAMA_SIMATI,'&','&#38;') || ' @ '|| REPLACE(TBLPPKSIMATI.NAMA_LAIN,'&','&#38;')
+          WHEN TBLPPKSIMATI.NAMA_SIMATI IS NULL AND TBLPPKSIMATI.NAMA_LAIN IS NOT NULL THEN REPLACE(TBLPPKSIMATI.NAMA_LAIN,'&','&#38;')
+	END AS TBLPPKSIMATI_NAMA_SIMATI,
+     CASE
+    WHEN length(AAA.NO_KP1) IS NULL THEN ''
+        WHEN length(AAA.NO_KP1)<12 THEN  ''||rtrim(AAA.NO_KP1)||''
+        WHEN length(rtrim(AAA.NO_KP1))=12 then substr(AAA.NO_KP1,1,6) || '-' || substr(AAA.NO_KP1,7,2) || '-' || substr(AAA.NO_KP1,9,4)
+     ELSE substr(AAA.NO_KP1,1,6) || '-' || substr(AAA.NO_KP1,7,2) || '-' || substr(AAA.NO_KP1,9,4)  ||'  ('||TRIM(substr(AAA.NO_KP1,13,length(AAA.NO_KP1)))||')'
+     END  AS no_kp_simati,
+     CASE
+    WHEN length(BBB.NO_KP2) IS NULL THEN ''
+        WHEN length(BBB.NO_KP2)<12 THEN  ''||rtrim(BBB.NO_KP2)||''
+        WHEN length(rtrim(BBB.NO_KP2))=12 then substr(BBB.NO_KP2,1,6) || '-' || substr(BBB.NO_KP2,7,2) || '-' || substr(BBB.NO_KP2,9,4)
+     ELSE substr(BBB.NO_KP2,1,6) || '-' || substr(BBB.NO_KP2,7,2) || '-' || substr(BBB.NO_KP2,9,4)  ||'  ('||TRIM(substr(BBB.NO_KP2,13,length(BBB.NO_KP2)))||')'
+     END  AS no_kp_pemohon,
+     NVL(TO_CHAR(TBLPPKSIMATI.TARIKH_MATI,'DD/MM/YYYY'),'') AS TBLPPKSIMATI_TARIKH_MATI,
+     NVL(TBLPPKSIMATI.NO_SIJIL_MATI, '') AS TBLPPKSIMATI_NO_SIJIL_MATI,
+     --NVL(upper(TBLPPKPEMOHON.NAMA_PEMOHON),'') AS TBLPPKPEMOHON_NAMA_PEMOHON,
+    CASE
+          WHEN TBLPPKPEMOHON.NAMA_PEMOHON IS NOT NULL AND TBLPPKPEMOHON.NAMA_LAIN IS NULL THEN REPLACE(TBLPPKPEMOHON.NAMA_PEMOHON,'&','&#38;')
+          WHEN TBLPPKPEMOHON.NAMA_PEMOHON IS NOT NULL AND TBLPPKPEMOHON.NAMA_LAIN IS NOT NULL THEN REPLACE(TBLPPKPEMOHON.NAMA_PEMOHON,'&','&#38;') || ' @ '|| REPLACE(TBLPPKPEMOHON.NAMA_LAIN,'&','&#38;')
+          WHEN TBLPPKPEMOHON.NAMA_PEMOHON IS NULL AND TBLPPKPEMOHON.NAMA_LAIN IS NOT NULL THEN REPLACE(TBLPPKPEMOHON.NAMA_LAIN,'&','&#38;')
+    END AS TBLPPKPEMOHON_NAMA_PEMOHON,
+     TBLPPKPEMOHON.NO_KP_BARU AS TBLPPKPEMOHON_NO_KP_BARU,
+     NVL(REPLACE(REPLACE(TBLPPKPEMOHON.NO_TEL,'-'),' '),'') AS TBLPPKPEMOHON_NO_TEL_R,
+     NVL(REPLACE(REPLACE(TBLPPKPEMOHON.NO_HP,'-'),' '),'') AS TBLPPKPEMOHON_NO_TEL_HP,
+     NVL(TO_CHAR(TBLPPKKEPUTUSANPERMOHONAN.TARIKH_TERIMA_BORANGC,'DD/MM/YYYY'),'') AS TBLPPKKEPUTUSANPERMOHONAN_TARI,
+     NVL(upper(TBLPPKKEPUTUSANPERMOHONAN.JENIS_BORANGC),'') AS TBLPPKKPTSNPRMHNN_JENISBRGC,
+     NVL(upper(TBLPPKKEPUTUSANPERMOHONAN.CATATAN), '') AS TBLPPKKPTSNPRMHNN_CATATAN,
+     TBLPPKNOTISPERBICARAAN.ID_PERBICARAAN AS TBLPPKNOTISPERBICARA_ID_BICARA,TBLPFDFAIL."ID_FAIL",
+     decode(TBLPPKKEPUTUSANPERMOHONAN.JENIS_BORANGC,'P','PUTIH','p','PUTIH','K','KUNING','k','KUNING')JENIS_BORANGC,
+     TBLPPKRUJSAUDARA.KETERANGAN AS hubSimatiPemohon,
+     NVL((select A.ID_PARENTOB from TBLPPKHUBUNGANOB A, TBLPFDFAIL B, TBLPPKPERMOHONAN C, TBLPPKPERMOHONANSIMATI D, TBLPPKOB E
+	  where B.ID_FAIL = C.ID_FAIL
+	  AND C.ID_PERMOHONAN = D.ID_PERMOHONAN
+          AND E.ID_PERMOHONANSIMATI = D.ID_PERMOHONANSIMATI
+	  AND A.ID_PARENTOB = E.ID_OB
+	  and A.ID_PARENTOB = $P{idParentOB}
+	  and rownum<=1),'') as idParentOB,
+	nvl((select to_char(TARIKH_BAYARAN,'dd/mm/yyyy') from TBLPPKBAYARAN where id_jenisbayaran = 24 AND TBLPPKBAYARAN.ID_PERMOHONAN(+) = TBLPPKPERMOHONAN.ID_PERMOHONAN and rownum <=1),'') as tarikh_bayaran,
+	nvl((select NO_RESIT from TBLPPKBAYARAN where id_jenisbayaran = 24 AND TBLPPKBAYARAN.ID_PERMOHONAN(+) = TBLPPKPERMOHONAN.ID_PERMOHONAN and rownum <=1),'') as no_resit,
+TBLPPKPERBICARAAN.FLAG_BANTAHAN, TBLPPKPERBICARAAN.KETERANGAN_BANTAHAN, CASE WHEN COUNT(TBLPPKSEJARAHBIMAIN.ID_SEJARAHBIMAIN) > 0 THEN 'ADA' ELSE 'TIADA' END AS FLAG_PERUBAHAN
+FROM
+      TBLPPKSEJARAHBIMAIN, TBLPPKPERMOHONAN,  TBLPPKBAYARAN,TBLPFDFAIL,TBLPPKPERMOHONANSIMATI,TBLPPKPEMOHON,TBLPPKRUJSAUDARA,TBLPPKOB,
+      TBLPPKKEPUTUSANPERMOHONAN,TBLPPKPERBICARAAN,TBLRUJNEGERI,TBLPPKNOTISPERBICARAAN,TBLPPKSIMATI,
+      (SELECT
+      CASE
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+      WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+        WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAIN IS NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+         ELSE TBLPPKSIMATI.NO_KP_BARU
+      END || '' ||
+      CASE
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NOT NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+      END || '' ||
+      CASE
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS  NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+      END AS NO_KP1 , ID_SIMATI
+      from tblppksimati ) AAA,
+     (SELECT
+      CASE
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NOT NULL THEN  TBLPPKPEMOHON.NO_KP_LAMA
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NULL THEN  TBLPPKPEMOHON.NO_KP_LAIN
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS NULL AND TBLPPKPEMOHON.NO_KP_LAIN IS NULL THEN  TBLPPKPEMOHON.NO_KP_LAMA
+         ELSE TBLPPKPEMOHON.NO_KP_BARU
+      END || '' ||
+      CASE
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS NOT NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NOT NULL THEN  TBLPPKPEMOHON.NO_KP_LAMA
+      END || '' ||
+      CASE
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS  NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NOT NULL THEN  TBLPPKPEMOHON.NO_KP_LAIN
+      END AS NO_KP2 , ID_PEMOHON
+      from TBLPPKPEMOHON ) BBB,
+      (SELECT F.ID_PERMOHONAN, (SELECT SUM(A.nilai_ha_tarikhmohon) FROM tblppkha A, tblppkpermohonansimati B
+	 	WHERE F.id_permohonan = B.id_permohonan AND B.ID_PERMOHONANSIMATI = A.ID_PERMOHONANSIMATI AND B.id_simati = A.id_simati AND A.id_jenisha = '98' AND rownum<=1) TOTAL
+		FROM TBLPPKPERMOHONAN F
+	  ) ARB,
+	  TBLPPKRUJUNIT U
+WHERE
+      TBLPFDFAIL.ID_FAIL = TBLPPKPERMOHONAN.ID_FAIL
+    AND (CASE WHEN TBLPPKPERBICARAAN.ID_UNITPSK_NEW IS NOT NULL THEN TBLPPKPERBICARAAN.ID_UNITPSK_NEW ELSE TBLPPKPERBICARAAN.ID_UNITPSK END) = U.ID_UNITPSK(+)
+      AND TBLPPKPERMOHONAN.ID_PEMOHON = TBLPPKPEMOHON.ID_PEMOHON
+      AND TBLPPKPERMOHONAN.ID_PERMOHONAN = TBLPPKPERMOHONANSIMATI.ID_PERMOHONAN
+      AND TBLPPKPERMOHONAN.ID_PERMOHONAN = ARB.ID_PERMOHONAN
+      AND TBLPPKSIMATI.ID_SIMATI = TBLPPKPERMOHONANSIMATI.ID_SIMATI
+      AND TBLPPKKEPUTUSANPERMOHONAN.ID_PERMOHONAN = TBLPPKPERMOHONAN.ID_PERMOHONAN
+      AND TBLPPKKEPUTUSANPERMOHONAN.ID_KEPUTUSANPERMOHONAN = TBLPPKPERBICARAAN.ID_KEPUTUSANPERMOHONAN
+      AND TBLPPKPERBICARAAN.ID_PERBICARAAN = TBLPPKNOTISPERBICARAAN.ID_PERBICARAAN(+)
+      AND TBLPPKSIMATI.ID_SIMATI = AAA.ID_SIMATI
+      AND TBLPPKBAYARAN.ID_PERMOHONAN(+) = TBLPPKPERMOHONAN.ID_PERMOHONAN
+      AND TBLPPKPEMOHON.ID_PEMOHON = BBB.ID_PEMOHON
+      AND TBLPPKPEMOHON.ID_PEMOHON = TBLPPKOB.ID_PEMOHON
+      AND TBLPPKOB.ID_SAUDARA = TBLPPKRUJSAUDARA.ID_SAUDARA(+)
+      AND TBLPPKPERBICARAAN.ID_NEGERIBICARA = TBLRUJNEGERI.ID_NEGERI(+)
+      AND TBLPFDFAIL.ID_FAIL = $P{idfail}
+      AND TBLPPKPERBICARAAN.ID_PERBICARAAN = $P{idperbicaraan}
+      AND TBLPPKPERBICARAAN.ID_PERBICARAAN = TBLPPKSEJARAHBIMAIN.ID_PERBICARAAN(+)
+     -- AND KIRA_KIRA.ID_PERMOHONAN = TBLPPKPERMOHONAN.ID_PERMOHONAN
+GROUP BY
+TBLPPKPEMOHON.ID_PEMOHON,TBLPPKPERMOHONAN.ID_PERMOHONAN,TBLPPKPERMOHONANSIMATI.ID_PERMOHONANSIMATI,
+TBLPPKBAYARAN.ID_PERMOHONAN,TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMOHON,TBLPPKPERMOHONAN.JUMLAH_HARTA_TARIKHMATI, ARB.TOTAL,
+     TBLPFDFAIL.NO_FAIL,TBLPPKSIMATI.NAMA_LAIN,TBLPPKSIMATI.NAMA_SIMATI,
+     TBLPPKPERBICARAAN.TEMPAT_BICARA, TBLPPKPERBICARAAN.ALAMAT_BICARA1,
+     TBLPPKPERBICARAAN.ALAMAT_BICARA2,TBLPPKPERBICARAAN.ALAMAT_BICARA3,TBLPPKPERBICARAAN.BANDAR ,
+     TBLPPKPERBICARAAN.POSKOD,TBLRUJNEGERI.NAMA_NEGERI,TBLPPKPERBICARAAN.TARIKH_BICARA,
+     TBLPPKPERBICARAAN.MASA_BICARA, TBLPPKPERBICARAAN.PEG_PENGENDALI,
+     TBLPPKSIMATI.NO_KP_BARU,TBLPPKSIMATI.NO_SIJIL_MATI,TBLPPKPEMOHON.NAMA_LAIN,
+     TBLPPKSIMATI.TARIKH_MATI,AAA.NO_KP1,BBB.NO_KP2,
+     TBLPPKPEMOHON.NAMA_PEMOHON,TBLPPKPEMOHON.NO_KP_BARU,TBLPPKPEMOHON.NO_KP_LAMA,
+     TBLPPKPEMOHON.NO_TEL,TBLPPKKEPUTUSANPERMOHONAN.TARIKH_TERIMA_BORANGC,
+     TBLPPKKEPUTUSANPERMOHONAN.JENIS_BORANGC,TBLPPKKEPUTUSANPERMOHONAN.CATATAN,
+     TBLPPKNOTISPERBICARAAN.ID_PERBICARAAN,TBLPPKKEPUTUSANPERMOHONAN.JENIS_BORANGC,
+     TBLPPKPERMOHONAN.SEKSYEN,tblppkperbicaraan.JENIS_MASA_BICARA,
+     TBLPPKPEMOHON.NO_HP,TBLPFDFAIL.ID_FAIL,TBLPPKBAYARAN.ID_JENISBAYARAN,TBLPPKPERMOHONAN.TARIKH_MOHON,
+     TBLPPKRUJSAUDARA.ID_SAUDARA, TBLPPKOB.ID_SAUDARA, TBLPPKRUJSAUDARA.KETERANGAN, TBLPPKPERMOHONAN.id_permohonan,
+TBLPPKPERBICARAAN.FLAG_BANTAHAN, TBLPPKPERBICARAAN.KETERANGAN_BANTAHAN, U.NAMA_PEGAWAI]]>
+	</queryString>
+	<field name="ID_PEMOHON" class="java.lang.String"/>
+	<field name="ID_PERMOHONAN" class="java.lang.String"/>
+	<field name="ID_PERMOHONANSIMATI" class="java.lang.String"/>
+	<field name="TBLPPKPERMOHONN_JUM_HARTAMOHON" class="java.lang.String"/>
+	<field name="TBLPPKPERMOHONN_JUM_HARTAMATI" class="java.lang.String"/>
+	<field name="JUMLAH_BAYARAN_PERINTAH" class="java.lang.String"/>
+	<field name="TBLPFDFAIL_NO_FAIL" class="java.lang.String"/>
+	<field name="TBLPPKPERBICARAAN_TMPT_BICARA" class="java.lang.String"/>
+	<field name="TBLPPKPERBICARAAN_ALAMAT_B1" class="java.lang.String"/>
+	<field name="TBLPPKPERBICARAAN_ALAMAT_B2" class="java.lang.String"/>
+	<field name="TBLPPKPERBICARAAN_ALAMAT_B3" class="java.lang.String"/>
+	<field name="TBLPPKPERBICARAAN_POSKOD" class="java.lang.String"/>
+	<field name="TBLPPKPERBICARAAN_BANDAR" class="java.lang.String"/>
+	<field name="TBLRUJNEGERI_NAMA_NEGERI" class="java.lang.String"/>
+	<field name="TBLPPKPERBICARAAN_TKH_BICARA" class="java.lang.String"/>
+	<field name="MASA_BICARA" class="java.lang.String"/>
+	<field name="TBLPPKPERBICARAAN_MASA_BICARA" class="java.lang.String"/>
+	<field name="TBLPPKPERBICARAAN_PEG_PENGENDA" class="java.lang.String"/>
+	<field name="TBLPPKSIMATI_NAMA_SIMATI" class="java.lang.String"/>
+	<field name="NO_KP_SIMATI" class="java.lang.String"/>
+	<field name="NO_KP_PEMOHON" class="java.lang.String"/>
+	<field name="TBLPPKSIMATI_TARIKH_MATI" class="java.lang.String"/>
+	<field name="TBLPPKSIMATI_NO_SIJIL_MATI" class="java.lang.String"/>
+	<field name="TBLPPKPEMOHON_NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="TBLPPKPEMOHON_NO_KP_BARU" class="java.lang.String"/>
+	<field name="TBLPPKPEMOHON_NO_TEL_R" class="java.lang.String"/>
+	<field name="TBLPPKPEMOHON_NO_TEL_HP" class="java.lang.String"/>
+	<field name="TBLPPKKEPUTUSANPERMOHONAN_TARI" class="java.lang.String"/>
+	<field name="TBLPPKKPTSNPRMHNN_JENISBRGC" class="java.lang.String"/>
+	<field name="TBLPPKKPTSNPRMHNN_CATATAN" class="java.lang.String"/>
+	<field name="TBLPPKNOTISPERBICARA_ID_BICARA" class="java.math.BigDecimal"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="JENIS_BORANGC" class="java.lang.String"/>
+	<field name="HUBSIMATIPEMOHON" class="java.lang.String"/>
+	<field name="IDPARENTOB" class="java.math.BigDecimal"/>
+	<field name="TARIKH_BAYARAN" class="java.lang.String"/>
+	<field name="NO_RESIT" class="java.lang.String"/>
+	<field name="FLAG_BANTAHAN" class="java.lang.String"/>
+	<field name="KETERANGAN_BANTAHAN" class="java.lang.String"/>
+	<field name="FLAG_PERUBAHAN" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="675" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="9bb9f865-b3df-416a-8e30-668b2aee03e2" key="staticText-118" x="134" y="121" width="126" height="34">
+					<printWhenExpression><![CDATA[new Boolean ($P{flag}.equals("0"))]]></printWhenExpression>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<textField pattern=" #,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="00e8465e-a446-4113-9a8a-4427baa453f8" key="textField" x="134" y="155" width="126" height="60"/>
+				<box topPadding="3" leftPadding="5" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[]]></textFieldExpression>
+			</textField>
+			<textField pattern=" #,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="eb25db2b-e35b-40e1-be5c-b7aa7c72322a" key="textField-14" x="134" y="155" width="126" height="60">
+					<printWhenExpression><![CDATA[new Boolean ($P{flag}.equals("1"))]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="3" leftPadding="5" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["RM "]]></textFieldExpression>
+			</textField>
+			<textField pattern=" #,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="1f8a4414-f399-43e3-9665-b38b5f65ead9" key="textField-16" x="135" y="101" width="124" height="14"/>
+				<box leftPadding="5" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["RM "]]></textFieldExpression>
+			</textField>
+			<textField pattern=" #,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="c122062e-b525-4442-add7-eec2296bb828" key="textField-15" x="135" y="80" width="124" height="14"/>
+				<box leftPadding="5" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["RM "]]></textFieldExpression>
+			</textField>
+			<textField pattern=" #,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="7dc993f2-3a65-4918-b541-ecf5ce9a14fc" key="textField-18" x="134" y="59" width="126" height="62"/>
+				<box topPadding="3" leftPadding="5" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["RM "]]></textFieldExpression>
+			</textField>
+			<textField pattern=" #,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="d61882a4-a611-4254-81ce-ef5540d7ea05" key="textField" x="134" y="59" width="126" height="62"/>
+				<box topPadding="3" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKPERMOHONN_JUM_HARTAMATI}!= null ?$F{TBLPPKPERMOHONN_JUM_HARTAMATI}:" ")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ce74a41f-5c99-49be-876e-a8d0a16cc70e" key="staticText-1" mode="Opaque" x="0" y="34" width="134" height="26" backcolor="#FFFFFF"/>
+				<box topPadding="3" leftPadding="5" bottomPadding="1" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Nilaian T/Mohon]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="337043ab-4fd7-4ce5-869c-768b1514d771" key="staticText-2" mode="Opaque" x="0" y="59" width="134" height="62" forecolor="#000000" backcolor="#FFFFFF"/>
+				<box topPadding="3" leftPadding="5" bottomPadding="1" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Nilaian T/Mati]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="defde475-827c-4005-8d85-af25c284c431" key="staticText-3" mode="Opaque" x="4" y="80" width="128" height="14" backcolor="#FFFFFF"/>
+				<box bottomPadding="1" rightPadding="4"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Cukai Pusaka]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7bba5c16-9bbf-4c4c-8b46-1eea72828b90" key="staticText-4" mode="Opaque" x="4" y="101" width="128" height="14" backcolor="#FFFFFF"/>
+				<box bottomPadding="1" rightPadding="4"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Bayaran Perintah]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="baf7d40d-f994-4b57-a6ff-4957193d36f0" key="staticText-5" mode="Opaque" x="0" y="121" width="134" height="34" backcolor="#FFFFFF"/>
+				<box topPadding="3" leftPadding="5" bottomPadding="1" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[No. Resit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4b7c59de-f5e3-4829-b29e-9046b4464c27" key="staticText-6" mode="Opaque" x="4" y="139" width="130" height="14" backcolor="#FFFFFF"/>
+				<box bottomPadding="1" rightPadding="4"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Tarikh Resit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="61707286-54e6-4e33-a63b-0a0ca80a24f6" key="staticText-7" mode="Opaque" x="0" y="155" width="134" height="60" backcolor="#FFFFFF"/>
+				<box topPadding="3" leftPadding="5" bottomPadding="1" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Bayaran Perintah Tambahan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="fd7bf442-e3d7-470f-a97b-4e7719362c79" key="staticText-8" mode="Opaque" x="4" y="176" width="129" height="14" backcolor="#FFFFFF"/>
+				<box bottomPadding="1" rightPadding="4"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[No. Resit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e2d1ed88-879f-4b8c-b589-1dd647cc609b" key="staticText-9" mode="Opaque" x="4" y="196" width="129" height="14" backcolor="#FFFFFF"/>
+				<box bottomPadding="1" rightPadding="4"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Tarikh Resit]]></text>
+			</staticText>
+			<textField pattern=" #,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="034b3f6e-7770-4786-b7be-4364e738279f" key="textField" x="134" y="34" width="126" height="25"/>
+				<box topPadding="3" leftPadding="5" bottomPadding="1" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKPERMOHONN_JUM_HARTAMOHON}!=null ? $F{TBLPPKPERMOHONN_JUM_HARTAMOHON}:" ")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="01513440-56e2-4fb6-8373-996ae7417826" key="staticText-10" mode="Opaque" x="260" y="34" width="43" height="20" backcolor="#FFFFFF"/>
+				<box topPadding="3" leftPadding="5" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[No. Fail]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="88205773-a7c0-46f9-9d70-147e1df49792" key="staticText-11" x="260" y="54" width="241" height="16"/>
+				<box topPadding="3" leftPadding="5" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Di hadapan saya]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e5232330-9c59-4cb8-b1af-42f67be439bb" key="staticText-12" x="260" y="135" width="107" height="20"/>
+				<box leftPadding="5">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Tarikh :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="057c0647-6755-42c5-95ca-eda41b6769c4" key="staticText-13" x="367" y="135" width="134" height="20"/>
+				<box leftPadding="5">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[Jam :]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="8fa63ce2-ef5f-4aea-9338-7c6d2220d567" key="textField" x="303" y="34" width="198" height="20"/>
+				<box topPadding="3" leftPadding="5" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font fontName="Arial" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{TBLPFDFAIL_NO_FAIL}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement uuid="4cc9d270-c088-4c89-acf8-d4418ceae342" key="textField" x="260" y="70" width="241" height="65"/>
+				<box topPadding="3" leftPadding="4" rightPadding="5">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["DI "
++($F{TBLPPKPERBICARAAN_TMPT_BICARA}!=null ? $F{TBLPPKPERBICARAAN_TMPT_BICARA}:"")
++($F{TBLPPKPERBICARAAN_ALAMAT_B1}!=null ? ", "+$F{TBLPPKPERBICARAAN_ALAMAT_B1}:"")
++($F{TBLPPKPERBICARAAN_ALAMAT_B2}!=null ? ", "+$F{TBLPPKPERBICARAAN_ALAMAT_B2}:"")
++($F{TBLPPKPERBICARAAN_ALAMAT_B3}!=null ? ", "+$F{TBLPPKPERBICARAAN_ALAMAT_B3}:"")
++($F{TBLPPKPERBICARAAN_POSKOD}!=null ? ", "+$F{TBLPPKPERBICARAAN_POSKOD}:"")
++($F{TBLPPKPERBICARAAN_BANDAR}!=null ? " "+$F{TBLPPKPERBICARAAN_BANDAR}:"")
++(($F{TBLRUJNEGERI_NAMA_NEGERI}!=null) && ($F{TBLPPKPERBICARAAN_BANDAR}==null) ? " "+$F{TBLRUJNEGERI_NAMA_NEGERI}:(($F{TBLRUJNEGERI_NAMA_NEGERI}!=null) && ($F{TBLPPKPERBICARAAN_BANDAR}!=null) ? ", "+$F{TBLRUJNEGERI_NAMA_NEGERI}:"TIADA"))+"."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="0a0c75d7-c062-49b5-85d5-7945ac99078b" key="staticText-15" positionType="Float" x="0" y="250" width="170" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[DALAM PERKARA HARTA PUSAKA ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e24ee48a-d78a-4300-bf65-eb4e5165adae" key="staticText-16" positionType="Float" x="0" y="264" width="120" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[NO. KP ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1bce675f-5eef-4afc-a8b1-ce3ccc91b3e1" key="staticText-17" positionType="Float" x="0" y="278" width="120" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[TARIKH MATI ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c2081538-1a0e-4037-9d36-4ef8cd8b9760" key="staticText-18" positionType="Float" x="0" y="299" width="120" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[PEMOHON ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a3b209fc-a7c4-4b90-b65c-5266e5e40e29" key="staticText-19" positionType="Float" x="0" y="313" width="120" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[NO. KP/KPT ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e6f4af51-4029-450b-8a09-6ec41686d9b1" key="staticText-20" positionType="Float" x="0" y="346" width="120" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[BORANG C DITERIMA ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed23f002-1fc5-402f-a9e0-5fe3601636cf" key="staticText-21" positionType="Float" x="307" y="264" width="99" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[NO. SIJIL KEMATIAN ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="66aa3ee6-c85f-454b-97d7-5ed1bd7297b5" key="staticText-22" positionType="Float" x="307" y="299" width="99" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[NO. TELEFON (R)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="96b82296-fb3d-4209-b680-49e615a3ff0b" key="staticText-23" positionType="Float" x="307" y="360" width="99" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[BANTAHAN ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9ac0ae1c-ca2e-41fb-91bb-8e4bb8854a2b" key="staticText-24" positionType="Float" x="307" y="346" width="99" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[BERTARIKH ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="95c76a72-89f1-4a39-aa0a-538c190262be" key="staticText-25" positionType="Float" x="0" y="360" width="120" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[NOTIS]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="0ff97c0d-8fcb-43e3-af0e-8cd9a9a59cf8" key="textField" positionType="Float" x="184" y="250" width="324" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKSIMATI_NAMA_SIMATI}!=null ? $F{TBLPPKSIMATI_NAMA_SIMATI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="b047713b-a02f-4c71-8d33-c0ce567814cb" key="textField" positionType="Float" x="133" y="264" width="162" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_KP_SIMATI}!=null ? $F{NO_KP_SIMATI}:"")]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="cb71c69a-1342-41f8-8466-96df58785010" key="textField" positionType="Float" x="133" y="278" width="162" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKSIMATI_TARIKH_MATI}!=null ? $F{TBLPPKSIMATI_TARIKH_MATI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="c8786e1d-507c-4ca0-87ad-69c62e441e81" key="textField" positionType="Float" x="133" y="299" width="169" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKPEMOHON_NAMA_PEMOHON}!=null ? $F{TBLPPKPEMOHON_NAMA_PEMOHON}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="774befdf-438e-47f5-961d-6b56135b459e" key="textField" positionType="Float" x="133" y="313" width="162" height="11" forecolor="#000000"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_KP_PEMOHON}!=null ? $F{NO_KP_PEMOHON}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="39b150fd-2544-43f1-a241-7840492c4eef" key="textField" positionType="Float" x="133" y="346" width="162" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{JENIS_BORANGC}!=null ? $F{JENIS_BORANGC}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="33049c06-f9f2-427a-87e8-53e4d1284771" key="textField" positionType="Float" x="419" y="264" width="89" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKSIMATI_NO_SIJIL_MATI}!=null ? $F{TBLPPKSIMATI_NO_SIJIL_MATI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="d7ad5965-21ae-415f-891b-4ac841f5f8a6" key="textField" positionType="Float" x="419" y="299" width="89" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKPEMOHON_NO_TEL_R}!=null ? $F{TBLPPKPEMOHON_NO_TEL_R}:"")]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement uuid="a3989c15-9f3b-4907-b861-73ac0f37e5c0" key="textField" positionType="Float" x="419" y="346" width="88" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKKEPUTUSANPERMOHONAN_TARI}!= null ?$F{TBLPPKKEPUTUSANPERMOHONAN_TARI}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="52c68afa-9ff8-4f98-9593-2e7b04bdc1a1" key="textField" positionType="Float" x="420" y="360" width="87" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{FLAG_BANTAHAN}!=null && $F{FLAG_BANTAHAN}.equals("Y") ? "ADA" : "TIADA")
+/*($F{TBLPPKKPTSNPRMHNN_CATATAN}!=null ? $F{TBLPPKKPTSNPRMHNN_CATATAN}:"")*/]]></textFieldExpression>
+			</textField>
+			<textField pattern=" #,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="089e80f3-98fd-4971-a7d0-5b807eda403e" key="textField" x="180" y="80" width="80" height="14">
+					<printWhenExpression><![CDATA[new Boolean ($P{flag}.equals("1"))]]></printWhenExpression>
+				</reportElement>
+				<box rightPadding="4"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement uuid="312eedd0-23d3-45a3-9946-45b045c7ad76" key="textField" mode="Transparent" x="181" y="101" width="79" height="14">
+					<printWhenExpression><![CDATA[new Boolean ($P{flag}.equals("1"))]]></printWhenExpression>
+				</reportElement>
+				<box rightPadding="4"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{JUMLAH_BAYARAN_PERINTAH}!=null ? $F{JUMLAH_BAYARAN_PERINTAH}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="20fcb696-7b41-46e5-9399-b08aa9ed2f68" key="textField" x="134" y="121" width="126" height="34">
+					<printWhenExpression><![CDATA[new Boolean ($P{flag}.equals("1"))]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="3" rightPadding="4">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NO_RESIT}]]></textFieldExpression>
+			</textField>
+			<textField pattern="yyyy/MM/dd" isBlankWhenNull="true">
+				<reportElement uuid="8e68d698-a092-4593-8718-00d63ad14a68" key="textField" x="160" y="139" width="100" height="14">
+					<printWhenExpression><![CDATA[new Boolean ($P{flag}.equals("1"))]]></printWhenExpression>
+				</reportElement>
+				<box rightPadding="4"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TARIKH_BAYARAN}!=null ? $F{TARIKH_BAYARAN}:"")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="c0a5918c-a75c-45bf-9315-106f2c07c9b4" key="textField" x="160" y="176" width="100" height="14">
+					<printWhenExpression><![CDATA[new Boolean ($P{flag}.equals("1"))]]></printWhenExpression>
+				</reportElement>
+				<box rightPadding="4"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="989265f4-e44a-4bf1-93d7-ef8fb4319994" key="textField" x="160" y="197" width="100" height="14">
+					<printWhenExpression><![CDATA[new Boolean ($P{flag}.equals("1"))]]></printWhenExpression>
+				</reportElement>
+				<box rightPadding="4"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yy" isBlankWhenNull="true">
+				<reportElement uuid="1c0cfee9-e148-4993-a918-13b8ac5a074f" key="textField" x="308" y="135" width="59" height="20"/>
+				<box leftPadding="5"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{TBLPPKPERBICARAAN_TKH_BICARA}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="0e200445-d361-4e1c-8ac6-f0b749e2ce2f" key="textField" x="394" y="135" width="107" height="20"/>
+				<box leftPadding="5"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MASA_BICARA}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="c270fcf5-3625-4917-ae39-ccaadd155e4e" key="staticText-26" mode="Opaque" x="0" y="1" width="509" height="20" backcolor="#FFFFFF"/>
+				<box bottomPadding="1" rightPadding="4"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NOTA PERBICARAAN]]></text>
+			</staticText>
+			<subreport isUsingCache="true">
+				<reportElement uuid="1d406474-0cd3-4f5a-9fca-24031f6ab069" key="subreport-1" positionType="Float" x="0" y="380" width="476" height="17"/>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idperbicaraan">
+					<subreportParameterExpression><![CDATA[$P{idperbicaraan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan_subreport1.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="ebab8044-f76a-480f-b73f-a934022051e5" key="subreport-2" positionType="Float" x="0" y="410" width="476" height="17"/>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idperbicaraan">
+					<subreportParameterExpression><![CDATA[$P{idperbicaraan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan_subreportHTATH.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="c410c8cc-7c92-48a5-8151-d95c67b7a5f6" key="subreport-3" positionType="Float" x="0" y="440" width="476" height="17"/>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idperbicaraan">
+					<subreportParameterExpression><![CDATA[$P{idperbicaraan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan_subreportHartaAlih.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="c488ed7b-22e2-4c80-a5c9-506c6a60fee8" key="subreport-4" positionType="Float" x="0" y="470" width="476" height="17">
+					<printWhenExpression><![CDATA[new Boolean(!$P{flagBicaraOnline}.equals("Y"))]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idperbicaraan">
+					<subreportParameterExpression><![CDATA[$P{idperbicaraan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan17_subreportD.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="b6fefdd8-020a-4b45-8a25-071edd21b993" key="subreport-5" positionType="Float" x="0" y="542" width="476" height="17"/>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idperbicaraan">
+					<subreportParameterExpression><![CDATA[$P{idperbicaraan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan_subreportPenghutang.jasper"]]></subreportExpression>
+			</subreport>
+			<staticText>
+				<reportElement uuid="29da2e14-fae6-4bbd-8047-ac951528f5e6" key="staticText-54" positionType="Float" x="134" y="360" width="133" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[SERAH/DITERIMA]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="1555ba30-977f-44bd-be22-fc25aaad3692" key="textField-4" positionType="Float" x="0" y="228" width="475" height="16"/>
+				<textElement>
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["PERMOHONAN DI BAWAH SEKSYEN 8 (AKTA 98)"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="e17c801b-40d5-4b09-92e9-68bacfa553bc" key="staticText-55" positionType="Float" x="0" y="262" width="501" height="1"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1415677e-f8c0-4115-998e-a5e878a79bf1" key="staticText-56" positionType="Float" x="170" y="250" width="14" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3d55ced1-8d6c-4644-987c-d8355401208f" key="staticText-57" positionType="Float" x="120" y="264" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="29669277-c510-41a2-b3a7-622f9194580d" key="staticText-58" positionType="Float" x="120" y="278" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c699769b-0913-489f-8252-5cb9bcf37c80" key="staticText-61" positionType="Float" x="0" y="276" width="501" height="1"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="553a7bec-1f55-4fe5-9121-c0f3e27b60f8" key="staticText-63" positionType="Float" x="0" y="311" width="501" height="1"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a59032ea-2f2a-4d52-b809-973906642b31" key="staticText-65" positionType="Float" x="0" y="358" width="501" height="1"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="60d540c1-ef1a-4220-99a4-f00205da0048" key="staticText-68" positionType="Float" x="406" y="264" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="e068d02e-c4f1-4700-8658-ee639794d73c" key="line-15" x="314" y="35" width="1" height="18"/>
+				<graphicElement>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement uuid="bb2db5b8-49ed-4f52-834c-5e3116114d67" key="staticText-108" positionType="Float" x="120" y="299" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="56998c8d-06e2-427e-8ef2-573e19ec7402" key="staticText-109" positionType="Float" x="406" y="299" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ffd91107-3f36-44f0-9bfa-92b80fa7733d" key="staticText-110" positionType="Float" x="120" y="313" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed629667-b4b6-42ea-8f8b-48d43a768cb8" key="staticText-111" positionType="Float" x="406" y="346" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a6ce2ffb-368f-4caa-bd09-e8ccc3d5401f" key="staticText-112" positionType="Float" x="406" y="360" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a3ac9b92-e25a-495f-82fe-d1e58f816e72" key="staticText-113" positionType="Float" x="120" y="360" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0ed2577d-8fd6-48f1-b98e-b85c5b828ceb" key="staticText-114" positionType="Float" x="120" y="346" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="ac6764db-45da-47b2-b3bf-6675932aa872" key="textField-7" positionType="Float" x="51" y="494" width="61" height="11"/>
+				<textElement markup="styled">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>H</style> - Hadir"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="cf2a3aaa-b68d-4917-9d1f-b3e6bb156db4" key="textField-8" positionType="Float" x="132" y="493" width="90" height="11"/>
+				<textElement markup="styled">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>TH</style> - Tidak Hadir"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="251a7958-49c4-4bd6-ad49-d755a789e65b" key="textField-9" positionType="Float" x="236" y="493" width="106" height="11"/>
+				<textElement markup="styled">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>BD</style> - Belum Dewasa"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="4d9d9888-ac10-486d-952a-e0445e4d5f37" key="textField-10" positionType="Float" x="366" y="494" width="128" height="11"/>
+				<textElement markup="styled">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>TSA</style> - Tidak Sempurna Akal"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="6db6b339-6f81-4c91-955d-45f426919d4c" key="textField-11" positionType="Float" x="2" y="491" width="32" height="11"/>
+				<textElement markup="styled">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Nota : "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="d63fdd3f-09b0-4747-b3e4-38d94560aee3" key="textField-12" x="260" y="155" width="241" height="60"/>
+				<box topPadding="3" leftPadding="5" bottomPadding="5" rightPadding="5">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Arial" size="9" isBold="true" isItalic="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKPERBICARAAN_PEG_PENGENDA}!= null ?$F{TBLPPKPERBICARAAN_PEG_PENGENDA}:"")]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement uuid="346aa0c6-1ba3-4f72-aa3a-bb98e1adfbb4" key="subreport-6" positionType="Float" x="1" y="515" width="476" height="17">
+					<printWhenExpression><![CDATA[new Boolean(!$P{flagBicaraOnline}.equals("Y"))]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idperbicaraan">
+					<subreportParameterExpression><![CDATA[$P{idperbicaraan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan_turutH.jasper"]]></subreportExpression>
+			</subreport>
+			<staticText>
+				<reportElement uuid="1b70e833-46ca-48a7-8884-683075137efe" key="staticText-116" positionType="Float" x="307" y="313" width="99" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[NO. TELEFON (HP)]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="98ca314f-dc43-4473-848b-1a7db488515d" key="textField-13" positionType="Float" x="419" y="313" width="89" height="11"/>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TBLPPKPEMOHON_NO_TEL_HP}!=null ? $F{TBLPPKPEMOHON_NO_TEL_HP}:"")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="8d3dcc7a-3003-4088-b883-78addd5e94c2" key="staticText-117" positionType="Float" x="406" y="313" width="13" height="11"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField pattern=" #,##0.00" isBlankWhenNull="true">
+				<reportElement uuid="68893962-6245-43f3-a112-b9080785c6b3" key="textField-17" x="134" y="34" width="126" height="25"/>
+				<box topPadding="3" leftPadding="5" bottomPadding="1" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["RM "]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="a4840982-b7c6-44da-900f-a43bf52f1906" key="staticText-119" positionType="Float" x="0" y="325" width="120" height="14"/>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[HUBUNGAN DGN SI MATI]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7a3efe6a-5bee-4c07-b582-9644aa7c7f88" key="staticText-120" positionType="Float" x="119" y="325" width="13" height="14"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement uuid="6d9397c2-da0c-4311-a5e5-518dd0b3bc81" key="textField" positionType="Float" x="133" y="325" width="274" height="14" forecolor="#000000"/>
+				<textElement>
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{HUBSIMATIPEMOHON}]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement uuid="32259c02-6cb2-4362-ac27-3513d3078189" key="subreport-7" positionType="Float" x="0" y="568" width="476" height="15"/>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idperbicaraan">
+					<subreportParameterExpression><![CDATA[$P{idperbicaraan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan_subreportPemiutang.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="388aaf4e-af79-4fbb-9f58-a6c81ed46d4d" key="subreport-8" positionType="Float" x="0" y="470" width="476" height="17">
+					<printWhenExpression><![CDATA[new Boolean($P{flagBicaraOnline}.equals("Y"))]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idperbicaraan">
+					<subreportParameterExpression><![CDATA[$P{idperbicaraan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idpermohonan">
+					<subreportParameterExpression><![CDATA[$F{ID_PERMOHONAN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idpermohonansimati">
+					<subreportParameterExpression><![CDATA[$F{ID_PERMOHONANSIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idpemohon">
+					<subreportParameterExpression><![CDATA[$F{ID_PEMOHON}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan_OBBicaraOnline.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="e8613f09-d9e0-4967-88f0-30bb64616bf3" key="subreport-9" positionType="Float" x="0" y="515" width="476" height="17">
+					<printWhenExpression><![CDATA[new Boolean($P{flagBicaraOnline}.equals("Y"))]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idperbicaraan">
+					<subreportParameterExpression><![CDATA[$P{idperbicaraan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idpermohonan">
+					<subreportParameterExpression><![CDATA[$F{ID_PERMOHONAN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idpermohonansimati">
+					<subreportParameterExpression><![CDATA[$F{ID_PERMOHONANSIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idpemohon">
+					<subreportParameterExpression><![CDATA[$F{ID_PEMOHON}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan_THBicaraOnline.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement uuid="5dd1e7be-c9e6-4d8e-9da4-69dd0be5949c" key="subreport-10" positionType="Float" x="0" y="593" width="476" height="15"/>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + ""+File.separator+"ppk"+File.separator+"NotaPerbicaraan_subreportPeguam.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="d87639f6-cde1-4764-9ab6-3c620fc6c9e3" key="textField-19" positionType="Float" x="0" y="619" width="155" height="11" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[new Boolean($P{flagBicaraOnline}.equals("Y"))]]></printWhenExpression>
+				</reportElement>
+				<textElement markup="styled">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["9.      Lampiran Perubahan Maklumat :"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="387246cb-0688-4841-97fd-fac7bf87a489" key="textField-20" positionType="Float" x="155" y="619" width="68" height="11" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[new Boolean($P{flagBicaraOnline}.equals("Y"))]]></printWhenExpression>
+				</reportElement>
+				<textElement markup="styled">
+					<font fontName="Arial" size="8" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{FLAG_PERUBAHAN}!=null ? $F{FLAG_PERUBAHAN}:"TIADA")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement uuid="377777d3-196a-4c05-9af4-e7952c341737" key="textField-21" positionType="Float" x="0" y="640" width="155" height="11" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[new Boolean($P{flagBicaraOnline}.equals("Y"))]]></printWhenExpression>
+				</reportElement>
+				<textElement markup="styled">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["10.    Maklumat Bantahan :"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement uuid="6ac097b2-5c26-4216-919d-f7cab4cf4d91" key="textField-22" positionType="Float" isPrintRepeatedValues="false" x="20" y="658" width="452" height="14" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[new Boolean($P{flagBicaraOnline}.equals("Y"))]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font fontName="Arial" size="9" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{KETERANGAN_BANTAHAN}!=null ? $F{KETERANGAN_BANTAHAN}:"TIADA")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="25" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement uuid="4f5261a6-0920-4414-b750-64f8e157571e" key="textField-5" x="3" y="9" width="270" height="16"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA["Muka Surat " + $V{PAGE_NUMBER} + "/"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" isBlankWhenNull="false">
+				<reportElement uuid="07145004-9d0d-4b5c-9829-10113f229503" key="textField-6" x="273" y="9" width="231" height="16"/>
+				<textElement textAlignment="Left"/>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER} + ""]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

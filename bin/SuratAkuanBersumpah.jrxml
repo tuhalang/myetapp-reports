@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="SuratAkuanBersumpah"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idperbicaraan" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select DISTINCT
+f.FLAG_JENIS_NOTIS,
+g.id_perbicaraan,
+J.ID_FAIL,
+ CASE
+    WHEN I.SEKSYEN = '8' THEN J.NO_FAIL
+    ELSE SUBSTR(J.NO_FAIL,1,INSTR(J.NO_FAIL,'/S17-')-1)
+
+END AS NO_FAIL,
+upper(nvl(a.NAMA_PENGHANTAR_NOTIS,'')) as NAMA_PENGHANTAR_NOTIS,
+nvl(a.STATUS_AKUAN_SUMPAH,'') as STATUS_AKUAN_SUMPAH,
+nvl(a.status_SERAH,'') as  status_SERAH,
+to_char(a.TARIKH_SERAHAN,'yyyy') as TARIKH_SERAHAN,
+ CASE 
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='01' THEN 'Januari' 
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='02' THEN 'Febuari'
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='03' THEN 'Mac'
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='04' THEN 'April'
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='05' THEN 'Mei'
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='06' THEN 'Jun'
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='07' THEN 'Julai'
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='08' THEN 'Ogos' 
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='09' THEN 'September'
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='10' THEN 'Oktober'
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='11' THEN 'November'
+                WHEN TO_CHAR(a.TARIKH_SERAHAN, 'MM')='12' THEN 'Disember' 
+ END || ' ' || TO_CHAR(a.TARIKH_SERAHAN, 'YYYY') AS BULAN,
+ to_char(a.TARIKH_SERAHAN,'dd') as hari,NVL(REPLACE(TRIM(a.CATATAN),'&','&#38;'),'') as CATATAN,
+b.ID_PEJABATJKPTG,
+INITCAP(c.NAMA_PEJABAT) as NAMA_PEJABAT_PENGHANTAR_NOTIS,
+upper(c.NAMA_PEJABAT) as NAMA_PEJABAT,
+REPLACE(UPPER(REPLACE(TRIM(c.ALAMAT1),'&','&#38;')),',') AS ALAMAT1_PEJABATJKPTG,
+REPLACE(UPPER(REPLACE(TRIM(c.ALAMAT2),'&','&#38;')),',') AS ALAMAT2_PEJABATJKPTG,
+REPLACE(UPPER(REPLACE(TRIM(c.ALAMAT3),'&','&#38;')),',') AS ALAMAT3_PEJABATJKPTG,
+c.POSKOD AS POSKOD_PEJABATJKPTG,
+CASE
+ WHEN UPPER(TRIM(d.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(d.KETERANGAN)),'')
+ ELSE ''
+  END AS BANDAR_PEJABATJKPTG,
+upper(e.NAMA_NEGERI) as negeri,
+REPLACE(UPPER(REPLACE(TRIM(k.ALAMAT1_SURAT),'&','&#38;')),',') AS ALAMAT1_SURAT_PEMOHON,
+REPLACE(UPPER(REPLACE(TRIM(k.ALAMAT2_SURAT),'&','&#38;')),',') AS ALAMAT2_SURAT_PEMOHON,
+REPLACE(UPPER(REPLACE(TRIM(k.ALAMAT3_SURAT),'&','&#38;')),',') AS ALAMAT3_SURAT_PEMOHON,
+k.poskod as poskod_pemohon,
+CASE
+ WHEN UPPER(TRIM(l.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(l.KETERANGAN)),'')
+ ELSE ''
+  END AS bandarPemohon,
+upper(m.NAMA_NEGERI) as NEGERISURAT_PEMOHON
+from tblppknotisobmst a, tblppkrujpenghantarnotis b, tblrujpejabatjkptg c,
+tblrujbandar d,tblrujnegeri e, tblppknotisperbicaraan f,tblppkperbicaraan g,
+tblppkkeputusanpermohonan h, tblppkpermohonan i, tblpfdfail j,tblppkpemohon k,
+tblrujbandar l,tblrujnegeri m
+where a.ID_PENGHANTARNOTIS=b.ID_PENGHANTARNOTIS
+and b.ID_PEJABATJKPTG = c.ID_PEJABATJKPTG(+)
+and d.ID_BANDAR(+)=c.ID_BANDAR
+and e.ID_NEGERI(+)=c.ID_NEGERI
+and a.ID_NOTISOBMST=f.ID_NOTISOBMST
+and f.ID_PERBICARAAN=g.ID_PERBICARAAN
+and g.ID_KEPUTUSANPERMOHONAN=h.ID_KEPUTUSANPERMOHONAN
+and h.ID_PERMOHONAN=i.ID_PERMOHONAN
+and i.ID_FAIL=j.ID_FAIL
+and status_SERAH=2
+and k.ID_PEMOHON=i.ID_PEMOHON
+and l.ID_BANDAR(+)=k.ID_BANDAR
+and m.ID_NEGERI(+)=k.ID_NEGERI
+and nvl(f.FLAG_JENIS_NOTIS, '0')= '0'
+and g.id_perbicaraan = $P!{idperbicaraan}]]></queryString>
+
+	<field name="ID_PERBICARAAN" class="java.math.BigDecimal"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="ID_PEJABATJKPTG" class="java.math.BigDecimal"/>
+	<field name="FLAG_JENIS_NOTIS" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="NAMA_PENGHANTAR_NOTIS" class="java.lang.String"/>
+	<field name="STATUS_AKUAN_SUMPAH" class="java.lang.String"/>
+	<field name="STATUS_SERAH" class="java.lang.String"/>
+	<field name="TARIKH_SERAHAN" class="java.lang.String"/>
+	<field name="BULAN" class="java.lang.String"/>
+	<field name="HARI" class="java.lang.String"/>
+	<field name="CATATAN" class="java.lang.String"/>
+	<field name="NAMA_PEJABAT_PENGHANTAR_NOTIS" class="java.lang.String"/>
+	<field name="NAMA_PEJABAT" class="java.lang.String"/>
+	<field name="ALAMAT1_PEJABATJKPTG" class="java.lang.String"/>
+	<field name="ALAMAT2_PEJABATJKPTG" class="java.lang.String"/>
+	<field name="ALAMAT3_PEJABATJKPTG" class="java.lang.String"/>
+	<field name="POSKOD_PEJABATJKPTG" class="java.lang.String"/>
+	<field name="BANDAR_PEJABATJKPTG" class="java.lang.String"/>
+	<field name="NEGERI" class="java.lang.String"/>
+	<field name="ALAMAT1_SURAT_PEMOHON" class="java.lang.String"/>
+	<field name="ALAMAT2_SURAT_PEMOHON" class="java.lang.String"/>
+	<field name="ALAMAT3_SURAT_PEMOHON" class="java.lang.String"/>
+	<field name="POSKOD_PEMOHON" class="java.lang.String"/>
+	<field name="BANDARPEMOHON" class="java.lang.String"/>
+	<field name="NEGERISURAT_PEMOHON" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="528"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="54"
+						y="212"
+						width="426"
+						height="13"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true" isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[AKUAN BERSUMPAH]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="310"
+						y="392"
+						width="170"
+						height="13"
+						key="staticText-3"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[Penghantar Notis]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="54"
+						y="447"
+						width="161"
+						height="13"
+						key="staticText-4"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[Dihadapan saya,]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="310"
+						y="378"
+						width="170"
+						height="13"
+						key="textField-6"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PENGHANTAR_NOTIS}!=null?$F{NAMA_PENGHANTAR_NOTIS}:"")]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="310"
+						y="364"
+						width="170"
+						height="13"
+						key="staticText-6"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[Tandatangan]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="54"
+						y="515"
+						width="170"
+						height="13"
+						key="staticText-7"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Pentadbir Tanah / Majistret]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="291"
+						y="118"
+						width="189"
+						height="13"
+						key="textField-8"
+						isPrintRepeatedValues="false"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_FAIL}!=null?$F{NO_FAIL}:"")]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="54"
+						y="352"
+						width="170"
+						height="13"
+						key="staticText-8"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[Pada : ............................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="310"
+						y="352"
+						width="170"
+						height="13"
+						key="staticText-9"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[.......................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="50"
+						y="503"
+						width="170"
+						height="13"
+						key="staticText-10"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[.........................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="54"
+						y="238"
+						width="426"
+						height="13"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true" isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[PENGHANTAR NOTIS BAGI NOTIS YANG TIDAK DAPAT DISERAH]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="310"
+						y="406"
+						width="170"
+						height="13"
+						key="textField"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PEJABAT_PENGHANTAR_NOTIS}!=null?$F{NAMA_PEJABAT_PENGHANTAR_NOTIS}:"")]]></textFieldExpression>
+				</textField>
+				<break>
+					<reportElement
+						x="0"
+						y="527"
+						width="535"
+						height="0"
+						key="element-1"
+						positionType="Float"
+						isPrintWhenDetailOverflows="true"/>
+				</break>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="54"
+						y="280"
+						width="425"
+						height="22"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled" lineSpacing="1_1_2">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bahawa saya <style pdfFontName='Helvetica-BoldOblique'>"+($F{NAMA_PENGHANTAR_NOTIS}!=null?$F{NAMA_PENGHANTAR_NOTIS}:"")+"</style> Penghantar Notis Pusaka Kecil <style pdfFontName='Helvetica-BoldOblique'>"+($F{NAMA_PEJABAT}!=null?$F{NAMA_PEJABAT}+", ":"")
++($F{ALAMAT1_PEJABATJKPTG}!=null?$F{ALAMAT1_PEJABATJKPTG}+", ":"")
++($F{ALAMAT2_PEJABATJKPTG}!=null?$F{ALAMAT2_PEJABATJKPTG}+", ":"")
++($F{ALAMAT3_PEJABATJKPTG}!=null?$F{ALAMAT3_PEJABATJKPTG}+", ":"")
++($F{POSKOD_PEJABATJKPTG}!=null?$F{POSKOD_PEJABATJKPTG}+" ":"")
++($F{BANDAR_PEJABATJKPTG}!=null?$F{BANDAR_PEJABATJKPTG}+", ":"")
++($F{NEGERI}!=null?$F{NEGERI}:"")+"</style> mengaku dengan sesungguhnya telah hadir ke alamat <style pdfFontName='Helvetica-BoldOblique'>"
++($F{ALAMAT1_SURAT_PEMOHON}!=null?$F{ALAMAT1_SURAT_PEMOHON}+", ":"")
++($F{ALAMAT2_SURAT_PEMOHON}!=null?$F{ALAMAT2_SURAT_PEMOHON}+", ":"")
++($F{ALAMAT3_SURAT_PEMOHON}!=null?$F{ALAMAT3_SURAT_PEMOHON}+", ":"")
++($F{POSKOD_PEMOHON}!=null?$F{POSKOD_PEMOHON}+" ":"")
++($F{BANDARPEMOHON}!=null?$F{BANDARPEMOHON}+", ":"")
++($F{NEGERISURAT_PEMOHON}!=null?$F{NEGERISURAT_PEMOHON}:"")
++"</style> untuk menyempurnakan serahan notis bagi fail <style pdfFontName='Helvetica-BoldOblique'>"+($F{NO_FAIL}!=null?$F{NO_FAIL}:"")+"</style> Notis telah <style pdfFontName='Helvetica-BoldOblique'>TIDAK DAPAT DISERAHKAN</style>"
++($F{CATATAN}!=null?" kerana <style pdfFontName='Helvetica-BoldOblique'>"+$F{CATATAN}+"</style>":".")]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</summary>
+</jasperReport>

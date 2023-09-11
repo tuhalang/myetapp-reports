@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BorangAOnline_Malay_subreport1"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="460"
+		 pageHeight="802"
+		 columnWidth="460"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoDataSection"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.zoom" value="1.5" />
+	<property name="ireport.x" value="0" />
+	<property name="ireport.y" value="0" />
+	<property name="ireport.jasperserver.reportUnit" value="/reports/myetapp/BorangAOnline_Eng" />
+	<property name="ireport.jasperserver.url" value="http://etapp.my:8080/jasperserver/services/repository" />
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idPermohonan" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idParentOB" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="ReportDir" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[WITH MYOB(LVL, LAPIS, UMUR, ID_PARENTOB, HUBUNGAN, NAMA_OB, ID_OB, ALAMAT1, ALAMAT2, ALAMAT3, BANDAR, NEGERI, POSKOD, NO_KP) AS
+(
+SELECT 1 AS LVL, OB.LAPIS, OB.UMUR, NULL AS ID_PARENTOB, 
+SAU.KETERANGAN||' KEPADA '|| SM.NAMA_SIMATI AS HUBUNGAN,
+OB.NAMA_OB,OB.ID_OB,
+REPLACE(UPPER(REPLACE(TRIM(OB.ALAMAT1_SURAT),'&','&#38;')),',') ALAMAT1,
+REPLACE(UPPER(REPLACE(TRIM(OB.ALAMAT2_SURAT),'&','&#38;')),',') ALAMAT2,
+REPLACE(UPPER(REPLACE(TRIM(OB.ALAMAT3_SURAT),'&','&#38;')),',') ALAMAT3,
+CASE
+WHEN UPPER(TRIM(B.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN REPLACE(UPPER(REPLACE(NVL(UPPER(TRIM(B.KETERANGAN)),''),'&','&#38;')),',')
+ELSE ''
+END AS BANDAR,
+CASE
+WHEN UPPER(TRIM(N.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(N.NAMA_NEGERI)),'')
+ELSE ''
+END AS NEGERI,
+NVL(OB.POSKOD_SURAT,'')AS POSKOD,
+CASE
+WHEN OB.NO_KP_BARU IS NULL AND OB.NO_KP_LAMA IS NOT NULL THEN  UPPER(OB.NO_KP_LAMA)
+WHEN OB.NO_KP_BARU IS NULL AND OB.NO_KP_LAMA IS NULL THEN  UPPER(OB.NO_KP_LAIN)
+WHEN OB.NO_KP_BARU IS NULL AND OB.NO_KP_LAIN IS NULL THEN  UPPER(OB.NO_KP_LAMA )
+ELSE OB.NO_KP_BARU
+END || '' ||
+CASE
+WHEN OB.NO_KP_BARU IS NOT NULL AND OB.NO_KP_LAMA IS NOT NULL THEN UPPER(OB.NO_KP_LAMA)
+END || '' ||
+CASE
+WHEN OB.NO_KP_BARU IS  NULL AND OB.NO_KP_LAMA IS NOT NULL THEN UPPER(OB.NO_KP_LAIN)
+END AS NO_KP
+FROM TBLPPKOBPERMOHONAN OB, TBLPPKPERMOHONANSIMATI PSM, TBLPPKSIMATI SM, TBLPPKRUJSAUDARA SAU,
+TBLRUJNEGERI N, TBLRUJBANDAR B,
+(SELECT HOPB.* FROM TBLPPKHUBUNGANOBPERMOHONAN HOPB, TBLPPKPERMOHONANSIMATI PSMB
+WHERE HOPB.ID_PERMOHONANSIMATI = PSMB.ID_PERMOHONANSIMATI
+AND PSMB.ID_PERMOHONAN = $P{idPermohonan}) HUB
+WHERE OB.ID_PERMOHONANSIMATI = PSM.ID_PERMOHONANSIMATI AND OB.ID_OB = HUB.ID_OB(+)
+AND PSM.ID_PERMOHONAN = $P{idPermohonan}
+AND PSM.ID_SIMATI = SM.ID_SIMATI
+AND OB.ID_TARAFKPTG = 1
+AND OB.ID_BANDARSURAT = B.ID_BANDAR(+)
+AND OB.ID_NEGERISURAT = N.ID_NEGERI(+)
+AND OB.ID_SAUDARA = SAU.ID_SAUDARA
+AND HUB.ID_PARENTOB IS NULL
+UNION ALL
+SELECT LVL + 1, OB.LAPIS, OB.UMUR, HUB.ID_PARENTOB, 
+SAU.KETERANGAN||' KEPADA '|| PAR.NAMA_OB AS HUBUNGAN,
+OB.NAMA_OB,OB.ID_OB,
+REPLACE(UPPER(REPLACE(TRIM(OB.ALAMAT1_SURAT),'&','&#38;')),',') ALAMAT1,
+REPLACE(UPPER(REPLACE(TRIM(OB.ALAMAT2_SURAT),'&','&#38;')),',') ALAMAT2,
+REPLACE(UPPER(REPLACE(TRIM(OB.ALAMAT3_SURAT),'&','&#38;')),',') ALAMAT3,
+CASE
+WHEN UPPER(TRIM(B.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN REPLACE(UPPER(REPLACE(NVL(UPPER(TRIM(B.KETERANGAN)),''),'&','&#38;')),',')
+ELSE ''
+END AS BANDAR,
+CASE
+WHEN UPPER(TRIM(N.NAMA_NEGERI)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(N.NAMA_NEGERI)),'')
+ELSE ''
+END AS NEGERI,
+NVL(OB.POSKOD_SURAT,'')AS POSKOD,
+CASE
+WHEN OB.NO_KP_BARU IS NULL AND OB.NO_KP_LAMA IS NOT NULL THEN  UPPER(OB.NO_KP_LAMA)
+WHEN OB.NO_KP_BARU IS NULL AND OB.NO_KP_LAMA IS NULL THEN  UPPER(OB.NO_KP_LAIN)
+WHEN OB.NO_KP_BARU IS NULL AND OB.NO_KP_LAIN IS NULL THEN  UPPER(OB.NO_KP_LAMA )
+ELSE OB.NO_KP_BARU
+END || '' ||
+CASE
+WHEN OB.NO_KP_BARU IS NOT NULL AND OB.NO_KP_LAMA IS NOT NULL THEN UPPER(OB.NO_KP_LAMA)
+END || '' ||
+CASE
+WHEN OB.NO_KP_BARU IS  NULL AND OB.NO_KP_LAMA IS NOT NULL THEN UPPER(OB.NO_KP_LAIN)
+END AS NO_KP
+FROM TBLPPKOBPERMOHONAN OB, TBLPPKPERMOHONANSIMATI PSM, TBLPPKRUJSAUDARA SAU, TBLPPKOB PAR,
+TBLRUJNEGERI N, TBLRUJBANDAR B,
+MYOB MOB, 
+(SELECT HOPB.* FROM TBLPPKHUBUNGANOBPERMOHONAN HOPB, TBLPPKPERMOHONANSIMATI PSMB
+WHERE HOPB.ID_PERMOHONANSIMATI = PSMB.ID_PERMOHONANSIMATI 
+AND PSMB.ID_PERMOHONAN = $P{idPermohonan}) HUB
+WHERE OB.ID_PERMOHONANSIMATI = PSM.ID_PERMOHONANSIMATI AND OB.ID_OB = HUB.ID_OB
+AND PSM.ID_PERMOHONAN = $P{idPermohonan}
+AND OB.ID_SAUDARA = SAU.ID_SAUDARA
+AND HUB.ID_PARENTOB = PAR.ID_OB
+AND HUB.ID_PARENTOB = MOB.ID_OB
+AND OB.ID_TARAFKPTG = 1
+AND OB.ID_BANDARSURAT = B.ID_BANDAR(+)
+AND OB.ID_NEGERISURAT = N.ID_NEGERI(+)
+AND HUB.ID_PARENTOB IS NOT NULL
+) SEARCH DEPTH FIRST BY LAPIS,UMUR DESC SET SEQ
+SELECT LVL, LAPIS, UMUR, ID_PARENTOB, HUBUNGAN AS KETERANGAN, NAMA_OB, 
+ID_OB, ALAMAT1, ALAMAT2, ALAMAT3, BANDAR, NEGERI, POSKOD, 
+CASE
+WHEN LENGTH(NO_KP) IS NULL THEN ''
+WHEN LENGTH(NO_KP)<12 THEN  ''||RTRIM(NO_KP)||''
+WHEN LENGTH(RTRIM(NO_KP))=12 THEN SUBSTR(NO_KP,1,6) || '-' || SUBSTR(NO_KP,7,2) || '-' || SUBSTR(NO_KP,9,4)
+ELSE SUBSTR(NO_KP,1,6) || '-' || SUBSTR(NO_KP,7,2) || '-' || SUBSTR(NO_KP,9,4)  ||'  ('||SUBSTR(NO_KP,13,LENGTH(NO_KP))||')'
+END  AS NO_KP_OB
+FROM MYOB
+]]></queryString>
+
+	<field name="LVL" class="java.math.BigDecimal"/>
+	<field name="LAPIS" class="java.math.BigDecimal"/>
+	<field name="UMUR" class="java.math.BigDecimal"/>
+	<field name="ID_PARENTOB" class="java.math.BigDecimal"/>
+	<field name="KETERANGAN" class="java.lang.String"/>
+	<field name="NAMA_OB" class="java.lang.String"/>
+	<field name="ID_OB" class="java.math.BigDecimal"/>
+	<field name="ALAMAT1" class="java.lang.String"/>
+	<field name="ALAMAT2" class="java.lang.String"/>
+	<field name="ALAMAT3" class="java.lang.String"/>
+	<field name="BANDAR" class="java.lang.String"/>
+	<field name="NEGERI" class="java.lang.String"/>
+	<field name="POSKOD" class="java.lang.String"/>
+	<field name="NO_KP_OB" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="49"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="20"
+						y="0"
+						width="79"
+						height="49"
+						key="staticText-5"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
+				<text><![CDATA[Nama ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="99"
+						y="0"
+						width="110"
+						height="49"
+						key="staticText-6"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
+				<text><![CDATA[No. K/P (atau apa-apa 
+no. pengenalan lain)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="209"
+						y="0"
+						width="131"
+						height="49"
+						key="staticText-7"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
+				<text><![CDATA[Alamat]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="340"
+						y="0"
+						width="99"
+						height="49"
+						key="staticText-8"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
+				<text><![CDATA[Hubungan dengan
+si mati]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="78"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="20"
+						y="0"
+						width="79"
+						height="78"
+						key="textField"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NAMA_OB}!=null ? $F{NAMA_OB}+"\n":""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="99"
+						y="0"
+						width="110"
+						height="78"
+						key="textField"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NO_KP_OB}!=null ? $F{NO_KP_OB}+"\n":""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="209"
+						y="0"
+						width="131"
+						height="78"
+						key="textField"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Justified">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{ALAMAT1}!=null) ?
+(($F{ALAMAT1}!=null ? $F{ALAMAT1}+"\n":"")
++($F{ALAMAT2}!=null ? $F{ALAMAT2}+"\n":"")
++($F{ALAMAT3}!=null ? $F{ALAMAT3}+"\n":"")
++(($F{POSKOD}!=null && $F{BANDAR}!=null) ? $F{POSKOD}+" "+$F{BANDAR}+"\n":($F{POSKOD}==null && $F{BANDAR}!=null) ? $F{BANDAR}+"\n":($F{POSKOD}!=null && $F{BANDAR}==null) ? $F{POSKOD}+"\n":"")
++($F{NEGERI}!=null ? $F{NEGERI}:""))
+: ""]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="340"
+						y="0"
+						width="99"
+						height="78"
+						key="textField"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{KETERANGAN}!=null ? $F{KETERANGAN}+"\n":""]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+		<noData>
+			<band height="60"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="20"
+						y="10"
+						width="79"
+						height="31"
+						key="staticText"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
+				<text><![CDATA[Nama]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="209"
+						y="10"
+						width="131"
+						height="31"
+						key="staticText"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
+				<text><![CDATA[Alamat]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="340"
+						y="10"
+						width="99"
+						height="31"
+						key="staticText"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
+				<text><![CDATA[Hubungan dengan
+si mati]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="99"
+						y="10"
+						width="110"
+						height="31"
+						key="staticText"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
+				<text><![CDATA[No. K/P (atau apa-apa 
+no. pengenalan lain)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="20"
+						y="41"
+						width="419"
+						height="19"
+						key="staticText"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[- TIADA -]]></text>
+				</staticText>
+			</band>
+		</noData>
+</jasperReport>

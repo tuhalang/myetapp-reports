@@ -1,0 +1,1390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BorangE2" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="ee4e4946-a9ba-49b0-ae7e-5d3854407339">
+	<property name="ireport.zoom" value="1.6105100000000054"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="ReportDir" class="java.lang.String"/>
+	<parameter name="idfail" class="java.lang.String"/>
+	<parameter name="namaPegawai" class="java.lang.String"/>
+	<parameter name="jawatan" class="java.lang.String"/>
+	<parameter name="namaPentadbir" class="java.lang.String"/>
+	<parameter name="flagBorangF" class="java.lang.String"/>
+	<parameter name="jumlahBayaran" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="statusFail" class="java.lang.String"/>
+	<parameter name="flag_keb_kemaskini" class="java.lang.String"/>
+	<parameter name="NILAI_BERSIH_1" class="java.lang.String"/>
+	<parameter name="NILAI_BERSIH_2" class="java.lang.String"/>
+	<parameter name="namaPentadbirBorangF" class="java.lang.String"/>
+	<parameter name="noFailremoveslash" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[-----/Borang E2 edit by wan on 25/10/2011 */------
+
+SELECT DISTINCT
+            a.ID_FAIL,
+            Upper(REPLACE(A.NO_FAIL,'&','&#38;'))As No_Fail,
+
+            B.Id_Permohonan,
+            To_Char(B.Tarikh_Mohon,'yyyy') As Tahun,
+            nmhn.NAMA_NEGERI AS NEGERI_mohon,
+            REPLACE(dmhn.NAMA_DAERAH,'&','&#38;') AS DAERAH_mohon,
+            Nvl(Replace(To_Char(B.Jumlah_Hta_Tarikhmati,'999,999,999.99'),' ', ''),' ')As Jumlah_Hta_Tarikhmati,
+
+            c.ID_PERMOHONANSIMATI,
+
+ ------ /* Maklumat Simati */ ------------
+            d.ID_SIMATI,
+            CASE
+                WHEN d.NAMA_SIMATI IS NOT NULL AND d.NAMA_LAIN IS NULL THEN REPLACE(d.NAMA_SIMATI,'&','&#38;')
+                WHEN d.NAMA_SIMATI IS NOT NULL AND d.NAMA_LAIN IS NOT NULL THEN REPLACE(d.NAMA_SIMATI,'&','&#38;') || ' @'|| REPLACE(d.NAMA_LAIN,'&','&#38;')
+                WHEN d.NAMA_SIMATI IS NULL AND d.NAMA_LAIN IS NOT NULL THEN REPLACE(d.NAMA_LAIN,'&','&#38;')
+            End As Nama_Simati,
+            Case
+ 		WHEN (d.no_kp_baru IS NOT NULL OR d.no_kp_lama IS NOT NULL) THEN ', No. KP : '
+                --WHEN d.jenis_kp in (0,5,6,7) THEN ', No. KP : '
+                WHEN (d.no_kp_baru IS NULL and d.no_kp_lama is NULL and d.no_kp_lain IS NOT NULL and d.jenis_kp <> 4) THEN ', No. KP : '
+                WHEN d.jenis_kp=4 and (d.no_kp_baru IS NULL OR d.no_kp_lama IS NULL) THEN ', No. PASPORT : '
+            -- null,6,0,5,7,4,
+                Else ''
+            END AS Jenis_kp_simati,
+            CASE
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NULL and d.no_kp_lain IS NULL THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4)
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NOT NULL AND d.no_kp_lain IS NULL THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4) || ' ('||d.no_kp_lama ||')'
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NOT NULL AND d.no_kp_lain IS NOT NULL AND d.jenis_kp <> 4 THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4) || ' ('||d.no_kp_lama ||' / '||d.no_kp_lain ||')'
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NOT NULL AND d.no_kp_lain IS NOT NULL AND d.jenis_kp = 4 THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4) || ' ('||d.no_kp_lama ||' ) No. PASPORT : '||d.no_kp_lain ||''
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NULL AND d.no_kp_lain IS NOT NULL AND d.jenis_kp = 4 THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4) || ' No. PASPORT : '||d.no_kp_lain ||''
+                WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NULL and d.no_kp_lain IS NOT NULL AND d.jenis_kp <> 4 THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4)  || ' ('||d.no_kp_lain ||')'
+                WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NOT NULL and d.no_kp_lain IS NULL THEN REPLACE(d.no_kp_lama,'&','&#38;')
+                WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NOT NULL and d.no_kp_lain IS NOT NULL AND d.jenis_kp = 4 THEN REPLACE(d.no_kp_lama,'&','&#38;') || ' No. PASPORT : '||d.no_kp_lain ||''
+                WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NOT NULL and d.no_kp_lain IS NOT NULL AND d.jenis_kp <> 4 THEN REPLACE(d.no_kp_lama,'&','&#38;') || ' ('||d.no_kp_lain ||')'
+                WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NULL and d.no_kp_lain IS NOT NULL THEN REPLACE(d.no_kp_lain,'&','&#38;')
+                ELSE ''
+            END AS kp_simati,
+            d.JENIS_WARGA AS WARGA_SIMATI,
+            CASE
+                WHEN d.ID_BUKTIMATI = 1 THEN ', No. Sijil Mati: '|| d.NO_SIJIL_MATI
+                WHEN d.ID_BUKTIMATI = 2 THEN ', Surat Sumpah Kematian: '|| d.NO_SIJIL_MATI
+                WHEN d.ID_BUKTIMATI = 3 THEN ', Anggapan Kematian dari Mahkamah Tinggi: '|| d.NO_SIJIL_MATI
+                WHEN d.ID_BUKTIMATI = 4 THEN ', No. Permit Kubur: '|| d.NO_SIJIL_MATI
+                ELSE ''
+            END AS BUKTI_MATI,
+            CASE
+                WHEN TO_CHAR(d.TARIKH_MATI,'dd/mm/yyyy') < '01/11/1991' THEN '1'
+                ELSE '0'
+            END AS FLAG_TARIKHMATI,
+            TO_CHAR(d.TARIKH_MATI,'dd/mm/yyyy') as TARIKH_MATI,
+            d.NO_SIJIL_MATI,
+
+  ------ /* Maklumat Pemohon */ ------------
+            Upper(REPLACE(e.NAMA_PEMOHON,'&','&#38;')) as NAMA_PEMOHON,
+            CASE
+                WHEN e.jenis_kp in (0) and e.id_tarafkptg in (1) and nama_pemohon like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN e.id_tarafkptg in (6,10) and nama_pemohon like ('%AMANAH%') THEN null
+	     --WHEN e.id_tarafkptg in (6,10) and nama_pemohon like ('%AMANAH%') THEN ', No. DAFTAR: '
+                WHEN e.id_tarafkptg in (8) and nama_pemohon like ('%MAJLIS%AGAMA%ISLAM%') THEN ', No. DAFTAR: '
+                WHEN e.id_tarafkptg in (6,8) THEN ', No. DAFTAR: '
+	      WHEN e.id_tarafkptg in (8) THEN ', No. DAFTAR: '
+                WHEN e.jenis_kp in (0) and e.id_tarafkptg=1 THEN ', No. KP: '
+                WHEN e.jenis_kp in (0,5,6) THEN ', No. KP: '
+                WHEN e.jenis_kp in (7) and e.id_tarafkptg in (1) THEN ', No. KP: '
+                WHEN e.jenis_kp=4 AND e.no_kp_baru IS NULL AND e.no_kp_lama IS NULL THEN ', No. PASPORT: '
+                WHEN e.id_tarafkptg=1 THEN ', No. KP: '
+            -- null,6,0,5,7,4,
+                Else ''
+            END AS Jenis_kp_pemohon,
+            CASE
+                WHEN e.no_kp_baru IS NOT NULL AND e.no_kp_lama IS NULL and e.no_kp_lain IS NULL THEN  SUBSTR(e.no_kp_baru,1,6) || '-' || SUBSTR(e.no_kp_baru,7,2) || '-' || SUBSTR(e.no_kp_baru,9,4)
+		WHEN e.no_kp_baru IS NOT NULL AND e.no_kp_lama IS NULL and e.no_kp_lain IS NOT NULL THEN  SUBSTR(e.no_kp_baru,1,6) || '-' || SUBSTR(e.no_kp_baru,7,2) || '-' || SUBSTR(e.no_kp_baru,9,4) || ' ('||e.no_kp_lain ||')'
+                WHEN e.no_kp_baru IS NOT NULL AND e.no_kp_lama IS NOT NULL AND e.no_kp_lain IS NULL THEN  SUBSTR(e.no_kp_baru,1,6) || '-' || SUBSTR(e.no_kp_baru,7,2) || '-' || SUBSTR(e.no_kp_baru,9,4) || ' ('||e.no_kp_lama ||')'
+                WHEN e.no_kp_baru IS NOT NULL AND e.no_kp_lama IS NOT NULL AND e.no_kp_lain IS NOT NULL THEN SUBSTR(e.no_kp_baru,1,6) || '-' || SUBSTR(e.no_kp_baru,7,2) || '-' || SUBSTR(e.no_kp_baru,9,4) || ' ('||e.no_kp_lama ||' / '||e.no_kp_lain ||')'
+                WHEN e.no_kp_baru IS NULL AND e.no_kp_lama IS NOT NULL and e.no_kp_lain IS NULL THEN REPLACE(e.no_kp_lama,'&','&#38;')
+                WHEN e.no_kp_baru IS NULL AND e.no_kp_lama IS NOT NULL and e.no_kp_lain IS NOT NULL THEN REPLACE(e.no_kp_lama,'&','&#38;') || ' ('||e.no_kp_lain ||')'
+                WHEN e.no_kp_baru IS NULL AND e.no_kp_lama IS NULL and e.no_kp_lain IS NOT NULL THEN REPLACE(e.no_kp_lain,'&','&#38;')
+                ELSE ''
+            END AS kp_pemohon,
+            e.JENIS_WARGA AS WARGA_PEMOHON,
+            CASE
+                WHEN e.ALAMAT_1 IS NULL THEN 'TIADA'
+                WHEN e.ALAMAT_2 IS NULL AND e.ALAMAT_3 IS NULL THEN  REPLACE(REPLACE(UPPER(trim(e.ALAMAT_1)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(e.POSKOD),','),'&','&#38;') || ' ' || REPLACE(REPLACE(UPPER(trim(BANDAR.KETERANGAN)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPEMOHON.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN e.ALAMAT_2 IS NULL THEN REPLACE(REPLACE(UPPER(trim(e.ALAMAT_1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(e.ALAMAT_3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(e.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(BANDAR.KETERANGAN)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPEMOHON.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN e.ALAMAT_3 IS NULL THEN REPLACE(REPLACE(UPPER(trim(e.ALAMAT_1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(e.ALAMAT_2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(e.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(BANDAR.KETERANGAN)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPEMOHON.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN e.ALAMAT_3 IS NOT NULL THEN REPLACE(REPLACE(UPPER(trim(e.ALAMAT_1)),','),'&','&#38;')||', ' || REPLACE(REPLACE(UPPER(trim(e.ALAMAT_2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(e.ALAMAT_3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(e.POSKOD)),','),'&','&#38;') || ' ' || REPLACE(REPLACE(UPPER(trim(BANDAR.KETERANGAN)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPEMOHON.NAMA_NEGERI)),','),'&',chr(38))
+                ELSE 'TIADA'
+            END AS ALAMAT_PENUH_PEMOHON,
+
+            g.ID_KEPUTUSANPERMOHONAN,
+
+   ------ /* Maklumat Perbicaraan */ ------------
+            f.ID_PERBICARAAN,
+            f.BIL_BICARA,
+             CASE
+                WHEN f.ALAMAT_BICARA1 IS NULL AND f.ID_NEGERIBICARA <> 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA2 IS NULL AND f.ALAMAT_BICARA3 IS NULL AND f.ID_NEGERIBICARA <> 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' || REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPERBICARAAN.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA2 IS NULL AND f.ID_NEGERIBICARA <> 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPERBICARAAN.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA3 IS NULL AND f.ID_NEGERIBICARA <> 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPERBICARAAN.NAMA_NEGERI)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA3 IS NOT NULL AND f.ID_NEGERIBICARA <> 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;')||', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' || REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;') ||', '|| REPLACE(REPLACE(UPPER(trim(NEGERIPERBICARAAN.NAMA_NEGERI)),','),'&','&#38;')
+
+                WHEN f.ALAMAT_BICARA1 IS NULL AND f.ID_NEGERIBICARA = 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA2 IS NULL AND f.ALAMAT_BICARA3 IS NULL AND f.ID_NEGERIBICARA = 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' || REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA2 IS NULL AND f.ID_NEGERIBICARA = 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA3 IS NULL AND f.ID_NEGERIBICARA = 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;') ||', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;') || ' ' ||REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;')
+                WHEN f.ALAMAT_BICARA3 IS NOT NULL AND f.ID_NEGERIBICARA = 14 THEN REPLACE(REPLACE(UPPER(trim(f.TEMPAT_BICARA)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA1)),','),'&','&#38;')||', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA2)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.ALAMAT_BICARA3)),','),'&','&#38;') || ', ' || REPLACE(REPLACE(UPPER(trim(f.POSKOD)),','),'&','&#38;')|| ' ' || REPLACE(REPLACE(UPPER(trim(f.BANDAR)),','),'&','&#38;')
+
+                ELSE 'TIADA'
+            END AS ALAMAT_PENUH_BICARA,
+            TO_CHAR(f.TARIKH_BICARA, 'DD') AS HARI_BICARA,
+            CASE
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '01' THEN 'Januari'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '02' THEN 'Februari'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '03' THEN 'Mac'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '04' THEN 'April'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '05' THEN 'Mei'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '06' THEN 'Jun'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '07' THEN 'Julai'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '08' THEN 'Ogos'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '09' THEN 'September'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '10' THEN 'Oktober'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '11' THEN 'November'
+                WHEN TO_CHAR (f.TARIKH_BICARA, 'MM') = '12' THEN 'Disember'
+                ELSE 'TIADA'
+            END AS BULAN_BICARA,
+            TO_CHAR(f.TARIKH_BICARA, 'YYYY') AS TAHUN_BICARA,
+            TO_CHAR (f.TARIKH_BICARA, 'MM') AS NOBULAN_BICARA,
+
+
+   ------ /* Maklumat Perintah */ ------------
+
+            h.ID_PERINTAH,
+            TO_CHAR(h.TARIKH_PERINTAH, 'DD') AS HARI_PERINTAH,
+            CASE
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '01' THEN 'Januari'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '02' THEN 'Februari'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '03' THEN 'Mac'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '04' THEN 'April'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '05' THEN 'Mei'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '06' THEN 'Jun'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '07' THEN 'Julai'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '08' THEN 'Ogos'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '09' THEN 'September'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '10' THEN 'Oktober'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '11' THEN 'November'
+                WHEN TO_CHAR (h.TARIKH_PERINTAH, 'MM') = '12' THEN 'Disember'
+                ELSE 'TIADA'
+            END AS BULAN_PERINTAH,
+            TO_CHAR(h.TARIKH_PERINTAH, 'YYYY') AS TAHUN_PERINTAH,
+            TO_CHAR(h.TARIKH_PERINTAH, 'DD/MM/YYYY') AS TARIKH_PERINTAH,
+            (SELECT DISTINCT REPLACE(TO_CHAR(JUMLAH_BAYARAN,'999,999,999.99'),' ') FROM TBLPPKBAYARAN WHERE ID_PERMOHONAN = b.ID_PERMOHONAN AND ID_JENISBAYARAN = 26) AS CUKAI_PUSAKA,
+            (SELECT DISTINCT JUMLAH_BAYARAN FROM TBLPPKBAYARAN WHERE ID_PERMOHONAN = b.ID_PERMOHONAN AND ID_JENISBAYARAN = 26) AS CUKAI_PUSAKA_1,
+            (SELECT DISTINCT COUNT(*) FROM TBLPPKPERINTAHHTAOBMST WHERE ID_PERINTAH = h.ID_PERINTAH AND ID_JENISPERINTAH IN (1,7,9)) AS ID_PERINTAHHTAOBMST,
+            (SELECT DISTINCT COUNT(*) FROM TBLPPKPERINTAHHAOBMST WHERE ID_PERINTAH = h.ID_PERINTAH AND ID_JENISPERINTAH IN (1,7,9)) AS ID_PERINTAHHAOBMST,
+            HIS.NO_PINDAAN, TO_CHAR(HIS.TARIKH_KEMASKINI,'DD/MM/YYYY') AS TARIKH_PINDAAN
+From        Tblpfdfail A,
+            Tblppkpermohonan B,
+            Tblppkpermohonansimati C,
+            Tblppksimati D,
+            Tblppkpemohon E,
+            Tblppkperbicaraan F,
+            Tblppkkeputusanpermohonan G,
+            Tblppkperintah H,
+            Tblrujnegeri Nmhn,
+            TBLRUJDAERAH dmhn,
+            Tblrujbandar Bandar,
+            Tblrujnegeri Negeripemohon,
+            Tblrujnegeri Negeriperbicaraan,
+            (SELECT ID_FAIL, NO_PINDAAN, TARIKH_KEMASKINI FROM (
+        SELECT H.ID_FAIL, H.NO_PINDAAN, H.TARIKH_KEMASKINI FROM TBLPPKBORANG_HISTORY H
+        WHERE H.ID_FAIL = $P!{idfail}
+        ORDER BY H.TARIKH_KEMASKINI DESC) WHERE ROWNUM = 1)  HIS
+WHERE       a.ID_FAIL                   = b.ID_FAIL
+        and b.ID_PERMOHONAN             = c.ID_PERMOHONAN
+        And C.Id_Simati                 = D.Id_Simati
+        And B.Id_Negerimhn              = Nmhn.Id_Negeri
+        and b.ID_DAERAHMHN              = dmhn.ID_DAERAH
+        and e.ID_NEGERI                 = NEGERIPEMOHON.ID_NEGERI
+        and b.ID_PERMOHONAN             = g.ID_PERMOHONAN
+        and f.ID_KEPUTUSANPERMOHONAN    = g.ID_KEPUTUSANPERMOHONAN
+        and f.ID_NEGERIBICARA           = NEGERIPERBICARAAN.ID_NEGERI
+        and b.ID_PEMOHON                = e.ID_PEMOHON
+        and e.ID_BANDAR                 = BANDAR.ID_BANDAR(+)
+        and h.FLAG_JENIS_KEPUTUSAN      = 0
+        And H.Id_Perbicaraan            = F.Id_Perbicaraan
+        and a.ID_FAIL = HIS.ID_FAIL(+)
+        and a.ID_FAIL                   = $P!{idfail}]]>
+	</queryString>
+	<field name="ID_FAIL" class="java.lang.String"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="ID_PERMOHONAN" class="java.lang.String"/>
+	<field name="TAHUN" class="java.lang.String"/>
+	<field name="NEGERI_MOHON" class="java.lang.String"/>
+	<field name="DAERAH_MOHON" class="java.lang.String"/>
+	<field name="JUMLAH_HTA_TARIKHMATI" class="java.lang.String"/>
+	<field name="ID_PERMOHONANSIMATI" class="java.lang.String"/>
+	<field name="ID_SIMATI" class="java.lang.String"/>
+	<field name="NAMA_SIMATI" class="java.lang.String"/>
+	<field name="JENIS_KP_SIMATI" class="java.lang.String"/>
+	<field name="KP_SIMATI" class="java.lang.String"/>
+	<field name="WARGA_SIMATI" class="java.lang.String"/>
+	<field name="BUKTI_MATI" class="java.lang.String"/>
+	<field name="FLAG_TARIKHMATI" class="java.lang.String"/>
+	<field name="TARIKH_MATI" class="java.lang.String"/>
+	<field name="NO_SIJIL_MATI" class="java.lang.String"/>
+	<field name="NAMA_PEMOHON" class="java.lang.String"/>
+	<field name="JENIS_KP_PEMOHON" class="java.lang.String"/>
+	<field name="KP_PEMOHON" class="java.lang.String"/>
+	<field name="WARGA_PEMOHON" class="java.lang.String"/>
+	<field name="ALAMAT_PENUH_PEMOHON" class="java.lang.String"/>
+	<field name="ID_KEPUTUSANPERMOHONAN" class="java.lang.String"/>
+	<field name="ID_PERBICARAAN" class="java.lang.String"/>
+	<field name="BIL_BICARA" class="java.lang.String"/>
+	<field name="ALAMAT_PENUH_BICARA" class="java.lang.String"/>
+	<field name="HARI_BICARA" class="java.lang.String"/>
+	<field name="BULAN_BICARA" class="java.lang.String"/>
+	<field name="TAHUN_BICARA" class="java.lang.String"/>
+	<field name="NOBULAN_BICARA" class="java.lang.String"/>
+	<field name="ID_PERINTAH" class="java.lang.String"/>
+	<field name="HARI_PERINTAH" class="java.lang.String"/>
+	<field name="BULAN_PERINTAH" class="java.lang.String"/>
+	<field name="TAHUN_PERINTAH" class="java.lang.String"/>
+	<field name="TARIKH_PERINTAH" class="java.lang.String"/>
+	<field name="CUKAI_PUSAKA" class="java.lang.String"/>
+	<field name="CUKAI_PUSAKA_1" class="java.lang.String"/>
+	<field name="ID_PERINTAHHTAOBMST" class="java.lang.String"/>
+	<field name="ID_PERINTAHHAOBMST" class="java.lang.String"/>
+	<field name="NO_PINDAAN" class="java.lang.String"/>
+	<field name="TARIKH_PINDAAN" class="java.lang.String"/>
+	<variable name="PAGE_NUMBER_CURR" class="java.lang.Integer"/>
+	<background>
+		<band height="400" splitType="Stretch">
+			<image vAlign="Middle">
+				<reportElement key="image-1" positionType="Float" x="187" y="149" width="159" height="91" uuid="f21986a5-7ff0-4886-9802-f342b882ad1c">
+					<printWhenExpression><![CDATA[new Boolean($P{statusFail}.equals("Y")?true:false)]]></printWhenExpression>
+				</reportElement>
+				<imageExpression><![CDATA[$P{ReportDir} +"//ppk//DRAF.png"]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="20" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-46" positionType="Float" x="274" y="0" width="219" height="10" uuid="d83d6f82-e3d2-42c2-be37-402ba7588cc4"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{NO_FAIL}!= null ? $F{NO_FAIL}:"TIADA")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-48" positionType="Float" x="0" y="0" width="165" height="20" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="b6c12758-d0c7-435d-a386-cb2d7dcba6dc">
+					<printWhenExpression><![CDATA[new Boolean($P{flag_keb_kemaskini}.equals("Y")?true:false)]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Top" rotation="None">
+					<font fontName="Times New Roman" size="7" isBold="true" pdfFontName="Courier-Bold" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Pembetulan/pindaan ke atas perintah ini telah dibuat bagi Daerah " +$F{DAERAH_MOHON}+
+".\nNo Daftar "+$F{NO_PINDAAN}+" bertarikh "+$F{TARIKH_PINDAAN}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="118" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-45" positionType="Float" x="40" y="19" width="450" height="3" uuid="744a851f-0ae9-486b-9133-e240588434a9">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"") +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null? $F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"") +"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                   <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                (Seksyen 13)"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n          Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada- yang beralamat di - berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini.</style>"
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-33" positionType="Float" x="40" y="19" width="450" height="3" uuid="9a6b68e3-2049-452f-b60b-3893d822cb3a">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"") +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null? $F{NAMA_PEMOHON}:"TIADA")+($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                                    <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                                 (Seksyen 13)"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n          Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada- yang beralamat di - berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini.</style>"
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."]]></textFieldExpression>
+			</textField>
+			<break>
+				<reportElement key="element-1" positionType="Float" x="0" y="48" width="535" height="1" uuid="a576d69e-be1f-4674-88bd-2690dfc51050"/>
+			</break>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-1" positionType="Float" x="40" y="51" width="450" height="14" uuid="77c4cc96-b1ac-445d-8b68-150ab62d5660"/>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$F{HARI_PERINTAH}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="jawatan">
+					<subreportParameterExpression><![CDATA[$P{jawatan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$F{NEGERI_MOHON}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$F{BULAN_PERINTAH}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaPegawai">
+					<subreportParameterExpression><![CDATA[$P{namaPegawai}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$F{TAHUN_PERINTAH}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaPentadbir">
+					<subreportParameterExpression><![CDATA[$P{namaPentadbir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="flagBorangF">
+					<subreportParameterExpression><![CDATA[$P{flagBorangF}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[String.valueOf($F{ID_PERINTAH})]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPermohonanSimati">
+					<subreportParameterExpression><![CDATA[$F{ID_PERMOHONANSIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangE_subreport0.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-2" positionType="Float" x="40" y="69" width="450" height="14" uuid="3f5e6fd2-6c7b-41da-b6fc-2706160963d2"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaPegawai">
+					<subreportParameterExpression><![CDATA[$P{namaPegawai}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="jawatan">
+					<subreportParameterExpression><![CDATA[$P{jawatan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaPentadbir">
+					<subreportParameterExpression><![CDATA[$P{namaPentadbir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="flagBorangF">
+					<subreportParameterExpression><![CDATA[$P{flagBorangF}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPerintah">
+					<subreportParameterExpression><![CDATA[$F{ID_PERINTAH}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="hariBicara">
+					<subreportParameterExpression><![CDATA[$F{HARI_PERINTAH}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bulanBicara">
+					<subreportParameterExpression><![CDATA[$F{BULAN_PERINTAH}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tahunBicara">
+					<subreportParameterExpression><![CDATA[$F{TAHUN_PERINTAH}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaNegeri">
+					<subreportParameterExpression><![CDATA[$F{NEGERI_MOHON}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="jumlahBayaran">
+					<subreportParameterExpression><![CDATA[$P{jumlahBayaran}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPermohonanSimati">
+					<subreportParameterExpression><![CDATA[$F{ID_PERMOHONANSIMATI}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangE_JADUAL2.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-20" positionType="Float" x="40" y="1" width="450" height="15" uuid="564defab-db87-4550-9405-6063ad164ce1"/>
+				<textElement textAlignment="Center" verticalAlignment="Top" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style isBold='true' pdfFontName='Helvetica-Bold'>"+"BORANG E"+"</style>"
++"\n(Peraturan 7(1))"
++"\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+"MALAYSIA"+"</style>"
++"\nNegeri <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NEGERI_MOHON}!= null ? $F{NEGERI_MOHON}:"TIADA")+"</style>"
++"\nDaerah <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{DAERAH_MOHON}!= null ? $F{DAERAH_MOHON}:"TIADA")+"</style>"
++"\n\n<style isBold='true' pdfFontName='Helvetica-Bold'>"+"AKTA HARTA PUSAKA KECIL (PEMBAHAGIAN) 1955"+"</style>"
++"\nGUAMAN PEMBAHAGIAN NO. <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{NO_FAIL}!= null ? $F{NO_FAIL}:"TIADA")+"</style> TAHUN <style isBold='true' pdfFontName='Helvetica-Bold'>"+($F{TAHUN}!= null ? $F{TAHUN}:"TIADA")+"</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-22" positionType="Float" x="40" y="19" width="450" height="3" uuid="8574a3f0-dde0-482e-b7e0-2e6101ae59ff">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"") +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null? $F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                                    <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                                 (Seksyen 13)"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n          Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada- yang beralamat di - berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini.</style>"
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-24" positionType="Float" x="40" y="19" width="450" height="3" uuid="3954ada4-b559-42d0-a20f-d3c54955a02d">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"")  +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null? $F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                                    <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                                 (Seksyen 13)"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n          Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"         "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'> Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>          Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada</style> <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $P{namaPentadbir} +" </style>berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini."
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-3" positionType="Float" x="40" y="86" width="450" height="14" uuid="15337140-ee79-4c95-8484-e126d3f98863"/>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idPermohonan">
+					<subreportParameterExpression><![CDATA[$F{ID_PERMOHONAN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangE_subreportRekodPendaftaran.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-32" positionType="Float" x="40" y="19" width="450" height="3" uuid="1cd7f870-5498-46d8-ac75-510bcf807a2d">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}==" " || $F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"")  +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null? $F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                                    <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                                 (Seksyen 13)"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n          Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>          Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada</style> <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $P{namaPentadbir} +" </style>berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini."
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-38" positionType="Float" x="40" y="19" width="450" height="3" uuid="abc6ce89-c6d1-4a1f-9f41-a4b0b8ec1749">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0")) && ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"") +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null? $F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"")+"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                                    <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                                 (Seksyen 13)"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n          Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"         "+"<style isStrikeThrough ='false' pdfFontName='Helvetica'> Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>          Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada</style> <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $P{namaPentadbir} +" </style>berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini."
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-39" positionType="Float" x="40" y="19" width="450" height="3" uuid="ad057b8e-34f8-4dfc-890e-13f6c597803f">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&&($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"") +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null? $F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"") +"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                                    <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                                 (Seksyen 13)"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n          Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"          "+"<style isStrikeThrough ='false' pdfFontName='Helvetica'>Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada- yang beralamat di - berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini.</style>"
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."]]></textFieldExpression>
+			</textField>
+			<break>
+				<reportElement key="element-2" positionType="Float" x="0" y="67" width="535" height="1" uuid="0e042cc5-8062-4d7a-a2af-19b9bc4e9e37"/>
+			</break>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-40" positionType="Float" x="40" y="19" width="450" height="3" uuid="dc05cd6e-36b3-4984-8b37-dda3589b3a3f">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0")) && ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"") +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null?$F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"") +"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                                    <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                             (Seksyen 13)1"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n          Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"         "+"<style isStrikeThrough ='false' pdfFontName='Helvetica'> Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>          Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada</style> <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $P{namaPentadbir} +" </style>berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini."
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."
++"\n\n\n                                                                                                     T.M ..................................................................."
++"\n                                                                                                                      PENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT</style>/"
++"\n                                                                                                                      <style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n                                                                                                                      <style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"
++"\n\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"
++"\n\n\n                                                 																																															T.M              ................................................................."
++"\n                                                                    				 						 		 		 	 			 																									PENTADBIR TANAH / PEMUNGUT/"
++"\n                                                                    				 						 		 		 	 			 																									PEGAWAI DAERAH / PEGAWAI"
++"\n                                                                    				 						 		 		 	 			 																									PENTADBIR SARAWAK"
++"\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-41" positionType="Float" x="40" y="19" width="450" height="3" uuid="8ee24917-a81e-480c-848f-cd030e1a707d">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"") +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null?$F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"") +"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                                    <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                                 (Seksyen 13)"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n          Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"          "+"<style isStrikeThrough ='false' pdfFontName='Helvetica'>Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada- yang beralamat di - berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini.</style>"
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-42" positionType="Float" x="40" y="19" width="450" height="3" uuid="f100fc94-1d55-4252-871b-28dbfb68ea42">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") +($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"")  +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null?$F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"") +"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                                    <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                                                 (Seksyen 13)"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n          Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n          Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $P{namaPentadbir} +" </style>berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini."
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."
++"\n\n\n                                                                                                     T.M ..................................................................."
++"\n                                                                                                                      PENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT</style>/"
++"\n                                                                                                                      <style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n                                                                                                                      <style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"
++"\n\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"
++"\n\n\n                                                 																																															T.M              ................................................................."
++"\n                                                                    				 						 		 		 	 			 																									PENTADBIR TANAH / PEMUNGUT/"
++"\n                                                                    				 						 		 		 	 			 																									PEGAWAI DAERAH / PEGAWAI"
++"\n                                                                    				 						 		 		 	 			 																									PENTADBIR SARAWAK"
++"\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-43" positionType="Float" x="40" y="19" width="450" height="3" uuid="88025b92-a2d6-4da0-9c3d-725fee6f1478">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"")  +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null? $F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"") +"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                   <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                            (Seksyen 13)4"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n          Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"         "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'> Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n          Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $P{namaPentadbir} +" </style>berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini."
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."
++"\n\n\n                                                                                                     T.M ..................................................................."
++"\n                                                                                                                      PENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT</style>/"
++"\n                                                                                                                      <style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n                                                                                                                      <style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"
++"\n\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"
++"\n\n\n                                                 																																															T.M              ................................................................."
++"\n                                                                    				 						 		 		 	 			 																									PENTADBIR TANAH / PEMUNGUT/"
++"\n                                                                    				 						 		 		 	 			 																									PEGAWAI DAERAH / PEGAWAI"
++"\n                                                                    				 						 		 		 	 			 																									PENTADBIR SARAWAK"
++"\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-44" positionType="Float" x="40" y="19" width="450" height="3" uuid="56dc9296-b93f-4be9-9d86-d884f1d195fe">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dalam Hal Harta pusaka <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_SIMATI}!= null ? $F{NAMA_SIMATI}:"") + ($F{JENIS_KP_SIMATI}!= null? $F{JENIS_KP_SIMATI}:"")+ ($F{KP_SIMATI}!= null? $F{KP_SIMATI}:"") +  ", Tarikh Mati: "+ ($F{TARIKH_MATI} != null ? $F{TARIKH_MATI}:"TIADA")+($F{BUKTI_MATI}!=null?$F{BUKTI_MATI}:"")+".</style>"
++"\n\nPetisyen daripada <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{NAMA_PEMOHON}!= null? $F{NAMA_PEMOHON}:"TIADA")+ ($F{JENIS_KP_PEMOHON}!= null? $F{JENIS_KP_PEMOHON}:"")+ ($F{KP_PEMOHON}!= null? $F{KP_PEMOHON}:"") +"</style> yang beralamat di <style isBold='true' pdfFontName='Helvetica-Bold'>" +($F{ALAMAT_PENUH_PEMOHON}!= null ? $F{ALAMAT_PENUH_PEMOHON}:"TIADA")+".</style>"
++"\n\n                                                   <style isBold='true' pdfFontName='Helvetica-Bold'>PERINTAH PEMBAHAGIAN</style>"
++"\n                                                            (Seksyen 13)5"
++"\n\nPerkara ini setelah dibawa untuk penyelesaian di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" </style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{HARI_BICARA}+" </style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_BICARA}+" "+$F{TAHUN_BICARA}+" </style> di hadapan saya yang bertandatangan di bawah/pegawai yang terdahulu * <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{namaPegawai}+" </style>- <style isBold='true' pdfFontName='Helvetica-Bold'>"+$P{jawatan}+" </style> bagi Daerah <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{DAERAH_MOHON}+".</style>"
++"\n\n ADALAH DIPERINTAHKAN BAHAWA:-"
++"\n\n          Pertamanya, mana-mana bahagian harta tak alih si mati sebagaimana yang diperihalkan dalam Jadual I borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut."
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Keduanya, mana-mana bahagian harta alih si mati sebagaimana yang diperihalkan dalam Jadual II borang ini hendaklah dibahagikan mengikut cara yang diperuntukkan dalam Jadual tersebut.</style>"
++"\n\n"+"          "+"<style isStrikeThrough ='true' pdfFontName='Helvetica'>Ketiganya, Pemberian Surat Kuasa Mentadbir yang dilampirkan bersama-sama ini akan ditandakan sebagai Borang F dikeluarkan kepada- yang beralamat di - berkenaan dengan asset si mati yang tidak termasuk dalam Jadual I dan II borang ini.</style>"
++"\n\n          Keempatnya, bahawasanya nilai bersih harta pusaka itu saya dapati adalah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+$F{JUMLAH_HTA_TARIKHMATI}+"</style> dan fi Duti Harta Pusaka ke atasnya yang berjumlah <style isBold='true' pdfFontName='Helvetica-Bold'> RM "+ ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":$F{CUKAI_PUSAKA})+"</style> hendaklah dibayar oleh "+($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals(null) || $F{CUKAI_PUSAKA_1}.equals("") || $F{CUKAI_PUSAKA_1}.equals("0")?"TIADA":"<style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{NAMA_PEMOHON}+".</style>")
++"\nDiberikan di bawah tandatangan dan meteri saya di <style isBold='true' pdfFontName='Helvetica-Bold'>"+ $F{ALAMAT_PENUH_BICARA}+" "+"</style> pada <style isBold='true' pdfFontName='Helvetica-Bold'>" + $F{HARI_PERINTAH}+"</style> haribulan <style isBold='true' pdfFontName='Helvetica-Bold'>"+$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>."
++"\n\n\n                                                                                                     T.M ..................................................................."
++"\n                                                                                                                      PENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT</style>/"
++"\n                                                                                                                      <style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n                                                                                                                      <style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"
++"\n\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='false' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"
++"\n\n\n                                                 																																															T.M              ................................................................."
++"\n                                                                    				 						 		 		 	 			 																									PENTADBIR TANAH / PEMUNGUT/"
++"\n                                                                    				 						 		 		 	 			 																									PEGAWAI DAERAH / PEGAWAI"
++"\n                                                                    				 						 		 		 	 			 																									PENTADBIR SARAWAK"
++"\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+			</textField>
+			<break>
+				<reportElement key="element-20" positionType="Float" x="0" y="103" width="535" height="1" uuid="41c61a6b-7787-457f-a3ad-6eb3b1e340c2">
+					<printWhenExpression><![CDATA[new Boolean(($P{flagBorangF}.equals("Y")))]]></printWhenExpression>
+				</reportElement>
+			</break>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-3" positionType="Float" x="-28" y="104" width="450" height="14" uuid="5243c3b8-ed3b-420a-bc6d-492f3c71ca33">
+					<printWhenExpression><![CDATA[new Boolean(($P{flagBorangF}.equals("Y")))]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="ReportDir">
+					<subreportParameterExpression><![CDATA[$P{ReportDir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idfail">
+					<subreportParameterExpression><![CDATA[$P{idfail}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaPegawai">
+					<subreportParameterExpression><![CDATA[$P{namaPegawai}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="jawatan">
+					<subreportParameterExpression><![CDATA[$P{jawatan}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaPentadbir">
+					<subreportParameterExpression><![CDATA[$P{namaPentadbir}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="namaPentadbirBorangF">
+					<subreportParameterExpression><![CDATA[$P{namaPentadbirBorangF}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="daerahMohon">
+					<subreportParameterExpression><![CDATA[$F{DAERAH_MOHON}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="NILAI_BERSIH_1">
+					<subreportParameterExpression><![CDATA[$P{NILAI_BERSIH_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="NILAI_BERSIH_2">
+					<subreportParameterExpression><![CDATA[$P{NILAI_BERSIH_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{ReportDir} + "//ppk//BorangF.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-51" positionType="Float" x="40" y="25" width="450" height="2" uuid="66928671-3b11-4e8a-be21-42e3a9894411">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}==" " || $F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-52" positionType="Float" x="338" y="22" width="161" height="2" uuid="119a4a8c-6fd1-4c65-833d-59cd75d4405d">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}==" " || $F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-54" positionType="Float" x="337" y="27" width="162" height="2" uuid="8e7d10e6-833a-4023-9d41-b405b7fff5a3">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}==" " || $F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[".............TIDAK BERKENAAN............"
++"\nPENTADBIR TANAH / PEMUNGUT/"
++"\nPEGAWAI DAERAH / PEGAWAI"
++"\nPENTADBIR SARAWAK"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-57" positionType="Float" x="274" y="22" width="50" height="2" uuid="fb3547bd-2fcc-410f-b0d7-a4dafa42fc69">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}==" " || $F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-58" positionType="Float" x="274" y="27" width="51" height="2" uuid="f030ea45-a282-4e9a-a0b9-a7fc0e0b7092">
+					<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}==" " || $F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+			</textField>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-60" positionType="Float" x="40" y="25" width="450" height="2" uuid="8595927e-70b3-416e-ad35-1ea65d6b3656">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-61" positionType="Float" x="338" y="22" width="161" height="2" uuid="c04d9a3a-cc77-4078-b72e-ebda3b8e96f2">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-62" positionType="Float" x="337" y="27" width="162" height="2" uuid="41313c8c-0e70-4148-aa69-86a14d4a2368">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA[".............TIDAK BERKENAAN............"
++"\nPENTADBIR TANAH / PEMUNGUT/"
++"\nPEGAWAI DAERAH / PEGAWAI"
++"\nPENTADBIR SARAWAK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-63" positionType="Float" x="274" y="22" width="50" height="2" uuid="f97a2ca4-6437-4ef0-afbd-9081a2276a2b">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-64" positionType="Float" x="274" y="27" width="51" height="2" uuid="38cba069-52ff-45d3-b53f-02ae0a595400">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-66" positionType="Float" x="40" y="25" width="450" height="2" uuid="9e016365-4ec4-4b44-bdb1-110bb18f5b3f">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-67" positionType="Float" x="338" y="22" width="161" height="2" uuid="c89abb96-765d-45d2-bb80-e8578fac4c4a">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-68" positionType="Float" x="337" y="27" width="162" height="2" uuid="99fe757a-960f-4b4f-bddb-067190b8354f">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA[".............TIDAK BERKENAAN............"
++"\nPENTADBIR TANAH / PEMUNGUT/"
++"\nPEGAWAI DAERAH / PEGAWAI"
++"\nPENTADBIR SARAWAK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-69" positionType="Float" x="274" y="22" width="50" height="2" uuid="cce1c7ff-4c75-4336-ac5c-920d458cf087">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-70" positionType="Float" x="274" y="27" width="51" height="2" uuid="5b07d1d6-b2b2-4aae-b262-496262b89451">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-72" positionType="Float" x="40" y="25" width="450" height="2" uuid="05a9d45f-cd62-420d-8429-582fc88cef0e">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-73" positionType="Float" x="338" y="22" width="161" height="2" uuid="9498f50c-5b13-4c94-b487-b2e674cdd895">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-74" positionType="Float" x="337" y="27" width="162" height="2" uuid="42ac0c5a-197b-49fb-8323-bb8621375c73">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA[".............TIDAK BERKENAAN............"
++"\nPENTADBIR TANAH / PEMUNGUT/"
++"\nPEGAWAI DAERAH / PEGAWAI"
++"\nPENTADBIR SARAWAK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-75" positionType="Float" x="274" y="22" width="50" height="2" uuid="6e8e8097-04c8-44ae-8305-d928738aab0b">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-76" positionType="Float" x="274" y="27" width="51" height="2" uuid="9c0e97e0-2671-4a5b-8b78-9b21b14b0df3">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-78" positionType="Float" x="40" y="25" width="450" height="2" uuid="f0be2a46-5bc8-45aa-8dda-0668c1ba7b21">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-79" positionType="Float" x="338" y="22" width="161" height="2" uuid="a1ff1de0-fd17-4d5a-a5bc-fb7f346e6659">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-80" positionType="Float" x="337" y="27" width="162" height="2" uuid="ccb14528-5a32-4c7f-a915-873dd7e49a7e">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA[".............TIDAK BERKENAAN............"
++"\nPENTADBIR TANAH / PEMUNGUT/"
++"\nPEGAWAI DAERAH / PEGAWAI"
++"\nPENTADBIR SARAWAK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-81" positionType="Float" x="274" y="22" width="50" height="2" uuid="dc2018d2-8da3-4bc4-be70-718500f72160">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-82" positionType="Float" x="274" y="27" width="51" height="2" uuid="01902b9b-c9cd-4895-9605-5d565b8394a4">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-84" positionType="Float" x="40" y="25" width="450" height="2" uuid="6a8678dd-8368-4f63-a125-8828a9227915">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0")) && ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-85" positionType="Float" x="338" y="22" width="161" height="2" uuid="caaaede2-2615-43bc-9586-c0de213cc04a">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0")) && ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-86" positionType="Float" x="337" y="27" width="162" height="2" uuid="f0aec1da-db98-471b-992f-a0b7e4ac66a7">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0")) && ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA[".............TIDAK BERKENAAN............"
++"\nPENTADBIR TANAH / PEMUNGUT/"
++"\nPEGAWAI DAERAH / PEGAWAI"
++"\nPENTADBIR SARAWAK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-87" positionType="Float" x="274" y="22" width="50" height="2" uuid="f4796193-7775-4b8b-85e0-93d495e94718">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0")) && ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-88" positionType="Float" x="274" y="27" width="51" height="2" uuid="9116fcec-0556-4526-b95a-2ce4766eea4e">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0")) && ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-90" positionType="Float" x="40" y="25" width="450" height="2" uuid="9cb30673-6871-4818-8a7e-5ad81e6ac18a">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&&($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-91" positionType="Float" x="338" y="22" width="161" height="2" uuid="e921ab43-75ad-4eea-bf2a-5c1485ebbad8">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&&($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-92" positionType="Float" x="337" y="27" width="162" height="2" uuid="cbc83991-dc12-43a2-8e8a-cec8880b30d2">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&&($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA[".............TIDAK BERKENAAN............"
++"\nPENTADBIR TANAH / PEMUNGUT/"
++"\nPEGAWAI DAERAH / PEGAWAI"
++"\nPENTADBIR SARAWAK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-93" positionType="Float" x="274" y="22" width="50" height="2" uuid="6a8761c6-dfa9-422d-afdb-bd93fcdec30e">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&&($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-94" positionType="Float" x="274" y="27" width="51" height="2" uuid="daa52609-25b3-45b3-9d87-42e76d3040ff">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&&($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-98" positionType="Float" x="40" y="25" width="450" height="2" uuid="982663af-21c9-42a5-92e8-45ecfb4f958f">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>Saya memperakui bahawa fi Duti Harta Pusaka yang tersebut di atas telah dibayar pada hari ini.</style>"
++"\n<style isStrikeThrough ='true' pdfFontName='Helvetica'>"+$F{HARI_PERINTAH}+" " +$F{BULAN_PERINTAH}+ " "+$F{TAHUN_PERINTAH}+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-99" positionType="Float" x="338" y="22" width="161" height="2" uuid="34518993-5ee5-4e18-87cf-0c352f36e8f2">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["..........................................................."
++"\nPENTADBIR TANAH / <style isStrikeThrough ='true'>PEMUNGUT/</style>"
++"\n<style isStrikeThrough ='true'>PEGAWAI DAERAH / PEGAWAI</style>"
++"\n<style isStrikeThrough ='true'>PENTADBIR SARAWAK</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-100" positionType="Float" x="337" y="27" width="162" height="2" uuid="601d339e-d696-4fa3-a5b5-0f9efa0242a0">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Left" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA[".............TIDAK BERKENAAN............"
++"\nPENTADBIR TANAH / PEMUNGUT/"
++"\nPEGAWAI DAERAH / PEGAWAI"
++"\nPENTADBIR SARAWAK"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-101" positionType="Float" x="274" y="22" width="50" height="2" uuid="e07ba20d-291b-4b19-a51e-3e668456175e">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-102" positionType="Float" x="274" y="27" width="51" height="2" uuid="f9f848a4-6900-4372-a0b9-a5e007edba56">
+						<printWhenExpression><![CDATA[new Boolean( ($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["TM "]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="99" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-55" positionType="Float" x="39" y="0" width="450" height="5" uuid="309e3aee-bb5b-40d8-8e81-a7cac30e8217">
+					<printWhenExpression><![CDATA[new Boolean(($V{PAGE_NUMBER}.intValue()==1)&& ($P{flagBorangF}.equals("Y"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}==" " || $F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+				</reportElement>
+				<box>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Justified" markup="styled">
+					<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+			</textField>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-65" positionType="Float" x="39" y="0" width="450" height="5" uuid="e033a912-f7be-4150-bf06-2c975b3332be">
+						<printWhenExpression><![CDATA[new Boolean(($V{PAGE_NUMBER}.intValue()==1)&& ($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-71" positionType="Float" x="39" y="0" width="450" height="5" uuid="584b1f29-8379-45f0-866a-409b2610aae3">
+						<printWhenExpression><![CDATA[new Boolean( ($V{PAGE_NUMBER}.intValue()==1)&&($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& $F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-77" positionType="Float" x="39" y="0" width="450" height="5" uuid="0d6d949e-f06f-431b-bdaf-5b3248b5c3d7">
+						<printWhenExpression><![CDATA[new Boolean( ($V{PAGE_NUMBER}.intValue()==1)&&($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-83" positionType="Float" x="39" y="0" width="450" height="5" uuid="d0115777-eb9d-44ed-a78e-c2e72b740bc8">
+						<printWhenExpression><![CDATA[new Boolean( ($V{PAGE_NUMBER}.intValue()==1)&&($P{flagBorangF}.equals("T"))&&($F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-89" positionType="Float" x="39" y="0" width="450" height="5" uuid="b66a0653-589a-4dd6-b3fa-489ecfed9310">
+						<printWhenExpression><![CDATA[new Boolean( ($V{PAGE_NUMBER}.intValue()==1)&&($P{flagBorangF}.equals("Y"))&& (!$F{ID_PERINTAHHTAOBMST}.equals("0") && !$F{ID_PERINTAHHAOBMST}.equals("0")) && ($F{FLAG_TARIKHMATI}.equals("0") || $F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-95" positionType="Float" x="39" y="0" width="450" height="5" uuid="fec82f92-b491-487c-9157-7388432c372f">
+						<printWhenExpression><![CDATA[new Boolean( ($V{PAGE_NUMBER}.intValue()==1)&&($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&&($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && ($F{CUKAI_PUSAKA_1}==null || $F{CUKAI_PUSAKA_1}=="" || $F{CUKAI_PUSAKA_1}=="0" || $F{CUKAI_PUSAKA_1}.equals("0") || $F{CUKAI_PUSAKA_1}.equals(" ") || $F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<elementGroup>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="false">
+					<reportElement key="textField-103" positionType="Float" x="39" y="0" width="450" height="5" uuid="a1a5a6a0-2a1d-4db7-b89e-2357885da81d">
+						<printWhenExpression><![CDATA[new Boolean( ($V{PAGE_NUMBER}.intValue()==1)&&($P{flagBorangF}.equals("T"))&&(!$F{ID_PERINTAHHTAOBMST}.equals("0")&& !$F{ID_PERINTAHHAOBMST}.equals("0"))&& ($F{FLAG_TARIKHMATI}.equals("0")||$F{FLAG_TARIKHMATI}.equals("1")) && (!$F{CUKAI_PUSAKA_1}.equals("0") && !$F{CUKAI_PUSAKA_1}.equals(" ") && !$F{CUKAI_PUSAKA_1}.equals(null)))]]></printWhenExpression>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font fontName="Verdana" size="9" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<textFieldExpression><![CDATA["\n<style size ='7' pdfFontName='Helvetica'>CATATAN-</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(i)   Jika perintah itu untuk pembahagian keseluruhan harta pusaka dengan serta merta, fasal tiga bolehlah ditinggalkan.</style>"
++"\n<style size ='7' pdfFontName='Helvetica'>(ii)  Jika perintah untuk pentadbiran sahaja, hanya Borang F perlu digunakan.</style>"
++"\n<style size='7' pdfFontName='Helvetica'>(iii) Tiada apa-apa perintah boleh dikeluarkan sehingga fi Duti Harta Pusaka dibayar.</style>"]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+			<line>
+				<reportElement key="line-2" positionType="Float" x="40" y="1" width="430" height="1" uuid="05e48a6a-fc75-4a76-8255-2426a7f233d5">
+					<printWhenExpression><![CDATA[new Boolean($V{PAGE_NUMBER}.intValue()==1)]]></printWhenExpression>
+				</reportElement>
+			</line>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement key="textField-59" positionType="Float" x="40" y="5" width="450" height="11" uuid="48942835-70e5-4ad6-9241-4e5f67c64d00">
+					<printWhenExpression><![CDATA[new Boolean($V{PAGE_NUMBER}.intValue()==1)]]></printWhenExpression>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement markup="styled">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<style size ='7' pdfFontName='Helvetica'>* Masukkan Pentadbir Tanah Daerah/Pemungut/Pegawai Daerah/Pegawai Pentadbir Sarawak, mengikut kehendak keadaan.</style>"]]></textFieldExpression>
+			</textField>
+			<image>
+				<reportElement key="image-2" mode="Transparent" x="443" y="3" width="86" height="86" uuid="8ef518c1-084b-4b7b-96bc-2a6e502a5547">
+					<printWhenExpression><![CDATA[new Boolean ((Integer.parseInt($F{NOBULAN_BICARA})> 7 && Integer.parseInt($F{TAHUN_BICARA})> 2017)
+|| (Integer.parseInt($F{NOBULAN_BICARA})> 0 && Integer.parseInt($F{TAHUN_BICARA})> 2018))]]></printWhenExpression>
+				</reportElement>
+				<imageExpression><![CDATA[$P{ReportDir} +"//ppk//qrcode//"+$P{noFailremoveslash}+".png"]]></imageExpression>
+			</image>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-96" x="446" y="84" width="80" height="15" uuid="1be7e987-b824-45b5-8030-a99660773173">
+					<printWhenExpression><![CDATA[new Boolean ((Integer.parseInt($F{NOBULAN_BICARA})> 7 && Integer.parseInt($F{TAHUN_BICARA})> 2017)
+|| (Integer.parseInt($F{NOBULAN_BICARA})> 0 && Integer.parseInt($F{TAHUN_BICARA})> 2018))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font fontName="Verdana" size="6" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["di Playstore/GAMMA"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-30" positionType="Float" x="209" y="33" width="89" height="16" uuid="348038e7-c0c2-46f1-be46-4c6125f083d6"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" Mukasurat " + $V{PAGE_NUMBER} + " dari "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" isBlankWhenNull="false">
+				<reportElement key="textField-31" positionType="Float" x="299" y="33" width="23" height="16" uuid="07f7f40d-ee6f-4a5e-b52a-5df5f6496710"/>
+				<textElement textAlignment="Left" verticalAlignment="Bottom">
+					<font fontName="Verdana" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "+$V{PAGE_NUMBER}+""]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-97" x="447" y="82" width="80" height="15" uuid="706f1882-f6f3-46ca-9517-245ac2f85f3a">
+					<printWhenExpression><![CDATA[new Boolean ((Integer.parseInt($F{NOBULAN_BICARA})> 7 && Integer.parseInt($F{TAHUN_BICARA})> 2017)
+|| (Integer.parseInt($F{NOBULAN_BICARA})> 0 && Integer.parseInt($F{TAHUN_BICARA})> 2018))]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
+					<font fontName="Verdana" size="6" isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Muat turun Aplikasi MyeTaPP"]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="40" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-46" x="0" y="0" width="535" height="20" uuid="4dcc49d3-dc8d-4cf2-9f65-db9d5baa89f5"/>
+				<textElement textAlignment="Center">
+					<font isBold="true" isItalic="true" pdfFontName="Helvetica-BoldOblique"/>
+				</textElement>
+				<text><![CDATA[TIADA REKOD BAGI BORANG INI.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-47" x="0" y="20" width="535" height="20" uuid="512cd4e9-e744-4061-981b-e00a5609b2a9"/>
+				<textElement textAlignment="Center">
+					<font isBold="true" isItalic="true" pdfFontName="Helvetica-BoldOblique"/>
+				</textElement>
+				<text><![CDATA[BORANG TIDAK DAPAT DIJANA.]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

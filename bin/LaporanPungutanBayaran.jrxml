@@ -1,0 +1,694 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="LaporanPungutanBayaran"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="tahun" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="bulan" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idnegeri" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="iddaerah" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idjkptg" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="TAJUK" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT f.nama_pejabat, f.alamat1,NVL (SUM (AA.bayaran_perintah),0) as bayaran_perintah,
+NVL(SUM (BB.bayaran_salinan_perintah),0) as bayaran_salinan_perintah,NVL (SUM (CC.fee_rayuan),0) as fee_rayuan,
+NVL (SUM (DD.bayaran_salinan_dokumen),0) as bayaran_salinan_dokumen,NVL (SUM (EE.duti),0) as duti,
+NVL (SUM (FF.bayaran_baitulmal),0) as bayaran_baitulmal
+                
+                                                      
+FROM tblrujpejabatjkptg f, tblrujpejabaturusan g, 
+                             
+                            
+
+                   (SELECT NVL (SUM (a.jumlah_bayaran),0) as bayaran_perintah,b.id_negerimhn, b.id_daerahmhn
+                             
+                   FROM tblppkbayaran a,tblppkpermohonan b, tblpfdfail c
+                  WHERE a.id_jenisbayaran = 24
+                    and a.id_permohonan = b.id_permohonan
+                    and b.id_fail = c.id_fail
+                    AND TO_CHAR (a.tarikh_bayaran, 'yyyy') = '$P!{tahun}'
+                    AND TO_CHAR (a.tarikh_bayaran, 'mm') = '$P!{bulan}'
+                    group by b.id_negerimhn, b.id_daerahmhn) AA,
+                    
+                    (SELECT NVL (SUM (a.jumlah_bayaran), 0) as bayaran_salinan_perintah,b.id_negerimhn, b.id_daerahmhn
+                   FROM tblppkbayaran a,
+                        tblppkpermohonan b,
+                        tblpfdfail c
+                  WHERE a.id_jenisbayaran = 25
+                    AND c.id_fail = b.id_fail
+                    AND a.id_permohonan = b.id_permohonan
+                    AND TO_CHAR (a.tarikh_bayaran, 'yyyy') = '$P!{tahun}'
+                    AND TO_CHAR (a.tarikh_bayaran, 'mm') = '$P!{bulan}'
+                    group by b.id_negerimhn, b.id_daerahmhn) BB,
+                                                          
+                (SELECT NVL (SUM (a.jumlah_bayaran), 0) as fee_rayuan,b.id_negerimhn, b.id_daerahmhn
+                   FROM tblppkbayaran a,
+                        tblppkpermohonan b,
+                        tblpfdfail c
+                  WHERE a.id_jenisbayaran = 3
+                    AND c.id_fail = b.id_fail
+                    AND a.id_permohonan = b.id_permohonan
+                    AND TO_CHAR (a.tarikh_bayaran, 'yyyy') = '$P!{tahun}'
+                    AND TO_CHAR (a.tarikh_bayaran, 'mm') = '$P!{bulan}'
+                    group by b.id_negerimhn, b.id_daerahmhn) CC,
+                                                                
+                (SELECT NVL (SUM (a.jumlah_bayaran), 0) as bayaran_salinan_dokumen,b.id_negerimhn, b.id_daerahmhn
+                   FROM tblppkbayaran a,
+                        tblppkpermohonan b,
+                        tblpfdfail c
+                  WHERE a.id_jenisbayaran = 24
+                    AND c.id_fail = b.id_fail
+                    AND a.id_permohonan = b.id_permohonan
+                    AND a.id_jenisbayaran IN (5, 6)
+                    AND TO_CHAR (a.tarikh_bayaran, 'yyyy') = '$P!{tahun}'
+                    AND TO_CHAR (a.tarikh_bayaran, 'mm') = '$P!{bulan}'
+                    group by b.id_negerimhn, b.id_daerahmhn) DD,
+                                                           
+                (SELECT NVL (SUM (a.jumlah_bayaran), 0) as duti,b.id_negerimhn, b.id_daerahmhn
+                   FROM tblppkbayaran a,
+                        tblppkpermohonan b,
+                        tblpfdfail c
+                  WHERE a.id_jenisbayaran = 26
+                    AND c.id_fail = b.id_fail
+                    AND a.id_permohonan = b.id_permohonan
+                    AND TO_CHAR (a.tarikh_bayaran, 'yyyy') = '$P!{tahun}'
+                    AND TO_CHAR (a.tarikh_bayaran, 'mm') = '$P!{bulan}'
+                    group by b.id_negerimhn, b.id_daerahmhn) EE,
+                    
+                (SELECT NVL (SUM (a.jumlah_bayaran), 0) as bayaran_baitulmal,b.id_negerimhn, b.id_daerahmhn
+                   FROM tblppkbayaran a,
+                        tblppkpermohonan b,
+                        tblpfdfail c
+                  WHERE a.id_jenisbayaran = 29
+                    AND c.id_fail = b.id_fail
+                    AND a.id_permohonan = b.id_permohonan
+                    AND TO_CHAR (a.tarikh_bayaran, 'yyyy') = '$P!{tahun}'
+                    AND TO_CHAR (a.tarikh_bayaran, 'mm') = '$P!{bulan}'
+                    group by b.id_negerimhn, b.id_daerahmhn) FF
+                                                       
+          WHERE f.id_pejabatjkptg = $P!{idjkptg}
+            and f.id_pejabatjkptg = g.id_pejabatjkptg
+            AND f.id_seksyen = g.id_seksyen
+            and g.id_negeriurus = AA.id_negerimhn(+)
+            and g.id_daerahurus = AA.id_daerahmhn(+)
+            and g.id_negeriurus = BB.id_negerimhn(+)
+            and g.id_daerahurus = BB.id_daerahmhn(+)
+            and g.id_negeriurus = CC.id_negerimhn(+)
+            and g.id_daerahurus = CC.id_daerahmhn(+)
+            and g.id_negeriurus = DD.id_negerimhn(+)
+            and g.id_daerahurus = DD.id_daerahmhn(+)
+            and g.id_negeriurus = EE.id_negerimhn(+)
+            and g.id_daerahurus = EE.id_daerahmhn(+)
+            and g.id_negeriurus = FF.id_negerimhn(+)
+            and g.id_daerahurus = FF.id_daerahmhn(+)
+            and f.id_seksyen = 2
+            
+            group by f.nama_pejabat, f.alamat1]]></queryString>
+
+	<field name="NAMA_PEJABAT" class="java.lang.String"/>
+	<field name="ALAMAT1" class="java.lang.String"/>
+	<field name="BAYARAN_PERINTAH" class="java.math.BigDecimal"/>
+	<field name="BAYARAN_SALINAN_PERINTAH" class="java.math.BigDecimal"/>
+	<field name="FEE_RAYUAN" class="java.math.BigDecimal"/>
+	<field name="BAYARAN_SALINAN_DOKUMEN" class="java.math.BigDecimal"/>
+	<field name="DUTI" class="java.math.BigDecimal"/>
+	<field name="BAYARAN_BAITULMAL" class="java.math.BigDecimal"/>
+
+	<variable name="SUM_PENGELUARAN_PERINTAH_1" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{BAYARAN_PERINTAH}]]></variableExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="437"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="10"
+						y="148"
+						width="510"
+						height="32"
+						backcolor="#CCCCCC"
+						key="rectangle-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="0"
+						y="38"
+						width="535"
+						height="13"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="11" isBold="true" isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[LAPORAN PUNGUTAN BAYARAN DAN FEE]]></text>
+				</staticText>
+				<rectangle>
+					<reportElement
+						x="10"
+						y="179"
+						width="510"
+						height="238"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<line direction="TopDown">
+					<reportElement
+						x="38"
+						y="148"
+						width="2"
+						height="269"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="10"
+						y="209"
+						width="509"
+						height="0"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="10"
+						y="239"
+						width="509"
+						height="0"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="10"
+						y="270"
+						width="509"
+						height="0"
+						key="line-5"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="10"
+						y="299"
+						width="510"
+						height="0"
+						key="line-6"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="10"
+						y="329"
+						width="510"
+						height="0"
+						key="line-7"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="10"
+						y="359"
+						width="510"
+						height="0"
+						key="line-8"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="10"
+						y="387"
+						width="510"
+						height="0"
+						key="line-9"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="10"
+						y="417"
+						width="510"
+						height="0"
+						key="line-10"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="380"
+						y="148"
+						width="0"
+						height="269"
+						key="line-11"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="50"
+						y="155"
+						width="320"
+						height="19"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[JENIS BAYARAN / FEE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="390"
+						y="158"
+						width="110"
+						height="20"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[JUMLAH (RM)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="50"
+						y="188"
+						width="320"
+						height="20"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[PENGELUARAN PERINTAH PEMBAHAGIAN (BORANG E,F,FF,T,N)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="50"
+						y="218"
+						width="320"
+						height="20"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[SALINAN PERINTAH PEMBAHAGIAN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="52"
+						y="247"
+						width="320"
+						height="20"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[FEE RAYUAN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="52"
+						y="276"
+						width="320"
+						height="20"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[SALINAN DOKUMEN-DOKUMEN YANG DIPOHON]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="52"
+						y="307"
+						width="320"
+						height="20"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[DUTI HARTA PUSAKA]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="52"
+						y="337"
+						width="320"
+						height="20"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[PEMBELIAN BAHAGIAN BAITULMAL]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="53"
+						y="365"
+						width="320"
+						height="20"
+						key="staticText-10"/>
+					<box></box>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[LAIN-LAIN BAYARAN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="15"
+						y="188"
+						width="20"
+						height="20"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[1]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="15"
+						y="216"
+						width="20"
+						height="20"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[2]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="15"
+						y="246"
+						width="20"
+						height="20"
+						key="staticText-13"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[3]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="16"
+						y="277"
+						width="20"
+						height="20"
+						key="staticText-14"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[4]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="15"
+						y="306"
+						width="20"
+						height="20"
+						key="staticText-15"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[5]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="16"
+						y="336"
+						width="20"
+						height="20"
+						key="staticText-16"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[6]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="16"
+						y="364"
+						width="20"
+						height="20"
+						key="staticText-17"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[7]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="217"
+						y="393"
+						width="153"
+						height="21"
+						key="staticText-18"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[JUMLAH KUTIPAN :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="13"
+						y="156"
+						width="25"
+						height="20"
+						key="staticText-19"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[BIL]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="392"
+						y="187"
+						width="118"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BAYARAN_PERINTAH}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="390"
+						y="217"
+						width="120"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BAYARAN_SALINAN_PERINTAH}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="392"
+						y="249"
+						width="118"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{FEE_RAYUAN}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="392"
+						y="278"
+						width="118"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BAYARAN_SALINAN_DOKUMEN}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="392"
+						y="310"
+						width="118"
+						height="16"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DUTI}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="392"
+						y="337"
+						width="118"
+						height="19"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BAYARAN_BAITULMAL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="116"
+						y="74"
+						width="299"
+						height="47"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NAMA_PEJABAT} + " " + $F{ALAMAT1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Auto" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="410"
+						y="391"
+						width="100"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[new Double($F{BAYARAN_PERINTAH}.doubleValue() + $F{BAYARAN_SALINAN_PERINTAH}.doubleValue() 
++ $F{FEE_RAYUAN}.doubleValue() + $F{BAYARAN_SALINAN_DOKUMEN}.doubleValue() + 
+$F{DUTI}.doubleValue() + $F{BAYARAN_BAITULMAL}.doubleValue())]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="56"
+						width="535"
+						height="13"
+						key="textField-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["BAGI BULAN "  + $P{TAJUK}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="392"
+						y="365"
+						width="118"
+						height="20"
+						key="staticText-23"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial"/>
+					</textElement>
+				<text><![CDATA[0.00]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="29"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="58"
+						y="7"
+						width="100"
+						height="18"
+						key="textField-2"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font fontName="Arial" size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="4"
+						y="7"
+						width="53"
+						height="18"
+						key="staticText-24"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Arial" size="8"/>
+					</textElement>
+				<text><![CDATA[Tarikh Cetak :]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="4"
+						width="534"
+						height="0"
+						key="line-12"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</summary>
+</jasperReport>

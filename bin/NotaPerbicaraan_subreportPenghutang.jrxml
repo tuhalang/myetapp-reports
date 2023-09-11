@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="NotaPerbicaraan_subreportPenghutang" pageWidth="595" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="509" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="f2bf3287-0158-4554-88d8-5c4f1ad67e4d">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="2.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="idfail" class="java.lang.String"/>
+	<parameter name="idperbicaraan" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select x.*, ROW_NUMBER() OVER(ORDER BY x.id_penghutang DESC) AS BIL
+from (
+select distinct
+	d.id_penghutang,
+      REPLACE(a.NO_FAIL,'&','&#38;') AS NO_FAIL,
+      REPLACE(d.nama_penghutang,'&','&#38;') as Penghutang,
+      REPLACE(d.butiran_hutang,'&','&#38;')as butiran_Hutang,
+      CASE
+          WHEN d.JUMLAH_HUTANG <= 0 THEN ' '
+          WHEN d.JUMLAH_HUTANG IS NOT NULL THEN (REPLACE(TO_CHAR(d.JUMLAH_HUTANG,'999,999,999.99'),' ', ''))
+      END AS JUMLAH_HUTANG,
+      CASE
+          WHEN d.JENIS_PENGHUTANG = '1' THEN 'AGENSI'
+          WHEN d.JENIS_PENGHUTANG = '2' THEN 'INDIVIDU'
+      END AS JENIS_PENGHUTANG,
+      CASE
+          WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NULL and d.no_kp_lain IS NULL THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4)
+          WHEN d.no_kp_baru IS NOT NULL AND d.no_kp_lama IS NOT NULL AND d.no_kp_lain IS NULL THEN SUBSTR(d.no_kp_baru,1,6) || '-' || SUBSTR(d.no_kp_baru,7,2) || '-' || SUBSTR(d.no_kp_baru,9,4) || '(' ||d.no_kp_lain || ')'
+          WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NOT NULL AND d.no_kp_lain IS NULL THEN d.no_kp_lama
+          WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NULL AND d.no_kp_lain IS NOT NULL THEN d.no_kp_lain
+          WHEN d.no_kp_baru IS NULL AND d.no_kp_lama IS NOT NULL AND d.no_kp_lain IS NOT NULL THEN d.no_kp_lama || '(' ||d.no_kp_lain || ')'
+      END AS no_kp_Agensi
+from  tblpfdfail a,
+      tblppkpermohonan b,
+      tblppkpermohonansimati c,
+      tblppkpenghutang d,
+      TBLPPKKEPUTUSANPERMOHONAN e,
+      tblppkperbicaraan f,
+      tblppkob g
+Where a.id_fail   = b.id_fail
+  and b.id_permohonan = c.id_permohonan
+  AND C.id_permohonansimati=d.id_permohonansimati
+  and b.id_permohonan  =  e.id_permohonan
+  and f.id_keputusanpermohonan  = e.id_keputusanpermohonan
+  and c.id_permohonansimati = g.id_permohonansimati
+  and g.ID_TARAFKPTG = 2
+  and a.id_fail	= $P!{idfail}
+  and f.ID_PERBICARAAN = $P!{idperbicaraan}
+) x]]>
+	</queryString>
+	<field name="ID_PENGHUTANG" class="java.math.BigDecimal"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="PENGHUTANG" class="java.lang.String"/>
+	<field name="BUTIRAN_HUTANG" class="java.lang.String"/>
+	<field name="JUMLAH_HUTANG" class="java.lang.String"/>
+	<field name="JENIS_PENGHUTANG" class="java.lang.String"/>
+	<field name="NO_KP_AGENSI" class="java.lang.String"/>
+	<field name="BIL" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="54" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-1" x="4" y="4" width="240" height="20" uuid="0d9b04a2-87da-405e-9444-1e5c3d247f44"/>
+				<textElement>
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[6.    Senarai Penghutang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-2" positionType="Float" mode="Opaque" x="24" y="24" width="148" height="30" backcolor="#CCCCCC" uuid="45fbe75f-b8f2-4e96-a342-a432fb3a502b"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Butiran Hutang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-3" positionType="Float" mode="Opaque" x="409" y="24" width="92" height="30" backcolor="#CCCCCC" uuid="d01a2953-d991-458c-b357-ce915da56d10"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Jumlah (RM)  ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-4" positionType="Float" mode="Opaque" x="172" y="24" width="138" height="30" backcolor="#CCCCCC" uuid="32bf47c7-bd78-4db5-9087-8eddba75d21e"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Nama Penghutang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-5" positionType="Float" mode="Opaque" x="310" y="24" width="99" height="30" backcolor="#CCCCCC" uuid="7822e480-79e8-4ec9-b75a-353110316cb3"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[No. KP/Agensi]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-6" positionType="Float" mode="Opaque" x="4" y="24" width="20" height="30" backcolor="#CCCCCC" uuid="9ca5de37-0ef4-42c9-8e8c-b40f2324550a"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Bil]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="25" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-1" stretchType="RelativeToTallestObject" x="310" y="0" width="99" height="25" isPrintWhenDetailOverflows="true" uuid="263483a8-fb13-47b9-90b5-cbfe821cde0e"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NO_KP_AGENSI}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-2" stretchType="RelativeToTallestObject" x="172" y="0" width="138" height="25" isPrintWhenDetailOverflows="true" uuid="eaea54e7-41e0-478a-b69c-597cf67649b9"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PENGHUTANG}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-3" stretchType="RelativeToTallestObject" x="409" y="0" width="92" height="25" isPrintWhenDetailOverflows="true" uuid="7ba11983-f74d-4327-bbac-9534902e0cfc"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{JUMLAH_HUTANG}+ "  "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-4" stretchType="RelativeToTallestObject" x="24" y="0" width="148" height="25" isPrintWhenDetailOverflows="true" uuid="bc041404-eeb0-4462-b4a7-ec9a6ad97708"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["  "+$F{BUTIRAN_HUTANG}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-5" stretchType="RelativeToTallestObject" x="4" y="0" width="20" height="25" isPrintWhenDetailOverflows="true" uuid="d881042f-5957-4730-9cd3-832cb7a7c362"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}+"."]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="50" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-1" stretchType="RelativeToTallestObject" x="310" y="0" width="99" height="25" isPrintWhenDetailOverflows="true" uuid="aae69bc9-479a-460f-b26b-a1829614c4ee"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-5" stretchType="RelativeToTallestObject" x="4" y="0" width="20" height="25" isPrintWhenDetailOverflows="true" uuid="76cd20f0-051b-42f6-9cd0-7a4d3562ca94"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-4" stretchType="RelativeToTallestObject" x="24" y="0" width="148" height="25" isPrintWhenDetailOverflows="true" uuid="04df8136-d2d4-4b11-96f8-540843716cee"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-3" stretchType="RelativeToTallestObject" x="409" y="0" width="92" height="25" isPrintWhenDetailOverflows="true" uuid="67d48576-f3a2-4b83-8446-e56a5b4285a8"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-2" stretchType="RelativeToTallestObject" x="172" y="0" width="138" height="25" isPrintWhenDetailOverflows="true" uuid="9556d26e-f40f-418b-b886-24bebae977cc"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-5" stretchType="RelativeToTallestObject" x="4" y="25" width="20" height="25" isPrintWhenDetailOverflows="true" uuid="561145e5-adf4-446e-b128-142a0f7786cb"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-2" stretchType="RelativeToTallestObject" x="172" y="25" width="138" height="25" isPrintWhenDetailOverflows="true" uuid="89b7aed5-263c-4a7b-bdb8-ab72f16195e7"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-3" stretchType="RelativeToTallestObject" x="409" y="25" width="92" height="25" isPrintWhenDetailOverflows="true" uuid="8a1d3f67-3ca2-4509-8baf-d7662c8c14ee"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-1" stretchType="RelativeToTallestObject" x="310" y="25" width="99" height="25" isPrintWhenDetailOverflows="true" uuid="90e11480-69b8-498f-8e70-5a7611fa8f88"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-4" stretchType="RelativeToTallestObject" x="24" y="25" width="148" height="25" isPrintWhenDetailOverflows="true" uuid="85fc49d9-31dd-4392-8feb-f91e4443e9a8"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+					<topPen lineWidth="0.5" lineStyle="Solid"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+	<noData>
+		<band height="215" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-7" x="5" y="2" width="240" height="20" uuid="0c2b5e57-1b8d-4881-8ad4-031af8370d19"/>
+				<textElement>
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[6.    Senarai Penghutang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-8" positionType="Float" mode="Opaque" x="25" y="22" width="148" height="30" backcolor="#CCCCCC" uuid="9b88eac4-4dbc-4a60-a4ad-23af7e4ef60e"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Butiran Hutang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-9" positionType="Float" mode="Opaque" x="410" y="22" width="92" height="30" backcolor="#CCCCCC" uuid="a899afda-2336-4581-9329-9dabfacf8705"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Jumlah (RM)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-10" positionType="Float" mode="Opaque" x="173" y="22" width="138" height="30" backcolor="#CCCCCC" uuid="6e523366-1f81-44b2-89e8-a6bfe9a94971"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Nama Penghutang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-11" positionType="Float" mode="Opaque" x="311" y="22" width="99" height="30" backcolor="#CCCCCC" uuid="bbc421df-8a27-4f37-ae80-dc72956c1a70"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[No. KP/Agensi]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-12" positionType="Float" mode="Opaque" x="5" y="22" width="20" height="30" backcolor="#CCCCCC" uuid="c2949342-ab23-4ab7-9fef-bbd7fd7b4c6a"/>
+				<box>
+					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Bil]]></text>
+			</staticText>
+			<line>
+				<reportElement mode="Opaque" x="5" y="76" width="498" height="1" uuid="6fa79874-cb96-4692-a9fe-0ea2e97edbe2"/>
+			</line>
+			<line>
+				<reportElement mode="Opaque" x="5" y="101" width="498" height="1" uuid="8299f34b-8dad-4bc6-84bd-8bc40c70bd8c"/>
+			</line>
+			<line>
+				<reportElement x="410" y="22" width="1" height="79" uuid="09f63d8d-69d8-4425-93e7-71189cd82f16"/>
+			</line>
+			<line>
+				<reportElement x="503" y="22" width="1" height="79" uuid="ca6056a9-3216-46d2-b464-82ba6af781aa"/>
+			</line>
+			<line>
+				<reportElement x="173" y="22" width="1" height="79" uuid="9c41202b-aa54-4272-9fe7-a064f247f723"/>
+			</line>
+			<line>
+				<reportElement x="311" y="22" width="1" height="79" uuid="8bdc8e06-f4d0-47b3-855d-88251a4d9836"/>
+			</line>
+			<line>
+				<reportElement x="5" y="22" width="1" height="79" uuid="83368cc1-7fd3-4293-a6a2-40dd79590fe1"/>
+			</line>
+			<line>
+				<reportElement x="25" y="22" width="1" height="79" uuid="3e87910d-33cd-4c66-a504-8c2f8b5ac13e"/>
+			</line>
+			<line>
+				<reportElement mode="Opaque" x="5" y="22" width="498" height="1" uuid="eedba8fb-2f81-4ae9-b6e5-a5f9b1777558"/>
+			</line>
+			<line>
+				<reportElement mode="Opaque" x="5" y="51" width="498" height="1" uuid="baa7bb01-661f-4ee4-b2db-25fc734bd9a1"/>
+			</line>
+		</band>
+	</noData>
+</jasperReport>

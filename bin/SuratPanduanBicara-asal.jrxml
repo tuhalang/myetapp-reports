@@ -1,0 +1,708 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="SuratPanduanBicara-asal"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT DISTINCT 
+A.ID_DAERAHMHN,
+C.NO_FAIL,
+C.ID_FAIL,
+
+
+N.NAMA_PEJABAT,N.ALAMAT1,N.ALAMAT2,N.ALAMAT3,
+N.POSKOD,
+CASE
+ WHEN UPPER(TRIM(M.KETERANGAN)) <> 'TIADA MAKLUMAT' THEN NVL(UPPER(TRIM(M.KETERANGAN)),'')
+ ELSE ''
+  END AS BANDAR,
+UPPER(I.NAMA_NEGERI) AS NAMA_NEGERI,
+NVL(N.NO_TEL,'') AS NO_TEL,
+A.SEKSYEN AS SEKSYEN,
+     CASE WHEN A.JUMLAH_HARTA_TARIKHMOHON <= 0 THEN ' '
+       WHEN A.JUMLAH_HARTA_TARIKHMOHON IS NOT NULL THEN 'RM '||(replace(to_char(A.JUMLAH_HARTA_TARIKHMOHON,'999,999,999.99'),' ', ''))
+       END AS TBLPPKPERMOHONN_JUM_HARTAMOHON,
+     CASE WHEN A.JUMLAH_HARTA_TARIKHMATI <= 0 THEN ' '
+       WHEN A.JUMLAH_HARTA_TARIKHMATI IS NOT NULL THEN 'RM '||(replace(to_char(A.JUMLAH_HARTA_TARIKHMATI,'999,999,999.99'),' ', ''))
+       END AS TBLPPKPERMOHONN_JUM_HARTAMATI,
+     ROUND(CASE WHEN A.JUMLAH_HARTA_TARIKHMOHON <= 1000 THEN 'RM '||replace(TO_CHAR(10,'999,999,999.99'),' ')
+          WHEN A.JUMLAH_HARTA_TARIKHMOHON BETWEEN 1001 AND 50000 THEN 'RM '||replace(TO_CHAR(30,'999,999,999.99'),' ')
+          WHEN A.JUMLAH_HARTA_TARIKHMOHON >= 50001 THEN 'RM '||replace(to_char((0.2/100)*A.JUMLAH_HARTA_TARIKHMOHON,'999,999,999.99'),' ')
+     END) AS JUMLAH_BAYARAN_PERINTAH,
+       MAX(CASE WHEN B.ID_JENISBAYARAN = 24   THEN  B.NO_RESIT END) AS NO_RESIT_PERINTAH,
+       MAX(CASE WHEN B.ID_JENISBAYARAN = 24   THEN  B.TARIKH_BAYARAN END) AS TARIKH_BAYARAN_PERINTAH,
+       MAX(CASE WHEN B.ID_JENISBAYARAN = 24  AND B.JUMLAH_BAYARAN>0 THEN  'RM '||replace(to_char(B.JUMLAH_BAYARAN,'999,999,999.99'),' ') END) AS JUMLAH_BAYARAN_PERINTAH,
+       MAX(CASE WHEN B.ID_JENISBAYARAN = 25   THEN  B.NO_RESIT END) AS NO_RESIT_PERINTAHTAMB,
+       MAX(CASE WHEN B.ID_JENISBAYARAN = 25   THEN  B.TARIKH_BAYARAN END) AS TARIKH_BAYARAN_PERINTAHTAMB,
+       MAX(CASE WHEN B.ID_JENISBAYARAN = 25  AND B.JUMLAH_BAYARAN>0 THEN  'RM '||replace(to_char(B.JUMLAH_BAYARAN,'999,999,999.99'),' ') END) AS JUMLAH_BAYARAN_PERINTAHTAMB,       
+       MAX(CASE WHEN B.ID_JENISBAYARAN = 26   THEN  B.NO_RESIT END) AS NO_RESIT_CUKAIPUSAKA,
+       MAX(CASE WHEN B.ID_JENISBAYARAN = 26   THEN  B.TARIKH_BAYARAN END) AS TARIKH_BAYARAN_CUKAIPUSAKA,
+       MAX(CASE WHEN B.ID_JENISBAYARAN = 26  AND B.JUMLAH_BAYARAN>0 THEN  'RM '||replace(to_char(B.JUMLAH_BAYARAN,'999,999,999.99'),' ') END) AS JUMLAH_BAYARAN_CUKAIPUSAKA
+    FROM
+      TBLPPKPERMOHONAN A,  
+      TBLPPKBAYARAN B,
+      TBLPFDFAIL C,
+      TBLPPKPERMOHONANSIMATI D,
+      TBLPPKPEMOHON E,
+      TBLRUJPEJABAT F, 
+      TBLPPKKEPUTUSANPERMOHONAN G,
+      TBLPPKPERBICARAAN H,
+      TBLRUJNEGERI I,
+      TBLPPKNOTISPERBICARAAN J,
+      TBLPPKSIMATI K,
+      TBLPPKRUJUNIT L,
+      TBLRUJBANDAR M,
+      TBLRUJPEJABATJKPTG N,
+      (SELECT      
+      CASE 
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+      WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+        WHEN TBLPPKSIMATI.NO_KP_BARU IS NULL AND TBLPPKSIMATI.NO_KP_LAIN IS NULL THEN  TBLPPKSIMATI.NO_KP_LAMA 
+         ELSE TBLPPKSIMATI.NO_KP_BARU
+      END || '' ||     
+     CASE 
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS NOT NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAMA
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKSIMATI.NO_KP_BARU IS  NULL AND TBLPPKSIMATI.NO_KP_LAMA IS NOT NULL THEN  TBLPPKSIMATI.NO_KP_LAIN
+     END AS NO_KP1 , ID_SIMATI      
+     from tblppksimati ) AAA,
+     (SELECT 
+     CASE 
+      WHEN TBLPPKPEMOHON.NO_KP_BARU IS NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NOT NULL THEN  TBLPPKPEMOHON.NO_KP_LAMA
+      WHEN TBLPPKPEMOHON.NO_KP_BARU IS NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NULL THEN  TBLPPKPEMOHON.NO_KP_LAIN
+        WHEN TBLPPKPEMOHON.NO_KP_BARU IS NULL AND TBLPPKPEMOHON.NO_KP_LAIN IS NULL THEN  TBLPPKPEMOHON.NO_KP_LAMA 
+         ELSE TBLPPKPEMOHON.NO_KP_BARU
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS NOT NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NOT NULL THEN  TBLPPKPEMOHON.NO_KP_LAMA
+     END || '' ||     
+     CASE 
+         WHEN TBLPPKPEMOHON.NO_KP_BARU IS  NULL AND TBLPPKPEMOHON.NO_KP_LAMA IS NOT NULL THEN  TBLPPKPEMOHON.NO_KP_LAIN
+     END AS NO_KP2 , ID_PEMOHON      
+     from TBLPPKPEMOHON ) BBB
+WHERE      A.ID_PERMOHONAN = B.ID_PERMOHONAN(+)
+     AND H.ID_PEJABAT = F.ID_PEJABAT(+)
+     AND K.ID_SIMATI = AAA.ID_SIMATI
+     AND E.ID_PEMOHON = BBB.ID_PEMOHON
+     AND A.ID_FAIL = C.ID_FAIL
+     AND A.ID_PERMOHONAN = D.ID_PERMOHONAN
+     AND A.ID_PEMOHON = E.ID_PEMOHON
+     AND A.ID_PERMOHONAN(+) = G.ID_PERMOHONAN
+     AND G.ID_KEPUTUSANPERMOHONAN = H.ID_KEPUTUSANPERMOHONAN
+     AND N.ID_NEGERI = I.ID_NEGERI(+)
+     AND N.ID_BANDAR = M.ID_BANDAR(+)
+     AND H.ID_PERBICARAAN(+) = J.ID_PERBICARAAN
+     AND D.ID_SIMATI = K.ID_SIMATI
+     AND L.ID_UNITPSK = H.ID_UNITPSK
+     AND N.ID_PEJABATJKPTG = L.ID_JKPTG
+     AND C.ID_FAIL = $P!{idfail}
+
+     GROUP BY F.NO_TEL,C.ID_FAIL, B.ID_PERMOHONAN,A.JUMLAH_HARTA_TARIKHMOHON,A.JUMLAH_HARTA_TARIKHMATI,
+     G.ID_KEPUTUSANPERMOHONAN,
+     C.NO_FAIL,
+     I.NAMA_NEGERI ,H.TARIKH_BICARA,
+     H.MASA_BICARA, H.PEG_PENGENDALI,K.NAMA_SIMATI,
+     K.NO_KP_BARU ,
+     K.NO_SIJIL_MATI,
+     K.TARIKH_MATI ,  AAA.NO_KP1, BBB.NO_KP2,
+     E.NAMA_PEMOHON ,   E.NO_KP_BARU ,E.NO_KP_LAMA ,
+     E.NO_TEL ,     G.TARIKH_TERIMA_BORANGC ,
+     G.JENIS_BORANGC ,     G.CATATAN ,
+     J.ID_PERBICARAAN ,G.JENIS_BORANGC,
+     A.SEKSYEN,H.ID_NEGERIBICARA,
+     A.ID_DAERAHMHN,N.NAMA_PEJABAT,N.ALAMAT1,
+     N.ALAMAT2,N.ALAMAT3,
+     N.POSKOD,N.NO_TEL,M.KETERANGAN]]></queryString>
+
+	<field name="ID_DAERAHMHN" class="java.math.BigDecimal"/>
+	<field name="NO_FAIL" class="java.lang.String"/>
+	<field name="ID_FAIL" class="java.math.BigDecimal"/>
+	<field name="NAMA_PEJABAT" class="java.lang.String"/>
+	<field name="ALAMAT1" class="java.lang.String"/>
+	<field name="ALAMAT2" class="java.lang.String"/>
+	<field name="ALAMAT3" class="java.lang.String"/>
+	<field name="POSKOD" class="java.lang.String"/>
+	<field name="BANDAR" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+	<field name="NO_TEL" class="java.lang.String"/>
+	<field name="SEKSYEN" class="java.lang.String"/>
+	<field name="TBLPPKPERMOHONN_JUM_HARTAMOHON" class="java.lang.String"/>
+	<field name="TBLPPKPERMOHONN_JUM_HARTAMATI" class="java.lang.String"/>
+	<field name="JUMLAH_BAYARAN_PERINTAH" class="java.lang.String"/>
+	<field name="NO_RESIT_PERINTAH" class="java.lang.String"/>
+	<field name="TARIKH_BAYARAN_PERINTAH" class="java.sql.Timestamp"/>
+	<field name="NO_RESIT_PERINTAHTAMB" class="java.lang.String"/>
+	<field name="TARIKH_BAYARAN_PERINTAHTAMB" class="java.sql.Timestamp"/>
+	<field name="JUMLAH_BAYARAN_PERINTAHTAMB" class="java.lang.String"/>
+	<field name="NO_RESIT_CUKAIPUSAKA" class="java.lang.String"/>
+	<field name="TARIKH_BAYARAN_CUKAIPUSAKA" class="java.sql.Timestamp"/>
+	<field name="JUMLAH_BAYARAN_CUKAIPUSAKA" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="728"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="80"
+						y="684"
+						width="405"
+						height="44"
+						key="textField-13"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean(!($F{ID_DAERAHMHN}.equals("73"))&&!($F{ID_DAERAHMHN}.equals("79")))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NAMA_PEJABAT}!=null?$F{NAMA_PEJABAT}+"\n":"")
++($F{ALAMAT1}!=null?$F{ALAMAT1}+"\n":"")
++($F{ALAMAT2}!=null?$F{ALAMAT2}+"\n":"")
++($F{ALAMAT3}!=null?$F{ALAMAT3}+"\n":"")
++(($F{POSKOD}!=null && $F{BANDAR}!=null) ? $F{POSKOD}+" "+$F{BANDAR}+"\n":($F{POSKOD}==null && $F{BANDAR}!=null) ? $F{BANDAR}+"\n":($F{POSKOD}!=null && $F{BANDAR}==null) ? $F{POSKOD}+"\n":"")
++($F{NO_TEL}!=null ? "NO TEL : "+$F{NO_TEL}+".\n":"")
++"<style size ='8' pdfFontName='Helvetica'>www.kptg.gov.my</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="80"
+						y="684"
+						width="405"
+						height="44"
+						key="textField-12"
+						positionType="Float">
+							<printWhenExpression><![CDATA[new Boolean($F{ID_DAERAHMHN}.equals("73") || $F{ID_DAERAHMHN}.equals("79"))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement textAlignment="Center" markup="styled">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["JABATAN KETUA PENGARAH TANAH DAN GALIAN (PERSEKUTUAN)"
++"\nNEGERI SELANGOR"
++"\nTINGKAT 10, PLAZA MASALAM,"
++"\nNO.2 JALAN TENGKU AMPUAN ZABEDAH E9/E"
++"\nSEKSYEN 9, 40100 SHAH ALAM, SELANGOR"
++"\nNO TEL:03-55197779 EXT 117/ FAX 03-55123916"
++"\n<style size ='8' pdfFontName='Helvetica'>www.kptg.gov.my</style>"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="106"
+						y="61"
+						width="322"
+						height="21"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[PANDUAN MENGHADIRI PERBICARAAN ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="62"
+						y="81"
+						width="410"
+						height="22"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[AKTA HARTA PUSAKA KECIL (PEMBAHAGIAN) 1955]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="109"
+						width="435"
+						height="39"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Top">
+						<font pdfFontName="Helvetica" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[Perbicaraan harta pusaka simati akan diadakan pada tarikh, masa dan tempat seperti yang tercatit dalam Borang D (Notis Petisyen dan Pendengaran - Seksyen 8) dan Borang S (Notis Pendengaran Permohonan Berikutnya - Seksyen 17)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="157"
+						width="435"
+						height="13"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Pemohon/pempetisyen adalah bertanggungjawab ke atas perkara-perkara yang berikut :-]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="179"
+						width="31"
+						height="13"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[1.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="107"
+						y="201"
+						width="376"
+						height="13"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Sijil Kematian simati/waris-waris yang telah mati]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="77"
+						y="201"
+						width="31"
+						height="13"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<text><![CDATA[i.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="107"
+						y="213"
+						width="376"
+						height="13"
+						key="staticText-11"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Kad Pengenalan atau Surat Beranak semua waris]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="77"
+						y="213"
+						width="31"
+						height="13"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<text><![CDATA[ii.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="107"
+						y="225"
+						width="376"
+						height="13"
+						key="staticText-13"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Sijil Kerakyatan / Surat Kelahiran, Sijil Perkahwinan simati (jika ada)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="77"
+						y="225"
+						width="31"
+						height="13"
+						key="staticText-14"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<text><![CDATA[iii.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="107"
+						y="237"
+						width="376"
+						height="13"
+						key="staticText-15"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Hakmilik tanah / Surat Perjanjian Jual Beli]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="77"
+						y="237"
+						width="31"
+						height="13"
+						key="staticText-16"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<text><![CDATA[iv.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="107"
+						y="249"
+						width="376"
+						height="26"
+						key="staticText-17"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top" rotation="None" lineSpacing="Single">
+						<font/>
+					</textElement>
+				<text><![CDATA[Sijil Pendaftaran kenderaan, sijil saham, buku akaun simpanan yang telah dikemaskinikan.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="77"
+						y="249"
+						width="31"
+						height="13"
+						key="staticText-18"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<text><![CDATA[v.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="77"
+						y="274"
+						width="31"
+						height="13"
+						key="staticText-20"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<text><![CDATA[vi.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="79"
+						y="296"
+						width="405"
+						height="26"
+						key="staticText-23"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font/>
+					</textElement>
+				<text><![CDATA[Tuan/puan dikehendaki memaklumkan kepada semua waris simati yang berhak menuntut harta pusaka tersebut supaya hadir pada tarikh perbicaraan.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="296"
+						width="31"
+						height="13"
+						key="staticText-24"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[2.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="331"
+						width="31"
+						height="13"
+						key="staticText-26"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[3.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="379"
+						width="31"
+						height="13"
+						key="staticText-29"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[4.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="79"
+						y="460"
+						width="405"
+						height="28"
+						key="staticText-31"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font/>
+					</textElement>
+				<text><![CDATA[Sekiranya simati meninggalkan ibu bapa, mereka adalah waris yang berhak dan dikehendaki hadir perbicaraan atau mengemukakan surat akuan persetujuan.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="460"
+						width="31"
+						height="13"
+						key="staticText-32"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[5.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="79"
+						y="543"
+						width="405"
+						height="26"
+						key="staticText-33"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font/>
+					</textElement>
+				<text><![CDATA[Sebelum menghadiri perbicaraan, waris-waris dinasihatkan supaya mengadakan perbincangan bagi menentukan cara pembahagian.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="543"
+						width="31"
+						height="13"
+						key="staticText-34"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[7.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="79"
+						y="494"
+						width="405"
+						height="40"
+						key="staticText-35"/>
+					<box></box>
+					<textElement textAlignment="Justified">
+						<font/>
+					</textElement>
+				<text><![CDATA[Jika tuan/puan seorang sahaja waris simati (tunggal) yang akan menghadiri perbicaraan itu, maka tuan/puan dikehendaki membawa dua (2) orang saksi bebas (yang tidak ada pertalian persaudaraan dengan waris yang berhak / simati)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="494"
+						width="31"
+						height="13"
+						key="staticText-36"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[6.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="578"
+						width="31"
+						height="13"
+						key="staticText-38"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[8.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="613"
+						width="31"
+						height="13"
+						key="staticText-40"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[9.]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="79"
+						y="379"
+						width="405"
+						height="82"
+						key="textField-2"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Waris yang tidak dapat hadir pada tarikh perbicaraan, bolehlah mengemukakan <style isBold='true' pdfFontName='Helvetica-Bold'>SURAT AKUAN PERSETUJUAN</style> yang boleh diperolehi di mana-mana Unit Pembahagian Pusaka seluruh Semenanjung Malaysia. <style isBold='true' pdfFontName='Helvetica-Bold'>PERINGATAN</style> Surat akuan Persetujuan hendaklah ditandatangani di hadapan Pesuruhjaya Sumpah, Majistret atau Pentadbir Tanah Daerah dan diisi dengan lengkap bagaimana harta hendak dibahagikan diruang yang disediakan. Surat akuan yang tidak lengkap akan ditolak."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="79"
+						y="613"
+						width="405"
+						height="44"
+						key="textField-3"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bayaran perintah sebanyak <style isBold='true' pdfFontName='Helvetica-Bold'>" + ($F{JUMLAH_BAYARAN_PERINTAH}!=null?$F{JUMLAH_BAYARAN_PERINTAH}:" ") + "</style> hendaklah dijelaskan semasa perbicaraan (berdasarkan <style isBold='true' pdfFontName='Helvetica-Bold'>nilaian terkini</style> harta simati seperti senarai harta di Borang Permohonan Borang A-Seksyen 8 yang difailkan)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="107"
+						y="274"
+						width="376"
+						height="13"
+						key="textField-5"/>
+					<box></box>
+					<textElement markup="styled">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Lain-lain <style isBold='true' pdfFontName='Helvetica-Bold'>dokumen asal</style> yang berkaitan dengan harta simati"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="79"
+						y="331"
+						width="405"
+						height="48"
+						key="textField-6"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Top" markup="styled" lineSpacing="Single">
+						<font fontName="Arial" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Sila pastikan semua yang hadir <style isBold='true' pdfFontName='Helvetica-Bold'>berpakaian kemas dan sopan</style>. (Bagi waris di bawah umur 18 tahun tidak diwajibkan hadir, hanya salinan kad pengenalan dan surat beranak sahaja diperlukan)."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="79"
+						y="179"
+						width="405"
+						height="13"
+						key="textField-7"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Tuan/puan adalah dikehendaki membawa bersama <style isBold='true' pdfFontName='Helvetica-Bold'>dokumen-dokumen asal</style> berikut :-"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="79"
+						y="578"
+						width="405"
+						height="26"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Justified" markup="styled">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Sekiranya tuan/puan <style isBold='true' pdfFontName='Helvetica-Bold'>gagal hadir</style> perbicaraan setelah <style isBold='true' pdfFontName='Helvetica-Bold'>3 kali</style> panggilan dibuat, permohonan tuan/puan akan dibatalkan."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="79"
+						y="663"
+						width="405"
+						height="14"
+						key="textField-10"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["** Sebarang maklumat / keterangan lanjut sila hubungi Unit Pembahagian Pusaka yang berkenaan. "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="42"
+						y="0"
+						width="450"
+						height="11"
+						key="textField-14"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Verdana" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{NO_FAIL}!= null ?$F{NO_FAIL}:"TIADA")]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</summary>
+</jasperReport>

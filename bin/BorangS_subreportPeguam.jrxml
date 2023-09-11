@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BorangS_subreportPeguam"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="idfail" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="idpemohon" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT REPLACE(UPPER(TRIM(tblppkpeguam.nama_firma)),',') AS NAMA_FIRMA,
+REPLACE(UPPER(TRIM(tblppkpeguam.NO_RUJUKAN_FIRMA )),',') as rujukan_firma,
+         CASE
+            WHEN tblppkpemohon.id_pemohon = $P!{idpemohon}
+            AND tblppkpeguam.alamat1 IS NOT NULL
+               THEN REPLACE(UPPER(REPLACE(TRIM(tblppkpeguam.alamat1),'&','&#38;')),',')
+            ELSE ''
+         END AS alamat_1,
+         CASE
+            WHEN tblppkpemohon.id_pemohon = $P!{idpemohon}
+            AND tblppkpeguam.alamat2 IS NOT NULL
+               THEN REPLACE(UPPER(REPLACE(TRIM(tblppkpeguam.alamat2),'&','&#38;')),',')
+            ELSE ''
+         END AS alamat_2,
+         CASE
+            WHEN tblppkpemohon.id_pemohon = $P!{idpemohon}
+            AND tblppkpeguam.alamat3 IS NOT NULL
+               THEN REPLACE(UPPER(REPLACE(TRIM(tblppkpeguam.alamat3),'&','&#38;')),',')
+            ELSE '' 
+         END AS alamat_3,
+         CASE
+            WHEN tblppkpemohon.id_pemohon = $P!{idpemohon}
+            AND tblppkpeguam.id_bandar IS NOT NULL AND tblrujbandar.keterangan<>'TIADA MAKLUMAT'
+               THEN UPPER(NVL(tblrujbandar.keterangan,''))
+            ELSE ''
+         END AS bandar,
+         CASE
+            WHEN tblppkpemohon.id_pemohon = $P!{idpemohon}
+            AND tblppkpeguam.poskod IS NOT NULL
+               THEN NVL(tblppkpeguam.poskod,'')
+            ELSE '' 
+         END AS poskod,
+         CASE
+            WHEN tblppkpemohon.id_pemohon = $P!{idpemohon}
+            AND tblppkpeguam.ID_NEGERI IS NOT NULL AND tblrujnegeri.nama_negeri<>'TIADA MAKLUMAT'
+               THEN UPPER(NVL(tblrujnegeri.nama_negeri,''))
+            ELSE ''
+         END AS nama_negeri
+         FROM 
+                tblppkpeguampemohon,
+                tblppkpemohon,
+                tblppkpeguam,
+                tblppkpermohonan,
+                tblpfdfail,
+                tblrujnegeri,
+                tblrujbandar
+          WHERE  tblppkpemohon.id_pemohon =tblppkpermohonan.id_pemohon
+                 AND tblppkpemohon.id_pemohon =tblppkpeguampemohon.id_pemohon 
+                 AND tblppkpeguampemohon.id_peguam = tblppkpeguam.id_peguam 
+                 AND tblpfdfail.id_fail = tblppkpermohonan.id_fail
+                 AND tblrujnegeri.id_negeri(+) = tblppkpeguam.id_negeri
+                 AND tblrujbandar.id_bandar(+) = tblppkpeguam.id_bandar               
+                 AND tblpfdfail.ID_FAIL = $P!{idfail}
+                 GROUP BY tblppkpeguam.nama_firma,tblppkpeguam.NO_RUJUKAN_FIRMA,tblppkpemohon.id_pemohon,tblppkpeguam.alamat1,tblppkpeguam.alamat2,
+                 tblppkpeguam.alamat3,tblppkpeguam.id_bandar,tblrujbandar.keterangan,tblppkpeguam.poskod,tblppkpeguam.ID_NEGERI,
+                 tblrujnegeri.nama_negeri
+         ORDER BY REPLACE (tblppkpemohon.id_pemohon, $P!{idpemohon}, 1)]]></queryString>
+
+	<field name="NAMA_FIRMA" class="java.lang.String"/>
+	<field name="RUJUKAN_FIRMA" class="java.lang.String"/>
+	<field name="ALAMAT_1" class="java.lang.String"/>
+	<field name="ALAMAT_2" class="java.lang.String"/>
+	<field name="ALAMAT_3" class="java.lang.String"/>
+	<field name="BANDAR" class="java.lang.String"/>
+	<field name="POSKOD" class="java.lang.String"/>
+	<field name="NAMA_NEGERI" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="13"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="2"
+						width="450"
+						height="11"
+						key="textField-1"
+						isRemoveLineWhenBlank="true">
+							<printWhenExpression><![CDATA[new Boolean( (($F{ALAMAT_1} != null)) || (!($F{ALAMAT_1}.equals(" "))) )]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["s.k"]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="115"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="10"
+						y="13"
+						width="450"
+						height="11"
+						key="textField-2"
+						isRemoveLineWhenBlank="true">
+							<printWhenExpression><![CDATA[new Boolean( (($F{NAMA_FIRMA} != null)) || (!($F{NAMA_FIRMA}.equals(" "))))]]></printWhenExpression>
+						</reportElement>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$V{COLUMN_COUNT}+". "+($F{NAMA_FIRMA} != null ? $F{NAMA_FIRMA}:" ")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="20"
+						y="25"
+						width="400"
+						height="11"
+						key="textField-3"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ALAMAT_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="20"
+						y="37"
+						width="400"
+						height="10"
+						key="textField-4"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ALAMAT_2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="20"
+						y="48"
+						width="400"
+						height="10"
+						key="textField-5"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ALAMAT_3}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="20"
+						y="59"
+						width="400"
+						height="13"
+						key="textField-6"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement>
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[($F{POSKOD}!= null ? $F{POSKOD}:"")+" "+($F{BANDAR}!= null ? $F{BANDAR}:"")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="20"
+						y="73"
+						width="400"
+						height="14"
+						key="textField-7"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement markup="styled">
+						<font fontName="Verdana" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["<style isBold='true' isUnderline='true' pdfFontName='Helvetica-Bold'>"+($F{NAMA_NEGERI}!= null ? $F{NAMA_NEGERI}:" ")+"</style>"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="20"
+						y="87"
+						width="400"
+						height="14"
+						key="textField-8"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement markup="styled">
+						<font fontName="Verdana" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Ruj : "+($F{RUJUKAN_FIRMA}!= null ? $F{RUJUKAN_FIRMA}:" ")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="20"
+						y="101"
+						width="448"
+						height="12"
+						key="textField-9"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled" lineSpacing="Single">
+						<font fontName="Verdana" pdfFontName="Helvetica-Oblique" size="8" isBold="false" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["**Untuk makluman tuan"]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="false" >
+			</band>
+		</summary>
+</jasperReport>
